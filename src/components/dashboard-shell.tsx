@@ -10,6 +10,7 @@ import { PAPEL_LABEL, type Profile } from "@/lib/types";
 import type { RedeBrand } from "@/lib/auth";
 import { UserSwitcher } from "@/components/user-switcher";
 import { PageTitleProvider, TopbarTitle } from "@/components/page-title";
+import { TopbarSearch } from "@/components/topbar-search";
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -164,6 +165,7 @@ export function DashboardShell({
           </div>
 
           <div className="flex shrink-0 items-center justify-end gap-2">
+            <TopbarSearch />
             <ThemeToggle />
 
             <div className="flex items-center gap-3 border-l border-border pl-3">
