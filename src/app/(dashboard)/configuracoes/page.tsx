@@ -146,6 +146,9 @@ export default async function ConfiguracoesPage({
             geo={plat.app_geolocalizacao ?? true}
             assinatura={plat.app_assinatura ?? false}
             offline={plat.app_offline ?? true}
+            exigeCadastro={plat.app_exige_cadastro ?? true}
+            aprovacaoAdmin={plat.app_aprovacao_admin ?? false}
+            campos={plat.app_cadastro_campos ?? []}
           />
         )}
         {ptab === "permissoes" && plat && (

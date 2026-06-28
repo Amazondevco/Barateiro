@@ -1,18 +1,29 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useTransition } from "react";
+import {
+  Download,
+  ClipboardList,
+  ShieldCheck,
+  Smartphone,
+  Plus,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { PERMISSOES } from "@/lib/permissoes";
+import { cn } from "@/lib/utils";
 import {
   updateDepartamentosPadrao,
   updateUnidadesPadrao,
   updateUsuariosPadrao,
-  updateAplicativoPadrao,
   updatePermissoesPadrao,
+  salvarAplicativoPadrao,
+  type CadastroCampo,
   type FormState,
 } from "./plataforma-actions";
 
@@ -285,40 +296,124 @@ const APP_OPTS = [
   },
 ] as const;
 
+const TIPO_CAMPO = [
+  { v: "texto", l: "Texto" },
+  { v: "email", l: "E-mail" },
+  { v: "telefone", l: "Telefone" },
+  { v: "numero", l: "Número" },
+  { v: "data", l: "Data" },
+  { v: "foto", l: "Foto" },
+];
+
 export function AplicativoPadraoForm({
   foto,
   geo,
   assinatura,
   offline,
+  exigeCadastro,
+  aprovacaoAdmin,
+  campos,
 }: {
   foto: boolean;
   geo: boolean;
   assinatura: boolean;
   offline: boolean;
+  exigeCadastro: boolean;
+  aprovacaoAdmin: boolean;
+  campos: CadastroCampo[];
 }) {
-  const [state, action, pending] = useActionState(
-    updateAplicativoPadrao,
-    {} as FormState,
+  const [state, setState] = useState<FormState>({});
+  const [pending, start] = useTransition();
+
+  const [vFoto, setVFoto] = useState(foto);
+  const [vGeo, setVGeo] = useState(geo);
+  const [vAssin, setVAssin] = useState(assinatura);
+  const [vOffline, setVOffline] = useState(offline);
+  const [vExige, setVExige] = useState(exigeCadastro);
+  const [vAprov, setVAprov] = useState(aprovacaoAdmin);
+  const [lista, setLista] = useState<CadastroCampo[]>(
+    campos.length
+      ? campos
+      : [{ label: "Nome completo", tipo: "texto", obrigatorio: true }],
   );
-  const valores: Record<string, boolean> = { foto, geo, assinatura, offline };
+
+  const toggles: { v: boolean; set: (b: boolean) => void; o: typeof APP_OPTS[number] }[] =
+    [
+      { v: vFoto, set: setVFoto, o: APP_OPTS[0] },
+      { v: vGeo, set: setVGeo, o: APP_OPTS[1] },
+      { v: vAssin, set: setVAssin, o: APP_OPTS[2] },
+      { v: vOffline, set: setVOffline, o: APP_OPTS[3] },
+    ];
+
+  function patchCampo(i: number, patch: Partial<CadastroCampo>) {
+    setLista((l) => l.map((c, k) => (k === i ? { ...c, ...patch } : c)));
+  }
+
+  function salvar() {
+    setState({});
+    start(async () => {
+      const r = await salvarAplicativoPadrao({
+        foto: vFoto,
+        geo: vGeo,
+        assinatura: vAssin,
+        offline: vOffline,
+        exigeCadastro: vExige,
+        aprovacaoAdmin: vAprov,
+        campos: lista,
+      });
+      setState(r);
+    });
+  }
+
+  // Fluxo: Baixar → Cadastro → [Aprovação] → Acesso
+  const fluxo: { icon: LucideIcon; titulo: string; desc: string }[] = [
+    {
+      icon: Download,
+      titulo: "1. Baixar o app",
+      desc: "O gerente instala o aplicativo no celular.",
+    },
+    {
+      icon: ClipboardList,
+      titulo: "2. Preencher cadastro",
+      desc: vExige
+        ? "Obrigatório: sem completar os dados, não acessa o app."
+        : "Opcional: o gerente pode acessar sem completar.",
+    },
+    ...(vAprov
+      ? [
+          {
+            icon: ShieldCheck,
+            titulo: "3. Aprovação do admin",
+            desc: "O admin da rede revisa e libera o acesso.",
+          },
+        ]
+      : []),
+    {
+      icon: Smartphone,
+      titulo: `${vAprov ? 4 : 3}. Acessar e preencher`,
+      desc: "Liberado, o gerente passa a preencher os checklists.",
+    },
+  ];
+
   return (
-    <Card>
-      <CardContent>
-        <form action={action} className="max-w-2xl space-y-4">
+    <div className="space-y-4">
+      {/* Funcionalidades */}
+      <Card>
+        <CardContent className="space-y-4">
           <Header
-            titulo="Aplicativo padrão"
+            titulo="Funcionalidades do app"
             desc="Como o app dos gerentes funciona por padrão nas redes novas."
           />
           <div className="space-y-2">
-            {APP_OPTS.map((o) => (
+            {toggles.map(({ v, set, o }) => (
               <label
                 key={o.name}
                 className="flex cursor-pointer items-start gap-3 rounded-lg border border-input p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/10"
               >
                 <input
                   type="checkbox"
-                  name={o.name}
-                  defaultChecked={valores[o.name]}
+                  checked={v}
+                  onChange={(e) => set(e.target.checked)}
                   className="mt-0.5 accent-[var(--primary)]"
                 />
                 <span>
@@ -330,14 +425,154 @@ export function AplicativoPadraoForm({
               </label>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Fluxo de acesso */}
+      <Card>
+        <CardContent className="space-y-4">
+          <Header
+            titulo="Fluxo de acesso do app"
+            desc="Como o gerente entra no app — do download ao primeiro checklist."
+          />
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {fluxo.map((f) => {
+              const Icon = f.icon;
+              return (
+                <div
+                  key={f.titulo}
+                  className="rounded-xl border border-border bg-muted/30 p-3"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <p className="mt-2 text-sm font-semibold">{f.titulo}</p>
+                  <p className="text-xs text-muted-foreground">{f.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="space-y-2 border-t border-border pt-4">
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-input p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/10">
+              <input
+                type="checkbox"
+                checked={vExige}
+                onChange={(e) => setVExige(e.target.checked)}
+                className="mt-0.5 accent-[var(--primary)]"
+              />
+              <span>
+                <span className="block text-sm font-medium">
+                  Exigir cadastro completo para acessar
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  Sem preencher os dados obrigatórios, o gerente não acessa o
+                  app.
+                </span>
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-input p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/10">
+              <input
+                type="checkbox"
+                checked={vAprov}
+                onChange={(e) => setVAprov(e.target.checked)}
+                className="mt-0.5 accent-[var(--primary)]"
+              />
+              <span>
+                <span className="block text-sm font-medium">
+                  Aprovação do admin antes de liberar
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  O acesso só é liberado após o admin da rede aprovar o cadastro.
+                </span>
+              </span>
+            </label>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Campos do cadastro */}
+      <Card>
+        <CardContent className="space-y-4">
+          <Header
+            titulo="Cadastro do gerente"
+            desc="Dados que o gerente precisa preencher para liberar o acesso."
+          />
+          <div className="space-y-2">
+            {lista.map((c, i) => (
+              <div
+                key={i}
+                className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2 sm:flex-nowrap"
+              >
+                <Input
+                  value={c.label}
+                  onChange={(e) => patchCampo(i, { label: e.target.value })}
+                  placeholder="Nome do campo (ex.: CPF)"
+                  className="h-9 min-w-40 flex-1"
+                />
+                <Select
+                  value={c.tipo}
+                  onChange={(e) => patchCampo(i, { tipo: e.target.value })}
+                  className="h-9 w-full sm:w-36"
+                >
+                  {TIPO_CAMPO.map((t) => (
+                    <option key={t.v} value={t.v}>
+                      {t.l}
+                    </option>
+                  ))}
+                </Select>
+                <label
+                  className={cn(
+                    "flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium",
+                    c.obrigatorio
+                      ? "border-primary/40 bg-primary/10 text-primary"
+                      : "border-input text-muted-foreground",
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={c.obrigatorio}
+                    onChange={(e) =>
+                      patchCampo(i, { obrigatorio: e.target.checked })
+                    }
+                    className="accent-[var(--primary)]"
+                  />
+                  Obrigatório
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setLista((l) => l.filter((_, k) => k !== i))}
+                  aria-label="Remover campo"
+                  className="shrink-0 text-muted-foreground hover:text-danger"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setLista((l) => [
+                ...l,
+                { label: "", tipo: "texto", obrigatorio: false },
+              ])
+            }
+          >
+            <Plus className="h-4 w-4" /> Adicionar campo
+          </Button>
+
           <Status state={state} />
           <div className="flex justify-end">
-            <Button type="submit" disabled={pending}>
+            <Button type="button" onClick={salvar} disabled={pending}>
               {pending ? "Salvando…" : "Salvar padrão"}
             </Button>
           </div>
-        </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

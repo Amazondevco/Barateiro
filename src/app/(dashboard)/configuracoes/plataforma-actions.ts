@@ -134,15 +134,37 @@ export async function updatePermissoesPadrao(
   });
 }
 
-/** Padrões do aplicativo dos gerentes. */
-export async function updateAplicativoPadrao(
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
+export type CadastroCampo = {
+  label: string;
+  tipo: string;
+  obrigatorio: boolean;
+};
+
+/** Padrões do aplicativo dos gerentes: funcionalidades + fluxo de acesso. */
+export async function salvarAplicativoPadrao(data: {
+  foto: boolean;
+  geo: boolean;
+  assinatura: boolean;
+  offline: boolean;
+  exigeCadastro: boolean;
+  aprovacaoAdmin: boolean;
+  campos: CadastroCampo[];
+}): Promise<FormState> {
+  const campos = data.campos
+    .map((c) => ({
+      label: String(c.label ?? "").trim(),
+      tipo: String(c.tipo ?? "texto"),
+      obrigatorio: !!c.obrigatorio,
+    }))
+    .filter((c) => c.label);
+
   return savePlataforma({
-    app_foto_obrigatoria: formData.get("foto") === "on",
-    app_geolocalizacao: formData.get("geo") === "on",
-    app_assinatura: formData.get("assinatura") === "on",
-    app_offline: formData.get("offline") === "on",
+    app_foto_obrigatoria: data.foto,
+    app_geolocalizacao: data.geo,
+    app_assinatura: data.assinatura,
+    app_offline: data.offline,
+    app_exige_cadastro: data.exigeCadastro,
+    app_aprovacao_admin: data.aprovacaoAdmin,
+    app_cadastro_campos: campos,
   });
 }
