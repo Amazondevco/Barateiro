@@ -85,36 +85,39 @@ function normalize(raw: unknown): AiForm {
 export async function generateFormulario(
   descricao: string,
 ): Promise<AiResult> {
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = process.env.GROQ_API_KEY;
   if (!key)
-    return {
-      error:
-        "IA ainda não configurada. Defina ANTHROPIC_API_KEY no servidor.",
-    };
+    return { error: "IA ainda não configurada. Defina GROQ_API_KEY no servidor." };
   if (!descricao.trim())
     return { error: "Descreva o que o formulário precisa verificar." };
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
+    const res = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          temperature: 0.4,
+          max_tokens: 4000,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: SYSTEM },
+            { role: "user", content: descricao },
+          ],
+        }),
       },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 4000,
-        system: SYSTEM,
-        messages: [{ role: "user", content: descricao }],
-      }),
-    });
+    );
 
     if (!res.ok) {
       return { error: `Falha ao gerar (IA respondeu ${res.status}).` };
     }
     const json = await res.json();
-    const text: string = json?.content?.[0]?.text ?? "";
+    const text: string = json?.choices?.[0]?.message?.content ?? "";
     const data = normalize(JSON.parse(extractJson(text)));
     if (!data.secoes.length)
       return { error: "A IA não conseguiu estruturar. Tente detalhar mais." };

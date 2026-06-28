@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import {
   type SecaoDraft,
   type FormularioPayload,
 } from "./actions";
+import { AiFormDialog } from "./ai-form-dialog";
+import type { AiForm } from "./ai-actions";
 import type { ItemTipo, UnidadeTipo } from "@/lib/types";
 
 const TIPO_ITEM: { v: ItemTipo; l: string }[] = [
@@ -50,6 +52,7 @@ export function FormBuilder({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
 
   const [nome, setNome] = useState(initial?.nome ?? "");
   const [descricao, setDescricao] = useState(initial?.descricao ?? "");
@@ -82,6 +85,13 @@ export function FormBuilder({
     );
   }
 
+  function applyAi(data: AiForm) {
+    setNome(data.nome);
+    setDescricao(data.descricao);
+    setTipoUnidade(data.tipo_unidade);
+    if (data.secoes.length) setSecoes(data.secoes);
+  }
+
   function save() {
     setError(null);
     const payload: FormularioPayload = {
@@ -101,6 +111,15 @@ export function FormBuilder({
 
   return (
     <div className="max-w-4xl space-y-6 pb-4">
+      <div className="flex justify-end">
+        <Button type="button" variant="outline" onClick={() => setAiOpen(true)}>
+          <Sparkles className="h-4 w-4" /> Criar com IA
+        </Button>
+      </div>
+      {aiOpen && (
+        <AiFormDialog onClose={() => setAiOpen(false)} onGenerated={applyAi} />
+      )}
+
       {/* Dados */}
       <Card>
         <CardContent className="space-y-4">
