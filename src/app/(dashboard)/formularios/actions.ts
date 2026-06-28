@@ -9,10 +9,13 @@ export type ItemDraft = {
   tipo: ItemTipo;
   obriga_obs: boolean;
   obriga_foto: boolean;
+  opcoes?: string[];
+  ajuda?: string;
 };
 export type SecaoDraft = {
   titulo: string;
   permite_na: boolean;
+  quebra_pagina?: boolean;
   itens: ItemDraft[];
 };
 export type FormularioPayload = {
@@ -81,6 +84,7 @@ export async function saveFormulario(
         titulo: sec.titulo.trim() || `Seção ${si + 1}`,
         ordem: si,
         permite_na: sec.permite_na,
+        quebra_pagina: sec.quebra_pagina ?? false,
       })
       .select("id")
       .single();
@@ -96,6 +100,11 @@ export async function saveFormulario(
           tipo: it.tipo,
           obriga_obs_quando_nao: it.obriga_obs,
           obriga_foto_quando_nao: it.obriga_foto,
+          opcoes:
+            it.tipo === "multipla_escolha" && it.opcoes?.length
+              ? it.opcoes.filter((o) => o.trim())
+              : null,
+          ajuda: it.ajuda?.trim() || null,
         })),
       );
       if (iErr) return { error: iErr.message };

@@ -31,7 +31,7 @@ export default async function EditarFormularioPage({
       supabase
         .from("formulario_secoes")
         .select(
-          "id,titulo,permite_na,ordem,formulario_itens(texto,tipo,ordem,obriga_obs_quando_nao,obriga_foto_quando_nao)",
+          "id,titulo,permite_na,quebra_pagina,ordem,formulario_itens(texto,tipo,ordem,obriga_obs_quando_nao,obriga_foto_quando_nao,opcoes,ajuda)",
         )
         .eq("formulario_id", id)
         .order("ordem"),
@@ -56,6 +56,7 @@ export default async function EditarFormularioPage({
     secoes: (secoes ?? []).map((s) => ({
       titulo: s.titulo,
       permite_na: s.permite_na,
+      quebra_pagina: s.quebra_pagina ?? false,
       itens: (
         (s.formulario_itens as {
           texto: string;
@@ -63,6 +64,8 @@ export default async function EditarFormularioPage({
           ordem: number;
           obriga_obs_quando_nao: boolean;
           obriga_foto_quando_nao: boolean;
+          opcoes: string[] | null;
+          ajuda: string | null;
         }[]) ?? []
       )
         .sort((a, b) => a.ordem - b.ordem)
@@ -71,6 +74,8 @@ export default async function EditarFormularioPage({
           tipo: it.tipo,
           obriga_obs: it.obriga_obs_quando_nao,
           obriga_foto: it.obriga_foto_quando_nao,
+          opcoes: it.opcoes ?? [],
+          ajuda: it.ajuda ?? "",
         })),
     })),
   };

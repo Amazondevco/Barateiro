@@ -11,7 +11,17 @@ export type AiForm = {
 };
 export type AiResult = { ok?: boolean; data?: AiForm; error?: string };
 
-const TIPOS: ItemTipo[] = ["ok_nao", "sim_nao", "abastecido_ruptura"];
+const TIPOS: ItemTipo[] = [
+  "ok_nao",
+  "sim_nao",
+  "abastecido_ruptura",
+  "texto",
+  "numero",
+  "data",
+  "foto",
+  "assinatura",
+  "multipla_escolha",
+];
 const UNIDADES: UnidadeTipo[] = ["loja", "cd", "escritorio", "outro"];
 
 const SYSTEM = `Você é um especialista em formulários digitais de checklist operacional para redes de supermercado.

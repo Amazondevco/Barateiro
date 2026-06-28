@@ -5,7 +5,16 @@ export type Papel = "super_admin" | "admin_supermercado" | "gerente";
 export type UnidadeTipo = "loja" | "cd" | "escritorio" | "outro";
 export type DeptoEscopo = "rede" | "unidade";
 export type EntidadeStatus = "ativo" | "inativo";
-export type ItemTipo = "ok_nao" | "sim_nao" | "abastecido_ruptura";
+export type ItemTipo =
+  | "ok_nao"
+  | "sim_nao"
+  | "abastecido_ruptura"
+  | "texto"
+  | "numero"
+  | "data"
+  | "foto"
+  | "assinatura"
+  | "multipla_escolha";
 export type RespostaStatus = "no_prazo" | "fora_prazo";
 
 export type Profile = {
