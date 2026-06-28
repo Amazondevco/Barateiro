@@ -90,6 +90,7 @@ type Initial = {
   tipo_unidade: UnidadeTipo;
   status: "ativo" | "inativo";
   departamentos: string[];
+  usuarios: string[];
   secoes: {
     titulo: string;
     permite_na: boolean;
@@ -138,11 +139,13 @@ export function FormBuilder({
   redeId,
   formId,
   departamentos,
+  usuarios,
   initial,
 }: {
   redeId: string;
   formId: string | null;
   departamentos: { id: string; nome: string }[];
+  usuarios: { id: string; nome: string; departamento_id: string | null }[];
   initial?: Initial;
 }) {
   const router = useRouter();
@@ -159,7 +162,23 @@ export function FormBuilder({
     initial?.status ?? "ativo",
   );
   const [deps, setDeps] = useState<string[]>(initial?.departamentos ?? []);
+  const [depMode, setDepMode] = useState<"todos" | "especificos">(
+    initial?.departamentos?.length ? "especificos" : "todos",
+  );
+  const [usuariosSel, setUsuariosSel] = useState<string[]>(
+    initial?.usuarios ?? [],
+  );
+  const [userMode, setUserMode] = useState<"todos" | "especificos">(
+    initial?.usuarios?.length ? "especificos" : "todos",
+  );
   const [secoes, setSecoes] = useState<BSecao[]>(() => initialSecoes(initial));
+
+  const usuariosVisiveis =
+    depMode === "especificos" && deps.length
+      ? usuarios.filter(
+          (u) => u.departamento_id && deps.includes(u.departamento_id),
+        )
+      : usuarios;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -266,7 +285,8 @@ export function FormBuilder({
       descricao,
       tipo_unidade: tipoUnidade,
       status,
-      departamentos: deps,
+      departamentos: depMode === "especificos" ? deps : [],
+      usuarios: userMode === "especificos" ? usuariosSel : [],
       secoes: secoes.map((s) => ({
         titulo: s.titulo,
         permite_na: s.permite_na,
@@ -360,41 +380,124 @@ export function FormBuilder({
         </CardContent>
       </Card>
 
-      {/* Departamentos */}
+      {/* Quem preenche */}
       <Card>
-        <CardContent className="space-y-3">
-          <h3 className="font-semibold">Atribuir a departamentos</h3>
-          {departamentos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nenhum departamento cadastrado. Crie em Configurações →
-              Departamentos.
-            </p>
-          ) : (
+        <CardContent className="space-y-6">
+          <h3 className="font-semibold">Quem preenche</h3>
+
+          {/* Departamentos */}
+          <div className="space-y-2">
+            <Label>Departamentos</Label>
             <div className="flex flex-wrap gap-2">
-              {departamentos.map((d) => {
-                const on = deps.includes(d.id);
-                return (
-                  <button
-                    key={d.id}
-                    type="button"
-                    onClick={() =>
-                      setDeps((v) =>
-                        on ? v.filter((x) => x !== d.id) : [...v, d.id],
-                      )
-                    }
-                    className={cn(
-                      "rounded-lg border px-3 py-2 text-sm transition-colors",
-                      on
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-input hover:bg-muted",
-                    )}
-                  >
-                    {d.nome}
-                  </button>
-                );
-              })}
+              {(["todos", "especificos"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setDepMode(m)}
+                  className={cn(
+                    "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
+                    depMode === m
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-input hover:bg-muted",
+                  )}
+                >
+                  {m === "todos" ? "Todos da unidade" : "Departamentos específicos"}
+                </button>
+              ))}
             </div>
-          )}
+            {depMode === "especificos" &&
+              (departamentos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum departamento. Crie em Configurações → Departamentos.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {departamentos.map((d) => {
+                    const on = deps.includes(d.id);
+                    return (
+                      <label
+                        key={d.id}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm",
+                          on
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-input hover:bg-muted",
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={on}
+                          onChange={() =>
+                            setDeps((v) =>
+                              on ? v.filter((x) => x !== d.id) : [...v, d.id],
+                            )
+                          }
+                          className="accent-[var(--primary)]"
+                        />
+                        {d.nome}
+                      </label>
+                    );
+                  })}
+                </div>
+              ))}
+          </div>
+
+          {/* Usuários */}
+          <div className="space-y-2">
+            <Label>Usuários</Label>
+            <div className="flex flex-wrap gap-2">
+              {(["todos", "especificos"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setUserMode(m)}
+                  className={cn(
+                    "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
+                    userMode === m
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-input hover:bg-muted",
+                  )}
+                >
+                  {m === "todos" ? "Todos do departamento" : "Usuários específicos"}
+                </button>
+              ))}
+            </div>
+            {userMode === "especificos" &&
+              (usuariosVisiveis.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum usuário disponível.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {usuariosVisiveis.map((u) => {
+                    const on = usuariosSel.includes(u.id);
+                    return (
+                      <label
+                        key={u.id}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm",
+                          on
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-input hover:bg-muted",
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={on}
+                          onChange={() =>
+                            setUsuariosSel((v) =>
+                              on ? v.filter((x) => x !== u.id) : [...v, u.id],
+                            )
+                          }
+                          className="accent-[var(--primary)]"
+                        />
+                        {u.nome}
+                      </label>
+                    );
+                  })}
+                </div>
+              ))}
+          </div>
         </CardContent>
       </Card>
 

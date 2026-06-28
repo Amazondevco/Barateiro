@@ -24,17 +24,30 @@ export default async function NovoFormularioPage() {
   }
 
   const supabase = await createClient();
-  const { data: deps } = await supabase
-    .from("departamentos")
-    .select("id,nome")
-    .eq("rede_id", redeId)
-    .eq("status", "ativo")
-    .order("nome");
+  const [{ data: deps }, { data: usuarios }] = await Promise.all([
+    supabase
+      .from("departamentos")
+      .select("id,nome")
+      .eq("rede_id", redeId)
+      .eq("status", "ativo")
+      .order("nome"),
+    supabase
+      .from("profiles")
+      .select("id,nome,departamento_id")
+      .eq("rede_id", redeId)
+      .eq("status", "ativo")
+      .order("nome"),
+  ]);
 
   return (
     <>
       <PageHeader title="Novo formulário" />
-      <FormBuilder redeId={redeId} formId={null} departamentos={deps ?? []} />
+      <FormBuilder
+        redeId={redeId}
+        formId={null}
+        departamentos={deps ?? []}
+        usuarios={usuarios ?? []}
+      />
     </>
   );
 }

@@ -24,26 +24,41 @@ export default async function EditarFormularioPage({
     .single();
   if (!form) notFound();
 
-  const [{ data: secoes }, { data: assigned }, { data: deps }] =
-    await Promise.all([
-      supabase
-        .from("formulario_secoes")
-        .select(
-          "id,titulo,permite_na,quebra_pagina,ordem,formulario_itens(texto,tipo,ordem,obriga_obs_quando_nao,obriga_foto_quando_nao,opcoes,ajuda)",
-        )
-        .eq("formulario_id", id)
-        .order("ordem"),
-      supabase
-        .from("formulario_departamentos")
-        .select("departamento_id")
-        .eq("formulario_id", id),
-      supabase
-        .from("departamentos")
-        .select("id,nome")
-        .eq("rede_id", redeId)
-        .eq("status", "ativo")
-        .order("nome"),
-    ]);
+  const [
+    { data: secoes },
+    { data: assigned },
+    { data: assignedUsers },
+    { data: deps },
+    { data: usuarios },
+  ] = await Promise.all([
+    supabase
+      .from("formulario_secoes")
+      .select(
+        "id,titulo,permite_na,quebra_pagina,ordem,formulario_itens(texto,tipo,ordem,obriga_obs_quando_nao,obriga_foto_quando_nao,opcoes,ajuda)",
+      )
+      .eq("formulario_id", id)
+      .order("ordem"),
+    supabase
+      .from("formulario_departamentos")
+      .select("departamento_id")
+      .eq("formulario_id", id),
+    supabase
+      .from("formulario_usuarios")
+      .select("user_id")
+      .eq("formulario_id", id),
+    supabase
+      .from("departamentos")
+      .select("id,nome")
+      .eq("rede_id", redeId)
+      .eq("status", "ativo")
+      .order("nome"),
+    supabase
+      .from("profiles")
+      .select("id,nome,departamento_id")
+      .eq("rede_id", redeId)
+      .eq("status", "ativo")
+      .order("nome"),
+  ]);
 
   const initial = {
     nome: form.nome,
@@ -51,6 +66,7 @@ export default async function EditarFormularioPage({
     tipo_unidade: form.tipo_unidade as UnidadeTipo,
     status: form.status as "ativo" | "inativo",
     departamentos: (assigned ?? []).map((a) => a.departamento_id),
+    usuarios: (assignedUsers ?? []).map((a) => a.user_id),
     secoes: (secoes ?? []).map((s) => ({
       titulo: s.titulo,
       permite_na: s.permite_na,
@@ -85,6 +101,7 @@ export default async function EditarFormularioPage({
         redeId={redeId}
         formId={id}
         departamentos={deps ?? []}
+        usuarios={usuarios ?? []}
         initial={initial}
       />
     </>

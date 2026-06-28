@@ -23,7 +23,8 @@ export type FormularioPayload = {
   descricao: string;
   tipo_unidade: UnidadeTipo;
   status: "ativo" | "inativo";
-  departamentos: string[];
+  departamentos: string[]; // vazio = todos da unidade
+  usuarios: string[]; // vazio = todos do departamento
   secoes: SecaoDraft[];
 };
 
@@ -111,7 +112,7 @@ export async function saveFormulario(
     }
   }
 
-  // Atribuição a departamentos
+  // Atribuição a departamentos (vazio = todos da unidade)
   await supabase.from("formulario_departamentos").delete().eq("formulario_id", id);
   if (payload.departamentos.length) {
     await supabase.from("formulario_departamentos").insert(
@@ -119,6 +120,14 @@ export async function saveFormulario(
         formulario_id: id,
         departamento_id,
       })),
+    );
+  }
+
+  // Atribuição a usuários específicos (vazio = todos do departamento)
+  await supabase.from("formulario_usuarios").delete().eq("formulario_id", id);
+  if (payload.usuarios.length) {
+    await supabase.from("formulario_usuarios").insert(
+      payload.usuarios.map((user_id) => ({ formulario_id: id, user_id })),
     );
   }
 
