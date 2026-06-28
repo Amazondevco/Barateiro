@@ -23,6 +23,9 @@ export type FormularioPayload = {
   descricao: string;
   tipo_unidade: UnidadeTipo;
   status: "ativo" | "inativo";
+  disponivel_de: string | null; // "HH:MM" ou null = sem restrição
+  disponivel_ate: string | null; // "HH:MM" ou null = sem restrição
+  dias_semana: number[]; // ISO 1=Seg…7=Dom; vazio = todos os dias
   unidades: string[]; // vazio = todas as unidades do tipo
   departamentos: string[]; // vazio = todos da unidade
   usuarios: string[]; // vazio = todos do departamento
@@ -48,6 +51,9 @@ export async function saveFormulario(
     descricao: payload.descricao.trim() || null,
     tipo_unidade: payload.tipo_unidade,
     status: payload.status,
+    disponivel_de: payload.disponivel_de || null,
+    disponivel_ate: payload.disponivel_ate || null,
+    dias_semana: payload.dias_semana ?? [],
   };
 
   if (!id) {

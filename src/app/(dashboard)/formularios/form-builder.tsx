@@ -56,6 +56,17 @@ const TIPO_ITEM: { v: ItemTipo; l: string }[] = [
 // Tipos de resposta em que "Obs./Foto ao Não" faz sentido
 const TIPOS_NAO: ItemTipo[] = ["ok_nao", "sim_nao", "abastecido_ruptura"];
 
+// ISO: 1=Seg … 7=Dom
+const DIAS_SEMANA = [
+  { v: 1, l: "Seg" },
+  { v: 2, l: "Ter" },
+  { v: 3, l: "Qua" },
+  { v: 4, l: "Qui" },
+  { v: 5, l: "Sex" },
+  { v: 6, l: "Sáb" },
+  { v: 7, l: "Dom" },
+];
+
 type BItem = {
   _id: string;
   texto: string;
@@ -91,6 +102,9 @@ type Initial = {
   descricao: string;
   tipo_unidade: UnidadeTipo;
   status: "ativo" | "inativo";
+  disponivel_de?: string | null;
+  disponivel_ate?: string | null;
+  dias_semana?: number[];
   unidades: string[];
   departamentos: string[];
   usuarios: string[];
@@ -168,6 +182,11 @@ export function FormBuilder({
   );
   const [status, setStatus] = useState<"ativo" | "inativo">(
     initial?.status ?? "ativo",
+  );
+  const [dispDe, setDispDe] = useState(initial?.disponivel_de ?? "");
+  const [dispAte, setDispAte] = useState(initial?.disponivel_ate ?? "");
+  const [diasSemana, setDiasSemana] = useState<number[]>(
+    initial?.dias_semana ?? [],
   );
   const [selUnidades, setSelUnidades] = useState<string[]>(
     initial?.unidades ?? [],
@@ -317,6 +336,9 @@ export function FormBuilder({
       descricao,
       tipo_unidade: tipoUnidade,
       status,
+      disponivel_de: dispDe || null,
+      disponivel_ate: dispAte || null,
+      dias_semana: diasSemana,
       unidades: selUnidades,
       departamentos: deps,
       usuarios: usuariosSel,
@@ -433,6 +455,67 @@ export function FormBuilder({
               </Select>
             </div>
           </div>
+          {/* Quando preencher (janela de horário + dias da semana) */}
+          <div className="space-y-3 border-t border-border pt-4">
+            <div>
+              <h4 className="text-sm font-semibold">Quando preencher</h4>
+              <p className="text-xs text-muted-foreground">
+                Defina a janela de horário e os dias em que o checklist fica
+                disponível. Vazio = sem restrição (vale o dia todo / todos os
+                dias).
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="disp_de">Disponível das</Label>
+                <Input
+                  id="disp_de"
+                  type="time"
+                  value={dispDe}
+                  onChange={(e) => setDispDe(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="disp_ate">Até as (horário limite)</Label>
+                <Input
+                  id="disp_ate"
+                  type="time"
+                  value={dispAte}
+                  onChange={(e) => setDispAte(e.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Dias da semana</Label>
+              <div className="flex flex-wrap gap-2">
+                {DIAS_SEMANA.map((d) => {
+                  const on = diasSemana.includes(d.v);
+                  return (
+                    <button
+                      key={d.v}
+                      type="button"
+                      onClick={() =>
+                        setDiasSemana((prev) =>
+                          on
+                            ? prev.filter((x) => x !== d.v)
+                            : [...prev, d.v].sort((a, b) => a - b),
+                        )
+                      }
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                        on
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-input text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {d.l}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
           {/* Quem preenche (cascata Unidade → Departamento → Usuário) */}
           <div className="space-y-3 border-t border-border pt-4">
             <div>

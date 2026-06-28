@@ -35,7 +35,9 @@ export default async function FormularioDetailPage({
   const supabase = await createClient();
   const { data: form } = await supabase
     .from("formularios")
-    .select("id,nome,descricao,tipo_unidade,status")
+    .select(
+      "id,nome,descricao,tipo_unidade,status,disponivel_de,disponivel_ate,dias_semana",
+    )
     .eq("id", id)
     .single();
   if (!form) notFound();
@@ -88,6 +90,9 @@ type Form = {
   descricao: string | null;
   tipo_unidade: string;
   status: string;
+  disponivel_de: string | null;
+  disponivel_ate: string | null;
+  dias_semana: number[] | null;
 };
 
 async function ModeloTab({
@@ -152,6 +157,13 @@ async function ModeloTab({
     descricao: form.descricao ?? "",
     tipo_unidade: form.tipo_unidade as UnidadeTipo,
     status: form.status as "ativo" | "inativo",
+    disponivel_de: form.disponivel_de
+      ? form.disponivel_de.slice(0, 5)
+      : null,
+    disponivel_ate: form.disponivel_ate
+      ? form.disponivel_ate.slice(0, 5)
+      : null,
+    dias_semana: form.dias_semana ?? [],
     unidades: (assignedUnits ?? []).map((a) => a.unidade_id),
     departamentos: (assigned ?? []).map((a) => a.departamento_id),
     usuarios: (assignedUsers ?? []).map((a) => a.user_id),
