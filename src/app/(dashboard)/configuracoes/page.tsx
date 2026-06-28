@@ -31,12 +31,12 @@ import { PermissoesTab } from "./permissoes-tab";
 export const metadata = { title: "Configurações — Amazon Dev & Co." };
 
 const TABS = [
-  { key: "unidades", label: "Unidades" },
-  { key: "departamentos", label: "Departamentos" },
-  { key: "usuarios", label: "Usuários" },
-  { key: "permissoes", label: "Permissões" },
-  { key: "auditoria", label: "Auditoria" },
-  { key: "aparencia", label: "Aparência" },
+  { key: "unidades", label: "Unidades", adminOnly: false },
+  { key: "departamentos", label: "Departamentos", adminOnly: false },
+  { key: "usuarios", label: "Usuários", adminOnly: false },
+  { key: "permissoes", label: "Permissões", adminOnly: false },
+  { key: "auditoria", label: "Auditoria", adminOnly: true },
+  { key: "aparencia", label: "Aparência", adminOnly: true },
 ];
 
 const TIPO_LABEL: Record<string, string> = {
@@ -56,6 +56,12 @@ export default async function ConfiguracoesPage({
   const redeId = profile?.rede_id ?? null;
   const supabase = await createClient();
 
+  // Auditoria e Aparência são exclusivas do admin da rede
+  const isAdminRede = profile?.papel === "admin_supermercado";
+  const visibleTabs = TABS.filter((t) => !t.adminOnly || isAdminRede);
+  const tabPermitida = visibleTabs.some((t) => t.key === tab);
+  const activeTab = tabPermitida ? tab : "unidades";
+
   return (
     <>
       <PageHeader
@@ -67,12 +73,12 @@ export default async function ConfiguracoesPage({
 
       {/* Abas horizontais */}
       <div className="mb-6 flex gap-1 overflow-x-auto border-b border-border">
-        {TABS.map((t) => (
+        {visibleTabs.map((t) => (
           <Link
             key={t.key}
             href={`/configuracoes?tab=${t.key}`}
             className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-              tab === t.key
+              activeTab === t.key
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
@@ -91,22 +97,22 @@ export default async function ConfiguracoesPage({
         </Card>
       ) : (
         <>
-          {tab === "unidades" && (
+          {activeTab === "unidades" && (
             <UnidadesTab supabase={supabase} redeId={redeId} />
           )}
-          {tab === "departamentos" && (
+          {activeTab === "departamentos" && (
             <DepartamentosTab supabase={supabase} redeId={redeId} />
           )}
-          {tab === "usuarios" && (
+          {activeTab === "usuarios" && (
             <UsuariosTab supabase={supabase} redeId={redeId} />
           )}
-          {tab === "permissoes" && (
+          {activeTab === "permissoes" && (
             <CargosTab supabase={supabase} redeId={redeId} />
           )}
-          {tab === "auditoria" && (
+          {activeTab === "auditoria" && isAdminRede && (
             <AuditoriaTab supabase={supabase} redeId={redeId} />
           )}
-          {tab === "aparencia" && rede && (
+          {activeTab === "aparencia" && isAdminRede && rede && (
             <AparenciaForm
               action={updateAparencia.bind(null, redeId)}
               redeId={redeId}
