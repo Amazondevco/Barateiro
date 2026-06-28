@@ -68,6 +68,14 @@ export function RespostasView({
 
   const link = (p: Periodo, r?: string) =>
     `?tab=respostas&periodo=${p}${r ? `&ref=${r}` : ""}`;
+  const hojeISO = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+      2,
+      "0",
+    )}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+  const ehHoje = refIso === hojeISO;
   const filtrosAtivos =
     (busca.trim() ? 1 : 0) +
     selUnidades.length +
@@ -214,7 +222,12 @@ export function RespostasView({
           </div>
           <Link
             href={link(periodo)}
-            className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+            className={cn(
+              "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
+              ehHoje
+                ? "border-success/40 bg-success-bg text-success"
+                : "border-warning/40 bg-warning-bg text-warning hover:opacity-90",
+            )}
           >
             Hoje
           </Link>
