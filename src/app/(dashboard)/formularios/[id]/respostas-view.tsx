@@ -1,10 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import Link from "next/link";
+import {
+  Search,
+  SlidersHorizontal,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { RefDatePicker } from "./ref-date-picker";
 import { cn } from "@/lib/utils";
 
 export type RespostaRow = {
@@ -28,23 +35,44 @@ function parseISO(s: string): Date {
   return new Date(y, m - 1, d);
 }
 
+type Periodo = "dia" | "semana" | "mes";
+
 export function RespostasView({
   rows,
   unidades,
   departamentos,
   usuarios,
   agruparPorDia,
+  periodo,
+  refIso,
+  prevRef,
+  nextRef,
+  periodLabel,
 }: {
   rows: RespostaRow[];
   unidades: Unidade[];
   departamentos: Departamento[];
   usuarios: Usuario[];
   agruparPorDia: boolean;
+  periodo: Periodo;
+  refIso: string;
+  prevRef: string;
+  nextRef: string;
+  periodLabel: string;
 }) {
   const [busca, setBusca] = useState("");
   const [selUnidades, setSelUnidades] = useState<string[]>([]);
   const [selDeps, setSelDeps] = useState<string[]>([]);
   const [selUsuarios, setSelUsuarios] = useState<string[]>([]);
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
+
+  const link = (p: Periodo, r?: string) =>
+    `?tab=respostas&periodo=${p}${r ? `&ref=${r}` : ""}`;
+  const filtrosAtivos =
+    (busca.trim() ? 1 : 0) +
+    selUnidades.length +
+    selDeps.length +
+    selUsuarios.length;
 
   // Cascata Unidade → Departamento → Usuário
   const depsForUnits = (units: string[]) =>
@@ -117,50 +145,128 @@ export function RespostasView({
 
   return (
     <div className="space-y-4">
-      {/* Busca + filtros */}
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="w-64">
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">
-            Buscar
-          </label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar por unidade ou gerente…"
-              className="h-10 w-full rounded-lg border border-input bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-            />
+      {/* Barra de período + navegação */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
+            {(
+              [
+                ["dia", "Dia"],
+                ["semana", "Semana"],
+                ["mes", "Mês"],
+              ] as const
+            ).map(([p, l]) => (
+              <Link
+                key={p}
+                href={link(p, refIso)}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  periodo === p
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {l}
+              </Link>
+            ))}
           </div>
+
+          <button
+            type="button"
+            onClick={() => setFiltrosAbertos((v) => !v)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
+              filtrosAbertos || filtrosAtivos > 0
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border bg-card text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Mais filtros
+            {filtrosAtivos > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold text-primary-foreground">
+                {filtrosAtivos}
+              </span>
+            )}
+          </button>
         </div>
-        <Campo label="Unidade">
-          <MultiSelect
-            emptyLabel="Todas as unidades"
-            options={unidades}
-            selected={selUnidades}
-            onChange={onUnidades}
-            emptyHint="Nenhuma unidade."
-          />
-        </Campo>
-        <Campo label="Departamento">
-          <MultiSelect
-            emptyLabel="Todos os deptos"
-            options={depsVisiveis}
-            selected={selDeps}
-            onChange={onDeps}
-            emptyHint="Nenhum departamento."
-          />
-        </Campo>
-        <Campo label="Usuário">
-          <MultiSelect
-            emptyLabel="Todos os usuários"
-            options={usuariosVisiveis}
-            selected={selUsuarios}
-            onChange={setSelUsuarios}
-            emptyHint="Nenhum usuário."
-          />
-        </Campo>
+
+        <div className="flex items-center gap-1">
+          <Link
+            href={link(periodo, prevRef)}
+            aria-label="Período anterior"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Link>
+          <span className="min-w-44 text-center text-sm font-medium capitalize">
+            {periodLabel}
+          </span>
+          <Link
+            href={link(periodo, nextRef)}
+            aria-label="Próximo período"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+          <div className="ml-1">
+            <RefDatePicker periodo={periodo} refIso={refIso} />
+          </div>
+          <Link
+            href={link(periodo)}
+            className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            Hoje
+          </Link>
+        </div>
       </div>
+
+      {/* Busca + filtros (expandível) */}
+      {filtrosAbertos && (
+        <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-muted/30 p-3">
+          <div className="w-64">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Buscar
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar por unidade ou gerente…"
+                className="h-10 w-full rounded-lg border border-input bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </div>
+          </div>
+          <Campo label="Unidade">
+            <MultiSelect
+              emptyLabel="Todas as unidades"
+              options={unidades}
+              selected={selUnidades}
+              onChange={onUnidades}
+              emptyHint="Nenhuma unidade."
+            />
+          </Campo>
+          <Campo label="Departamento">
+            <MultiSelect
+              emptyLabel="Todos os deptos"
+              options={depsVisiveis}
+              selected={selDeps}
+              onChange={onDeps}
+              emptyHint="Nenhum departamento."
+            />
+          </Campo>
+          <Campo label="Usuário">
+            <MultiSelect
+              emptyLabel="Todos os usuários"
+              options={usuariosVisiveis}
+              selected={selUsuarios}
+              onChange={setSelUsuarios}
+              emptyHint="Nenhum usuário."
+            />
+          </Campo>
+        </div>
+      )}
 
       {/* Resumo */}
       <div className="grid grid-cols-3 gap-3">

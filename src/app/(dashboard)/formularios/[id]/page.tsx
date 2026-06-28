@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { FormBuilder } from "../form-builder";
 import { RespostasView, type RespostaRow } from "./respostas-view";
-import { RefDatePicker } from "./ref-date-picker";
-import { cn } from "@/lib/utils";
 import type { ItemTipo, UnidadeTipo } from "@/lib/types";
 
 const TABS = [
@@ -332,76 +330,18 @@ async function RespostasTab({
     };
   });
 
-  // Navegação preservando o período
-  const prevRef = fmtISO(shiftRef(periodo, refDate, -1));
-  const nextRef = fmtISO(shiftRef(periodo, refDate, 1));
-  const link = (p: Periodo, r?: string) =>
-    `?tab=respostas&periodo=${p}${r ? `&ref=${r}` : ""}`;
-
   return (
-    <div className="space-y-4">
-      {/* Seletor de período + navegação */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
-          {(
-            [
-              ["dia", "Dia"],
-              ["semana", "Semana"],
-              ["mes", "Mês"],
-            ] as const
-          ).map(([p, l]) => (
-            <Link
-              key={p}
-              href={link(p, fmtISO(refDate))}
-              className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                periodo === p
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {l}
-            </Link>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Link
-            href={link(periodo, prevRef)}
-            aria-label="Período anterior"
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Link>
-          <span className="min-w-44 text-center text-sm font-medium capitalize">
-            {labelFor(periodo, start, end)}
-          </span>
-          <Link
-            href={link(periodo, nextRef)}
-            aria-label="Próximo período"
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Link>
-          <div className="ml-1">
-            <RefDatePicker periodo={periodo} refIso={fmtISO(refDate)} />
-          </div>
-          <Link
-            href={link(periodo)}
-            className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            Hoje
-          </Link>
-        </div>
-      </div>
-
-      <RespostasView
-        rows={rows}
-        unidades={unidadesData ?? []}
-        departamentos={deps ?? []}
-        usuarios={usuarios ?? []}
-        agruparPorDia={periodo !== "dia"}
-      />
-    </div>
+    <RespostasView
+      rows={rows}
+      unidades={unidadesData ?? []}
+      departamentos={deps ?? []}
+      usuarios={usuarios ?? []}
+      agruparPorDia={periodo !== "dia"}
+      periodo={periodo}
+      refIso={fmtISO(refDate)}
+      prevRef={fmtISO(shiftRef(periodo, refDate, -1))}
+      nextRef={fmtISO(shiftRef(periodo, refDate, 1))}
+      periodLabel={labelFor(periodo, start, end)}
+    />
   );
 }
