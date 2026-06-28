@@ -1,21 +1,15 @@
 import { Search } from "lucide-react";
 
-// Busca que expande para a esquerda ao passar o mouse (ou ao focar).
+// Busca que expande para a esquerda no hover/foco, com a lupa DENTRO do campo.
 export function TopbarSearch() {
   return (
-    <div className="group hidden items-center md:flex">
+    <div className="group relative hidden items-center justify-end md:flex">
       <input
         type="search"
         placeholder="Buscar…"
-        className="h-9 w-0 rounded-lg border border-transparent bg-transparent px-0 text-sm opacity-0 outline-none transition-all duration-200 placeholder:text-muted-foreground group-hover:w-56 group-hover:border-foreground/20 group-hover:bg-foreground/10 group-hover:px-3 group-hover:opacity-100 focus:w-56 focus:border-foreground/20 focus:bg-foreground/10 focus:px-3 focus:opacity-100"
+        className="h-9 w-9 cursor-pointer rounded-lg border border-transparent bg-transparent pl-3 pr-9 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-transparent group-hover:w-56 group-hover:cursor-text group-hover:border-foreground/20 group-hover:bg-foreground/10 group-hover:placeholder:text-muted-foreground focus:w-56 focus:cursor-text focus:border-foreground/20 focus:bg-foreground/10 focus:placeholder:text-muted-foreground"
       />
-      <button
-        type="button"
-        aria-label="Buscar"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted"
-      >
-        <Search className="h-5 w-5" />
-      </button>
+      <Search className="pointer-events-none absolute right-2.5 h-5 w-5 text-foreground" />
     </div>
   );
 }
