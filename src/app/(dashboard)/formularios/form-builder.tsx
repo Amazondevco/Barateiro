@@ -579,29 +579,42 @@ function PhonePreview({
   nome: string;
   secoes: BSecao[];
 }) {
+  // Agrupa seções em etapas (páginas) a partir das quebras de página
+  const steps: BSecao[][] = [];
+  secoes.forEach((sec, i) => {
+    if (i === 0 || sec.quebra_pagina) steps.push([sec]);
+    else steps[steps.length - 1].push(sec);
+  });
+
+  const [step, setStep] = useState(0);
+  const total = steps.length;
+  const idx = total ? Math.min(step, total - 1) : 0;
+  const stepSecoes = steps[idx] ?? [];
+  const isLast = idx >= total - 1;
+
   return (
     <div className="sticky top-4 w-[300px]">
       <div className="mx-auto rounded-[2.5rem] border-[10px] border-slate-900 bg-slate-900 shadow-xl">
-        <div className="relative h-[600px] overflow-hidden rounded-[1.8rem] bg-background">
+        <div className="relative flex h-[600px] flex-col overflow-hidden rounded-[1.8rem] bg-background">
           {/* notch */}
           <div className="absolute left-1/2 top-0 z-10 h-6 w-28 -translate-x-1/2 rounded-b-2xl bg-slate-900" />
-          <div className="h-full overflow-y-auto">
-            {/* header do app (cor primária) */}
-            <div className="bg-primary px-4 pb-3 pt-8 text-primary-foreground">
-              <p className="truncate text-sm font-semibold">
-                {nome || "Novo formulário"}
-              </p>
-              <p className="text-[11px] opacity-80">Checklist · hoje</p>
-            </div>
-            <div className="space-y-4 p-3">
-              {secoes.map((sec, si) => (
+          {/* header do app (cor primária) */}
+          <div className="bg-primary px-4 pb-3 pt-8 text-primary-foreground">
+            <p className="truncate text-sm font-semibold">
+              {nome || "Novo formulário"}
+            </p>
+            <p className="text-[11px] opacity-80">
+              {total > 1 ? `Etapa ${idx + 1} de ${total}` : "Checklist · hoje"}
+            </p>
+          </div>
+
+          {/* conteúdo da etapa */}
+          <div className="flex-1 space-y-4 overflow-y-auto p-3">
+            {stepSecoes.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Sem itens</p>
+            ) : (
+              stepSecoes.map((sec, si) => (
                 <div key={sec._id} className="space-y-2">
-                  {sec.quebra_pagina && si > 0 && (
-                    <div className="flex items-center gap-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                      <span className="h-px flex-1 bg-primary/30" /> Etapa{" "}
-                      {si + 1} <span className="h-px flex-1 bg-primary/30" />
-                    </div>
-                  )}
                   <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                     {sec.titulo || `Seção ${si + 1}`}
                   </p>
@@ -611,12 +624,37 @@ function PhonePreview({
                     sec.itens.map((it) => <PreviewItem key={it._id} item={it} />)
                   )}
                 </div>
-              ))}
-              {/* botão enviar */}
-              <div className="rounded-xl bg-primary py-2 text-center text-sm font-semibold text-primary-foreground">
+              ))
+            )}
+          </div>
+
+          {/* navegação entre etapas */}
+          <div className="flex gap-2 border-t border-border bg-background p-3">
+            {idx > 0 && (
+              <button
+                type="button"
+                onClick={() => setStep((s) => Math.max(0, s - 1))}
+                className="flex-1 rounded-xl border border-border py-2 text-sm font-medium"
+              >
+                Voltar
+              </button>
+            )}
+            {isLast ? (
+              <button
+                type="button"
+                className="flex-1 rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground"
+              >
                 Enviar checklist
-              </div>
-            </div>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setStep((s) => s + 1)}
+                className="flex-1 rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground"
+              >
+                Próxima
+              </button>
+            )}
           </div>
         </div>
       </div>
