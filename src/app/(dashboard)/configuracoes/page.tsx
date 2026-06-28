@@ -99,7 +99,9 @@ export default async function ConfiguracoesPage({
           {tab === "aparencia" && rede && (
             <AparenciaForm
               action={updateAparencia.bind(null, redeId)}
+              redeId={redeId}
               logoUrl={rede.logo_url}
+              bannerUrl={rede.banner_url}
               cor={rede.cor_primaria}
               nome={rede.nome}
             />

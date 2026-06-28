@@ -5,6 +5,7 @@ export type RedeBrand = {
   id: string;
   nome: string;
   logo_url: string | null;
+  banner_url: string | null;
   cor_primaria: string | null;
 };
 
@@ -20,7 +21,7 @@ export async function getSessionContext(): Promise<{
   const supabase = await createClient();
   const { data } = await supabase
     .from("redes")
-    .select("id,nome,logo_url,cor_primaria")
+    .select("id,nome,logo_url,banner_url,cor_primaria")
     .eq("id", profile.rede_id)
     .single();
 
