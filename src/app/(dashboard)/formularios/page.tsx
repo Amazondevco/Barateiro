@@ -25,28 +25,38 @@ export default async function FormulariosPage() {
   }
 
   const supabase = await createClient();
-  const [{ data: formsRaw }, { data: unidades }, { data: departamentos }] =
-    await Promise.all([
-      supabase
-        .from("formularios")
-        .select(
-          "id,nome,status,tipo_unidade,formulario_secoes(count),formulario_departamentos(departamento_id)",
-        )
-        .eq("rede_id", redeId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("unidades")
-        .select("id,nome,tipo")
-        .eq("rede_id", redeId)
-        .eq("status", "ativo")
-        .order("nome"),
-      supabase
-        .from("departamentos")
-        .select("id,nome,unidade_id")
-        .eq("rede_id", redeId)
-        .eq("status", "ativo")
-        .order("nome"),
-    ]);
+  const [
+    { data: formsRaw },
+    { data: unidades },
+    { data: departamentos },
+    { data: usuarios },
+  ] = await Promise.all([
+    supabase
+      .from("formularios")
+      .select(
+        "id,nome,status,tipo_unidade,formulario_secoes(count),formulario_departamentos(departamento_id),formulario_usuarios(user_id)",
+      )
+      .eq("rede_id", redeId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("unidades")
+      .select("id,nome,tipo")
+      .eq("rede_id", redeId)
+      .eq("status", "ativo")
+      .order("nome"),
+    supabase
+      .from("departamentos")
+      .select("id,nome,unidade_id")
+      .eq("rede_id", redeId)
+      .eq("status", "ativo")
+      .order("nome"),
+    supabase
+      .from("profiles")
+      .select("id,nome,departamento_id")
+      .eq("rede_id", redeId)
+      .eq("status", "ativo")
+      .order("nome"),
+  ]);
 
   const forms = (formsRaw ?? []).map((f) => ({
     id: f.id,
@@ -57,6 +67,9 @@ export default async function FormulariosPage() {
     depIds: (
       (f.formulario_departamentos as { departamento_id: string }[]) ?? []
     ).map((d) => d.departamento_id),
+    userIds: (
+      (f.formulario_usuarios as { user_id: string }[]) ?? []
+    ).map((u) => u.user_id),
   }));
 
   return (
@@ -66,6 +79,7 @@ export default async function FormulariosPage() {
         forms={forms}
         unidades={unidades ?? []}
         departamentos={departamentos ?? []}
+        usuarios={usuarios ?? []}
       />
     </>
   );

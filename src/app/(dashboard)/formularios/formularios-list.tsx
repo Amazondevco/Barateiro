@@ -16,9 +16,11 @@ type FormItem = {
   tipo_unidade: string;
   secoes: number;
   depIds: string[];
+  userIds: string[];
 };
 type Unidade = { id: string; nome: string; tipo: string };
 type Departamento = { id: string; nome: string; unidade_id: string | null };
+type Usuario = { id: string; nome: string; departamento_id: string | null };
 
 const TIPO_OPTS = [
   { id: "loja", nome: "Loja" },
@@ -31,14 +33,48 @@ export function FormulariosList({
   forms,
   unidades,
   departamentos,
+  usuarios,
 }: {
   forms: FormItem[];
   unidades: Unidade[];
   departamentos: Departamento[];
+  usuarios: Usuario[];
 }) {
   const [selTipos, setSelTipos] = useState<string[]>([]);
   const [selUnidades, setSelUnidades] = useState<string[]>([]);
   const [selDeps, setSelDeps] = useState<string[]>([]);
+  const [selUsuarios, setSelUsuarios] = useState<string[]>([]);
+
+  // Cascata Unidade → Departamento → Usuário
+  const depsForUnits = (units: string[]) =>
+    units.length
+      ? departamentos.filter(
+          (d) => d.unidade_id === null || units.includes(d.unidade_id),
+        )
+      : departamentos;
+  const usersFor = (units: string[], deps: string[]) => {
+    if (!units.length && !deps.length) return usuarios;
+    const eff = deps.length ? deps : depsForUnits(units).map((d) => d.id);
+    return usuarios.filter(
+      (u) => u.departamento_id && eff.includes(u.departamento_id),
+    );
+  };
+  const depsVisiveis = depsForUnits(selUnidades);
+  const usuariosVisiveis = usersFor(selUnidades, selDeps);
+
+  function onUnidades(next: string[]) {
+    const vdepIds = new Set(depsForUnits(next).map((d) => d.id));
+    const newDeps = selDeps.filter((id) => vdepIds.has(id));
+    const vuserIds = new Set(usersFor(next, newDeps).map((u) => u.id));
+    setSelUnidades(next);
+    setSelDeps(newDeps);
+    setSelUsuarios((p) => p.filter((id) => vuserIds.has(id)));
+  }
+  function onDeps(next: string[]) {
+    const vuserIds = new Set(usersFor(selUnidades, next).map((u) => u.id));
+    setSelDeps(next);
+    setSelUsuarios((p) => p.filter((id) => vuserIds.has(id)));
+  }
 
   const filtered = forms.filter((f) => {
     if (selTipos.length && !selTipos.includes(f.tipo_unidade)) return false;
@@ -49,11 +85,17 @@ export function FormulariosList({
       if (!ok) return false;
     }
 
+    if (selUsuarios.length) {
+      const ok =
+        f.userIds.length === 0 || f.userIds.some((u) => selUsuarios.includes(u));
+      if (!ok) return false;
+    }
+
     if (selUnidades.length) {
       const ok = selUnidades.some((uid) => {
         const u = unidades.find((x) => x.id === uid);
         if (!u || f.tipo_unidade !== u.tipo) return false;
-        if (f.depIds.length === 0) return true; // aplica a todos
+        if (f.depIds.length === 0) return true;
         return f.depIds.some((did) => {
           const dep = departamentos.find((d) => d.id === did);
           return dep && (dep.unidade_id === u.id || dep.unidade_id === null);
@@ -83,34 +125,42 @@ export function FormulariosList({
 
   return (
     <div className="space-y-4">
-      {/* Filtros + Novo formulário (mesmo nível) */}
       <div className="flex flex-wrap items-end gap-3">
-        <Filtro label="Tipo de formulário" empty="Todos os tipos">
+        <Campo label="Tipo de formulário">
           <MultiSelect
             emptyLabel="Todos os tipos"
             options={TIPO_OPTS}
             selected={selTipos}
             onChange={setSelTipos}
           />
-        </Filtro>
-        <Filtro label="Unidade" empty="Todas as unidades">
+        </Campo>
+        <Campo label="Unidade">
           <MultiSelect
             emptyLabel="Todas as unidades"
             options={unidades}
             selected={selUnidades}
-            onChange={setSelUnidades}
+            onChange={onUnidades}
             emptyHint="Nenhuma unidade."
           />
-        </Filtro>
-        <Filtro label="Departamento" empty="Todos os deptos">
+        </Campo>
+        <Campo label="Departamento">
           <MultiSelect
             emptyLabel="Todos os deptos"
-            options={departamentos}
+            options={depsVisiveis}
             selected={selDeps}
-            onChange={setSelDeps}
+            onChange={onDeps}
             emptyHint="Nenhum departamento."
           />
-        </Filtro>
+        </Campo>
+        <Campo label="Usuário">
+          <MultiSelect
+            emptyLabel="Todos os usuários"
+            options={usuariosVisiveis}
+            selected={selUsuarios}
+            onChange={setSelUsuarios}
+            emptyHint="Nenhum usuário."
+          />
+        </Campo>
 
         <Link href="/formularios/novo" className="ml-auto">
           <Button>
@@ -157,16 +207,15 @@ export function FormulariosList({
   );
 }
 
-function Filtro({
+function Campo({
   label,
   children,
 }: {
   label: string;
-  empty: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-48">
+    <div className="w-44">
       <label className="mb-1 block text-xs font-medium text-muted-foreground">
         {label}
       </label>

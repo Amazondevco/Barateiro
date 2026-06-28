@@ -91,6 +91,7 @@ type Initial = {
   descricao: string;
   tipo_unidade: UnidadeTipo;
   status: "ativo" | "inativo";
+  unidades: string[];
   departamentos: string[];
   usuarios: string[];
   secoes: {
@@ -140,6 +141,7 @@ function initialSecoes(initial?: Initial): BSecao[] {
 export function FormBuilder({
   redeId,
   formId,
+  unidades,
   departamentos,
   usuarios,
   initial,
@@ -147,7 +149,8 @@ export function FormBuilder({
 }: {
   redeId: string;
   formId: string | null;
-  departamentos: { id: string; nome: string }[];
+  unidades: { id: string; nome: string }[];
+  departamentos: { id: string; nome: string; unidade_id: string | null }[];
   usuarios: { id: string; nome: string; departamento_id: string | null }[];
   initial?: Initial;
   hideBack?: boolean;
@@ -166,17 +169,48 @@ export function FormBuilder({
   const [status, setStatus] = useState<"ativo" | "inativo">(
     initial?.status ?? "ativo",
   );
+  const [selUnidades, setSelUnidades] = useState<string[]>(
+    initial?.unidades ?? [],
+  );
   const [deps, setDeps] = useState<string[]>(initial?.departamentos ?? []);
   const [usuariosSel, setUsuariosSel] = useState<string[]>(
     initial?.usuarios ?? [],
   );
   const [secoes, setSecoes] = useState<BSecao[]>(() => initialSecoes(initial));
 
-  const usuariosVisiveis = deps.length
-    ? usuarios.filter(
-        (u) => u.departamento_id && deps.includes(u.departamento_id),
-      )
-    : usuarios;
+  // Cascata: Unidade → Departamento → Usuário
+  const depsForUnits = (units: string[]) =>
+    units.length
+      ? departamentos.filter(
+          (d) => d.unidade_id === null || units.includes(d.unidade_id),
+        )
+      : departamentos;
+  const usersFor = (units: string[], departs: string[]) => {
+    if (!units.length && !departs.length) return usuarios;
+    const effDepIds = departs.length
+      ? departs
+      : depsForUnits(units).map((d) => d.id);
+    return usuarios.filter(
+      (u) => u.departamento_id && effDepIds.includes(u.departamento_id),
+    );
+  };
+
+  const depsVisiveis = depsForUnits(selUnidades);
+  const usuariosVisiveis = usersFor(selUnidades, deps);
+
+  function onUnidades(next: string[]) {
+    const vdepIds = new Set(depsForUnits(next).map((d) => d.id));
+    const newDeps = deps.filter((id) => vdepIds.has(id));
+    const vuserIds = new Set(usersFor(next, newDeps).map((u) => u.id));
+    setSelUnidades(next);
+    setDeps(newDeps);
+    setUsuariosSel((prev) => prev.filter((id) => vuserIds.has(id)));
+  }
+  function onDeps(next: string[]) {
+    const vuserIds = new Set(usersFor(selUnidades, next).map((u) => u.id));
+    setDeps(next);
+    setUsuariosSel((prev) => prev.filter((id) => vuserIds.has(id)));
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -283,6 +317,7 @@ export function FormBuilder({
       descricao,
       tipo_unidade: tipoUnidade,
       status,
+      unidades: selUnidades,
       departamentos: deps,
       usuarios: usuariosSel,
       secoes: secoes.map((s) => ({
@@ -398,28 +433,44 @@ export function FormBuilder({
               </Select>
             </div>
           </div>
-          {/* Quem preenche */}
-          <div className="space-y-4 border-t border-border pt-4">
-            <h4 className="text-sm font-semibold">Quem preenche</h4>
-            <div className="grid gap-4 sm:grid-cols-2">
+          {/* Quem preenche (cascata Unidade → Departamento → Usuário) */}
+          <div className="space-y-3 border-t border-border pt-4">
+            <div>
+              <h4 className="text-sm font-semibold">Quem preenche</h4>
+              <p className="text-xs text-muted-foreground">
+                Vazio = todos. Escolher unidades filtra os departamentos, e
+                escolher departamentos filtra os usuários.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <Label>Unidades</Label>
+                <MultiSelect
+                  emptyLabel="Todas as unidades"
+                  options={unidades}
+                  selected={selUnidades}
+                  onChange={onUnidades}
+                  emptyHint="Nenhuma unidade."
+                />
+              </div>
               <div>
                 <Label>Departamentos</Label>
                 <MultiSelect
-                  emptyLabel="Todos da unidade"
-                  options={departamentos}
+                  emptyLabel="Todos os departamentos"
+                  options={depsVisiveis}
                   selected={deps}
-                  onChange={setDeps}
-                  emptyHint="Crie em Configurações → Departamentos."
+                  onChange={onDeps}
+                  emptyHint="Nenhum departamento."
                 />
               </div>
               <div>
                 <Label>Usuários</Label>
                 <MultiSelect
-                  emptyLabel="Todos do departamento"
+                  emptyLabel="Todos os usuários"
                   options={usuariosVisiveis}
                   selected={usuariosSel}
                   onChange={setUsuariosSel}
-                  emptyHint="Nenhum usuário disponível."
+                  emptyHint="Nenhum usuário."
                 />
               </div>
             </div>

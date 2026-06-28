@@ -23,6 +23,7 @@ export type FormularioPayload = {
   descricao: string;
   tipo_unidade: UnidadeTipo;
   status: "ativo" | "inativo";
+  unidades: string[]; // vazio = todas as unidades do tipo
   departamentos: string[]; // vazio = todos da unidade
   usuarios: string[]; // vazio = todos do departamento
   secoes: SecaoDraft[];
@@ -110,6 +111,14 @@ export async function saveFormulario(
       );
       if (iErr) return { error: iErr.message };
     }
+  }
+
+  // Atribuição a unidades (vazio = todas do tipo)
+  await supabase.from("formulario_unidades").delete().eq("formulario_id", id);
+  if (payload.unidades.length) {
+    await supabase.from("formulario_unidades").insert(
+      payload.unidades.map((unidade_id) => ({ formulario_id: id, unidade_id })),
+    );
   }
 
   // Atribuição a departamentos (vazio = todos da unidade)

@@ -24,20 +24,27 @@ export default async function NovoFormularioPage() {
   }
 
   const supabase = await createClient();
-  const [{ data: deps }, { data: usuarios }] = await Promise.all([
-    supabase
-      .from("departamentos")
-      .select("id,nome")
-      .eq("rede_id", redeId)
-      .eq("status", "ativo")
-      .order("nome"),
-    supabase
-      .from("profiles")
-      .select("id,nome,departamento_id")
-      .eq("rede_id", redeId)
-      .eq("status", "ativo")
-      .order("nome"),
-  ]);
+  const [{ data: unidades }, { data: deps }, { data: usuarios }] =
+    await Promise.all([
+      supabase
+        .from("unidades")
+        .select("id,nome")
+        .eq("rede_id", redeId)
+        .eq("status", "ativo")
+        .order("nome"),
+      supabase
+        .from("departamentos")
+        .select("id,nome,unidade_id")
+        .eq("rede_id", redeId)
+        .eq("status", "ativo")
+        .order("nome"),
+      supabase
+        .from("profiles")
+        .select("id,nome,departamento_id")
+        .eq("rede_id", redeId)
+        .eq("status", "ativo")
+        .order("nome"),
+    ]);
 
   return (
     <>
@@ -45,6 +52,7 @@ export default async function NovoFormularioPage() {
       <FormBuilder
         redeId={redeId}
         formId={null}
+        unidades={unidades ?? []}
         departamentos={deps ?? []}
         usuarios={usuarios ?? []}
       />

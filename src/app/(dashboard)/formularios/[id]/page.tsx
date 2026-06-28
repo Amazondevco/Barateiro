@@ -90,8 +90,10 @@ async function ModeloTab({
 }) {
   const [
     { data: secoes },
+    { data: assignedUnits },
     { data: assigned },
     { data: assignedUsers },
+    { data: unidadesData },
     { data: deps },
     { data: usuarios },
   ] = await Promise.all([
@@ -103,6 +105,10 @@ async function ModeloTab({
       .eq("formulario_id", form.id)
       .order("ordem"),
     supabase
+      .from("formulario_unidades")
+      .select("unidade_id")
+      .eq("formulario_id", form.id),
+    supabase
       .from("formulario_departamentos")
       .select("departamento_id")
       .eq("formulario_id", form.id),
@@ -111,8 +117,14 @@ async function ModeloTab({
       .select("user_id")
       .eq("formulario_id", form.id),
     supabase
-      .from("departamentos")
+      .from("unidades")
       .select("id,nome")
+      .eq("rede_id", redeId)
+      .eq("status", "ativo")
+      .order("nome"),
+    supabase
+      .from("departamentos")
+      .select("id,nome,unidade_id")
       .eq("rede_id", redeId)
       .eq("status", "ativo")
       .order("nome"),
@@ -129,6 +141,7 @@ async function ModeloTab({
     descricao: form.descricao ?? "",
     tipo_unidade: form.tipo_unidade as UnidadeTipo,
     status: form.status as "ativo" | "inativo",
+    unidades: (assignedUnits ?? []).map((a) => a.unidade_id),
     departamentos: (assigned ?? []).map((a) => a.departamento_id),
     usuarios: (assignedUsers ?? []).map((a) => a.user_id),
     secoes: (secoes ?? []).map((s) => ({
@@ -162,6 +175,7 @@ async function ModeloTab({
     <FormBuilder
       redeId={redeId}
       formId={form.id}
+      unidades={unidadesData ?? []}
       departamentos={deps ?? []}
       usuarios={usuarios ?? []}
       initial={initial}
