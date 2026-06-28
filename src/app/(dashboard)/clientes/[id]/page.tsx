@@ -46,20 +46,28 @@ export default async function RedeDetailPage({
 
   if (!rede) notFound();
 
-  const [{ data: unidades }, { data: usuarios }] = await Promise.all([
-    supabase
-      .from("unidades")
-      .select("id,nome,codigo,tipo,cidade,uf,status")
-      .eq("rede_id", id)
-      .order("nome"),
-    supabase
-      .from("profiles")
-      .select("id,nome,email,papel,status")
-      .eq("rede_id", id)
-      .order("nome"),
-  ]);
+  const [{ data: unidades }, { data: usuarios }, { data: departamentos }] =
+    await Promise.all([
+      supabase
+        .from("unidades")
+        .select("id,nome,codigo,tipo,cidade,uf,status")
+        .eq("rede_id", id)
+        .order("nome"),
+      supabase
+        .from("profiles")
+        .select("id,nome,email,papel,status")
+        .eq("rede_id", id)
+        .order("nome"),
+      supabase
+        .from("departamentos")
+        .select("id,nome")
+        .eq("rede_id", id)
+        .eq("status", "ativo")
+        .order("nome"),
+    ]);
 
   const unidadeOpts = (unidades ?? []).map((u) => ({ id: u.id, nome: u.nome }));
+  const deptoOpts = (departamentos ?? []).map((d) => ({ id: d.id, nome: d.nome }));
 
   return (
     <>
@@ -188,6 +196,7 @@ export default async function RedeDetailPage({
               action={createUsuario}
               redeId={id}
               unidades={unidadeOpts}
+              departamentos={deptoOpts}
             />
           </div>
           {(usuarios ?? []).length === 0 ? (

@@ -233,16 +233,33 @@ async function DepartamentosTab({ supabase, redeId }: { supabase: SB; redeId: st
 }
 
 async function UsuariosTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
-  const [{ data: usuarios }, { data: unidades }] = await Promise.all([
-    supabase.from("profiles").select("id,nome,email,papel,status").eq("rede_id", redeId).order("nome"),
-    supabase.from("unidades").select("id,nome").eq("rede_id", redeId).order("nome"),
-  ]);
+  const [{ data: usuarios }, { data: unidades }, { data: departamentos }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id,nome,email,papel,status,departamentos(nome)")
+        .eq("rede_id", redeId)
+        .order("nome"),
+      supabase.from("unidades").select("id,nome").eq("rede_id", redeId).order("nome"),
+      supabase
+        .from("departamentos")
+        .select("id,nome")
+        .eq("rede_id", redeId)
+        .eq("status", "ativo")
+        .order("nome"),
+    ]);
   const unidadeOpts = (unidades ?? []).map((u) => ({ id: u.id, nome: u.nome }));
+  const deptoOpts = (departamentos ?? []).map((d) => ({ id: d.id, nome: d.nome }));
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <AddUsuarioForm action={createUsuario} redeId={redeId} unidades={unidadeOpts} />
+        <AddUsuarioForm
+          action={createUsuario}
+          redeId={redeId}
+          unidades={unidadeOpts}
+          departamentos={deptoOpts}
+        />
       </div>
       {(usuarios ?? []).length === 0 ? (
         <EmptyState title="Nenhum usuário" description="Crie admins e gerentes desta rede." />
@@ -253,20 +270,25 @@ async function UsuariosTab({ supabase, redeId }: { supabase: SB; redeId: string 
               <TH>Nome</TH>
               <TH>E-mail</TH>
               <TH>Papel</TH>
+              <TH>Departamento</TH>
               <TH>Status</TH>
             </TR>
           </THead>
           <tbody>
-            {(usuarios ?? []).map((u) => (
-              <TR key={u.id}>
-                <TD className="font-medium">{u.nome || "—"}</TD>
-                <TD>{u.email}</TD>
-                <TD>{PAPEL_LABEL[u.papel as Papel]}</TD>
-                <TD>
-                  <Badge tone={u.status === "ativo" ? "success" : "neutral"}>{u.status}</Badge>
-                </TD>
-              </TR>
-            ))}
+            {(usuarios ?? []).map((u) => {
+              const depto = u.departamentos as unknown as { nome: string } | null;
+              return (
+                <TR key={u.id}>
+                  <TD className="font-medium">{u.nome || "—"}</TD>
+                  <TD>{u.email}</TD>
+                  <TD>{PAPEL_LABEL[u.papel as Papel]}</TD>
+                  <TD>{depto?.nome ?? "—"}</TD>
+                  <TD>
+                    <Badge tone={u.status === "ativo" ? "success" : "neutral"}>{u.status}</Badge>
+                  </TD>
+                </TR>
+              );
+            })}
           </tbody>
         </Table>
       )}

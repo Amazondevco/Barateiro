@@ -46,6 +46,18 @@ export default async function UsuariosPage() {
         ).data ?? []
       : [];
 
+  const deptoOpts =
+    !isSuper && profile?.rede_id
+      ? (
+          await supabase
+            .from("departamentos")
+            .select("id,nome")
+            .eq("rede_id", profile.rede_id)
+            .eq("status", "ativo")
+            .order("nome")
+        ).data ?? []
+      : [];
+
   return (
     <>
       <PageHeader
@@ -61,6 +73,7 @@ export default async function UsuariosPage() {
             redeId={isSuper ? undefined : (profile?.rede_id ?? undefined)}
             redes={redes ?? undefined}
             unidades={unidadeOpts}
+            departamentos={deptoOpts}
           />
         }
       />

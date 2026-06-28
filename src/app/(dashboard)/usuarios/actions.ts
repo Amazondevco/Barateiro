@@ -20,6 +20,8 @@ export async function createUsuario(
   const papel = String(formData.get("papel") ?? "gerente") as Papel;
   let rede_id: string | null =
     String(formData.get("rede_id") ?? "").trim() || null;
+  const departamentoId =
+    String(formData.get("departamento_id") ?? "").trim() || null;
   const unidadeIds = formData.getAll("unidade_ids").map((u) => String(u));
 
   if (!nome || !email || !senha)
@@ -37,8 +39,11 @@ export async function createUsuario(
   }
 
   if (papel === "super_admin") rede_id = null;
-  else if (!rede_id)
-    return { error: "Selecione a rede do usuário." };
+  else if (!rede_id) return { error: "Selecione a rede do usuário." };
+
+  // Usuário de uma rede precisa pertencer a um departamento
+  if (rede_id && !departamentoId)
+    return { error: "Selecione o departamento do usuário." };
 
   const admin = createAdminClient();
   const { data, error } = await admin.auth.admin.createUser({
@@ -50,6 +55,14 @@ export async function createUsuario(
 
   if (error) return { error: error.message };
   const userId = data.user?.id;
+
+  // Departamento do usuário
+  if (userId && departamentoId) {
+    await admin
+      .from("profiles")
+      .update({ departamento_id: departamentoId })
+      .eq("id", userId);
+  }
 
   // Vínculo com unidades (gerente)
   if (userId && unidadeIds.length) {

@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Modal } from "@/components/ui/modal";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { FormState } from "./departamento-actions";
@@ -23,69 +23,75 @@ export function AddDepartamentoForm({
 
   if (state.ok && open) setOpen(false);
 
-  if (!open) {
-    return (
+  return (
+    <>
       <Button onClick={() => setOpen(true)}>
         <Plus className="h-4 w-4" /> Novo departamento
       </Button>
-    );
-  }
 
-  return (
-    <Card>
-      <CardContent>
-        <form action={formAction} className="space-y-4">
-          <h3 className="font-semibold">Novo departamento</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <Label htmlFor="d_nome">Nome *</Label>
-              <Input id="d_nome" name="nome" placeholder="Ex.: Açougue, RH, Compras" required />
-            </div>
+      {open && (
+        <Modal title="Novo departamento" onClose={() => setOpen(false)}>
+          <form action={formAction} className="space-y-4">
             <div>
-              <Label htmlFor="d_escopo">Escopo</Label>
-              <Select
-                id="d_escopo"
-                name="escopo"
-                value={escopo}
-                onChange={(e) => setEscopo(e.target.value)}
-              >
-                <option value="unidade">De uma unidade</option>
-                <option value="rede">Geral da rede</option>
-              </Select>
+              <Label htmlFor="d_nome">Nome *</Label>
+              <Input
+                id="d_nome"
+                name="nome"
+                placeholder="Ex.: Açougue, RH, Compras"
+                required
+              />
             </div>
-            {escopo === "unidade" && (
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="d_unidade">Unidade</Label>
-                <Select id="d_unidade" name="unidade_id" defaultValue="">
-                  <option value="" disabled>
-                    Selecione
-                  </option>
-                  {unidades.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.nome}
-                    </option>
-                  ))}
+                <Label htmlFor="d_escopo">Escopo</Label>
+                <Select
+                  id="d_escopo"
+                  name="escopo"
+                  value={escopo}
+                  onChange={(e) => setEscopo(e.target.value)}
+                >
+                  <option value="unidade">De uma unidade</option>
+                  <option value="rede">Geral da rede</option>
                 </Select>
               </div>
+              {escopo === "unidade" && (
+                <div>
+                  <Label htmlFor="d_unidade">Unidade</Label>
+                  <Select id="d_unidade" name="unidade_id" defaultValue="">
+                    <option value="" disabled>
+                      Selecione
+                    </option>
+                    {unidades.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.nome}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            {state.error && (
+              <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
+                {state.error}
+              </p>
             )}
-          </div>
 
-          {state.error && (
-            <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
-              {state.error}
-            </p>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Salvando…" : "Adicionar"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={pending}>
+                {pending ? "Salvando…" : "Adicionar"}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
   );
 }
