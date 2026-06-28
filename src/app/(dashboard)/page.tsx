@@ -63,13 +63,12 @@ export default async function VisaoGeralPage() {
   return (
     <>
       <PageHeader
-        title={`Olá, ${profile?.nome?.split(" ")[0] || "bem-vindo"} 👋`}
-        crumb="Visão geral"
-        subtitle={
+        title="Visão geral"
+        subtitle={`Olá, ${profile?.nome?.split(" ")[0] || "bem-vindo"}! ${
           isSuper
             ? "Visão consolidada de todas as redes."
             : "Visão geral da sua rede."
-        }
+        }`}
       />
 
       {needsSetup && (

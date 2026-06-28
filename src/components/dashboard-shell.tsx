@@ -9,6 +9,7 @@ import { signOut } from "@/lib/auth-actions";
 import { PAPEL_LABEL, type Profile } from "@/lib/types";
 import type { RedeBrand } from "@/lib/auth";
 import { UserSwitcher } from "@/components/user-switcher";
+import { PageTitleProvider, TopbarTitle } from "@/components/page-title";
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -57,17 +58,15 @@ export function DashboardShell({
     .toUpperCase();
 
   return (
+    <PageTitleProvider>
     <div className="flex h-dvh overflow-hidden" style={brandStyle}>
-      {/* Sidebar desktop (recolhível) */}
-      <div
-        className={`hidden shrink-0 overflow-hidden transition-[width] duration-200 lg:block ${
-          collapsed ? "w-0" : "w-64"
-        }`}
-      >
+      {/* Sidebar desktop (recolhível em rail de ícones) */}
+      <div className="hidden lg:block">
         <Sidebar
           papel={profile.papel}
           brandName={rede?.nome}
           brandLogo={rede?.logo_url}
+          collapsed={collapsed}
         />
       </div>
 
@@ -92,12 +91,12 @@ export function DashboardShell({
       {/* Coluna principal */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             {/* Recolher/expandir sidebar (desktop) */}
             <Button
               variant="ghost"
               size="icon"
-              className="hidden lg:flex"
+              className="hidden shrink-0 lg:flex"
               onClick={toggleCollapsed}
               aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
               title={collapsed ? "Expandir menu" : "Recolher menu"}
@@ -112,15 +111,17 @@ export function DashboardShell({
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden"
+              className="shrink-0 lg:hidden"
               onClick={() => setOpen((v) => !v)}
               aria-label="Menu"
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
+            <div className="mx-1 hidden h-8 w-px shrink-0 bg-border lg:block" />
+            <TopbarTitle />
           </div>
 
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex shrink-0 items-center justify-end gap-2">
             <ThemeToggle />
 
             <div className="flex items-center gap-3 border-l border-border pl-3">
@@ -154,5 +155,6 @@ export function DashboardShell({
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
       </div>
     </div>
+    </PageTitleProvider>
   );
 }

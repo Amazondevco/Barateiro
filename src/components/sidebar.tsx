@@ -11,21 +11,34 @@ export function Sidebar({
   papel,
   brandName,
   brandLogo,
+  collapsed = false,
   onNavigate,
 }: {
   papel: Papel;
   brandName?: string;
   brandLogo?: string | null;
+  collapsed?: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
   const items = NAV.filter((i) => i.roles.includes(papel));
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col bg-sidebar">
-      <div className="flex h-16 items-center border-b border-sidebar-border px-5">
+    <aside
+      className={cn(
+        "flex h-full shrink-0 flex-col bg-sidebar transition-[width] duration-200",
+        collapsed ? "w-16" : "w-64",
+      )}
+    >
+      <div
+        className={cn(
+          "flex h-16 items-center border-b border-sidebar-border",
+          collapsed ? "justify-center px-0" : "px-5",
+        )}
+      >
         <Brand
           onDark
+          compact={collapsed}
           name={brandName}
           logoUrl={brandLogo}
           subtitle={brandName ? "Gestão da Rede" : undefined}
@@ -44,15 +57,17 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               onClick={onNavigate}
+              title={collapsed ? item.label : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center rounded-lg py-2 text-sm font-medium transition-colors",
+                collapsed ? "justify-center px-0" : "gap-3 px-3",
                 active
                   ? "bg-sidebar-active text-sidebar-active-foreground"
                   : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-white",
               )}
             >
               <Icon className="h-[18px] w-[18px] shrink-0" />
-              {item.label}
+              {!collapsed && item.label}
             </Link>
           );
         })}
