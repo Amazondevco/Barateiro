@@ -1,0 +1,80 @@
+import {
+  LayoutDashboard,
+  Building2,
+  ClipboardList,
+  Users,
+  BarChart3,
+  Receipt,
+  ScrollText,
+  LifeBuoy,
+  Settings,
+  type LucideIcon,
+} from "lucide-react";
+import type { Papel } from "@/lib/types";
+
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  roles: Papel[]; // papéis que enxergam o item
+};
+
+const ALL: Papel[] = ["super_admin", "admin_supermercado", "gerente"];
+
+export const NAV: NavItem[] = [
+  { href: "/", label: "Visão geral", icon: LayoutDashboard, roles: ALL },
+  {
+    href: "/clientes",
+    label: "Clientes (Redes)",
+    icon: Building2,
+    roles: ["super_admin"],
+  },
+  {
+    href: "/unidades",
+    label: "Unidades",
+    icon: Building2,
+    roles: ["admin_supermercado"],
+  },
+  {
+    href: "/formularios",
+    label: "Formulários",
+    icon: ClipboardList,
+    roles: ALL,
+  },
+  {
+    href: "/usuarios",
+    label: "Usuários",
+    icon: Users,
+    roles: ["super_admin", "admin_supermercado"],
+  },
+  {
+    href: "/relatorios",
+    label: "Relatórios",
+    icon: BarChart3,
+    roles: ["super_admin", "admin_supermercado"],
+  },
+  {
+    href: "/faturamento",
+    label: "Faturamento",
+    icon: Receipt,
+    roles: ["super_admin", "admin_supermercado"],
+  },
+  {
+    href: "/auditoria",
+    label: "Auditoria",
+    icon: ScrollText,
+    roles: ["super_admin", "admin_supermercado"],
+  },
+  {
+    href: "/suporte",
+    label: "Suporte",
+    icon: LifeBuoy,
+    roles: ALL,
+  },
+  {
+    href: "/configuracoes",
+    label: "Configurações",
+    icon: Settings,
+    roles: ["super_admin", "admin_supermercado"],
+  },
+];
