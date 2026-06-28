@@ -27,6 +27,7 @@ export type RespostaRow = {
   status: string;
   total_nao: number;
   total_itens: number;
+  enviado_em: string;
   unidade_id: string;
   unidade_nome: string;
   usuario_id: string;
@@ -67,6 +68,10 @@ export function RespostasView({
   const [selUnidades, setSelUnidades] = useState<string[]>([]);
   const [selDeps, setSelDeps] = useState<string[]>([]);
   const [selUsuarios, setSelUsuarios] = useState<string[]>([]);
+  const [prazo, setPrazo] = useState<"" | "no_prazo" | "fora_prazo">("");
+  const [pendencia, setPendencia] = useState<"" | "com" | "sem">("");
+  const [horaDe, setHoraDe] = useState("");
+  const [horaAte, setHoraAte] = useState("");
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const [visual, setVisual] = useState<Visualizacao>("tabela");
   const [visualModal, setVisualModal] = useState(false);
@@ -97,7 +102,17 @@ export function RespostasView({
     (busca.trim() ? 1 : 0) +
     selUnidades.length +
     selDeps.length +
-    selUsuarios.length;
+    selUsuarios.length +
+    (prazo ? 1 : 0) +
+    (pendencia ? 1 : 0) +
+    (horaDe ? 1 : 0) +
+    (horaAte ? 1 : 0);
+  const horaEnvio = (iso: string) => {
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2, "0")}:${String(
+      d.getMinutes(),
+    ).padStart(2, "0")}`;
+  };
 
   // Cascata Unidade → Departamento → Usuário
   const depsForUnits = (units: string[]) =>
@@ -148,9 +163,27 @@ export function RespostasView({
         return false;
       if (selUsuarios.length && !selUsuarios.includes(r.usuario_id))
         return false;
+      if (prazo && r.status !== prazo) return false;
+      if (pendencia === "com" && !(r.total_nao > 0)) return false;
+      if (pendencia === "sem" && r.total_nao > 0) return false;
+      if (horaDe || horaAte) {
+        const h = horaEnvio(r.enviado_em);
+        if (horaDe && h < horaDe) return false;
+        if (horaAte && h > horaAte) return false;
+      }
       return true;
     });
-  }, [rows, busca, selUnidades, selDeps, selUsuarios]);
+  }, [
+    rows,
+    busca,
+    selUnidades,
+    selDeps,
+    selUsuarios,
+    prazo,
+    pendencia,
+    horaDe,
+    horaAte,
+  ]);
 
   // Resumo (reflete os filtros)
   const totalEnvios = filtered.length;
@@ -301,6 +334,75 @@ export function RespostasView({
               emptyHint="Nenhum usuário."
             />
           </Campo>
+
+          {/* Prazo / pendência / horário de envio */}
+          <Campo label="Prazo">
+            <select
+              value={prazo}
+              onChange={(e) =>
+                setPrazo(e.target.value as "" | "no_prazo" | "fora_prazo")
+              }
+              className="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="">Todos</option>
+              <option value="no_prazo">No prazo</option>
+              <option value="fora_prazo">Fora do prazo</option>
+            </select>
+          </Campo>
+          <Campo label="Pendência">
+            <select
+              value={pendencia}
+              onChange={(e) =>
+                setPendencia(e.target.value as "" | "com" | "sem")
+              }
+              className="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="">Todas</option>
+              <option value="com">Com pendência</option>
+              <option value="sem">Sem pendência</option>
+            </select>
+          </Campo>
+          <div className="w-28">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Enviado das
+            </label>
+            <input
+              type="time"
+              value={horaDe}
+              onChange={(e) => setHoraDe(e.target.value)}
+              className="h-10 w-full rounded-lg border border-input bg-card px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+          <div className="w-28">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Até as
+            </label>
+            <input
+              type="time"
+              value={horaAte}
+              onChange={(e) => setHoraAte(e.target.value)}
+              className="h-10 w-full rounded-lg border border-input bg-card px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+
+          {filtrosAtivos > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setBusca("");
+                setSelUnidades([]);
+                setSelDeps([]);
+                setSelUsuarios([]);
+                setPrazo("");
+                setPendencia("");
+                setHoraDe("");
+                setHoraAte("");
+              }}
+              className="h-10 rounded-lg border border-border bg-card px-3 text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Limpar filtros
+            </button>
+          )}
         </div>
       )}
 
