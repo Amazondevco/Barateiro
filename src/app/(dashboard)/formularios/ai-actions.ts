@@ -135,10 +135,22 @@ async function callGroq(userMessage: string): Promise<AiResult> {
 
 export async function generateFormulario(
   descricao: string,
+  fileText?: string,
 ): Promise<AiResult> {
-  if (!descricao.trim())
+  const desc = descricao.trim();
+  const file = fileText?.trim();
+  if (!desc && !file)
     return { error: "Descreva o que o formulário precisa verificar." };
-  return callGroq(descricao);
+
+  if (file) {
+    const extra = desc
+      ? `\n\nInstruções adicionais do usuário: ${desc}`
+      : "";
+    return callGroq(
+      `Digitalize o formulário impresso abaixo em um checklist digital estruturado e mobile-first, preservando seções e itens. Conteúdo extraído do arquivo:\n\n${file}${extra}`,
+    );
+  }
+  return callGroq(desc);
 }
 
 // ---- Importar de arquivo (PDF / Word / Excel / texto) ----
@@ -173,9 +185,11 @@ async function extractText(file: File): Promise<string> {
   return buf.toString("utf8");
 }
 
-export async function importFormulario(
+// Lê o arquivo e devolve o texto extraído (NÃO gera o formulário).
+// A geração só acontece quando o usuário clicar em "Gerar formulário".
+export async function extractFileText(
   formData: FormData,
-): Promise<AiResult> {
+): Promise<{ text?: string; nome?: string; error?: string }> {
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0)
     return { error: "Selecione um arquivo." };
@@ -195,7 +209,5 @@ export async function importFormulario(
         "O arquivo não tem texto legível (pode ser uma imagem escaneada). Use um PDF/Word com texto ou digite a descrição.",
     };
 
-  return callGroq(
-    `Digitalize o formulário impresso abaixo em um checklist digital estruturado e mobile-first, preservando seções e itens. Conteúdo extraído do arquivo:\n\n${text}`,
-  );
+  return { text, nome: file.name };
 }

@@ -1,14 +1,10 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Sparkles, Mic, MicOff, X, FileUp } from "lucide-react";
+import { Sparkles, Mic, MicOff, X, FileUp, FileCheck2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  generateFormulario,
-  importFormulario,
-  type AiForm,
-} from "./ai-actions";
+import { generateFormulario, extractFileText, type AiForm } from "./ai-actions";
 
 export function AiFormDialog({
   onClose,
@@ -21,10 +17,13 @@ export function AiFormDialog({
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [fileText, setFileText] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const recRef = useRef<{ stop: () => void } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Importar = apenas LER o arquivo. A criação só ocorre em "Gerar formulário".
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -32,15 +31,20 @@ export function AiFormDialog({
     setImporting(true);
     const fd = new FormData();
     fd.append("file", f);
-    const res = await importFormulario(fd);
+    const res = await extractFileText(fd);
     setImporting(false);
     e.target.value = "";
-    if (res.error || !res.data) {
-      setError(res.error ?? "Falha ao importar.");
+    if (res.error || !res.text) {
+      setError(res.error ?? "Falha ao ler o arquivo.");
       return;
     }
-    onGenerated(res.data);
-    onClose();
+    setFileText(res.text);
+    setFileName(res.nome ?? f.name);
+  }
+
+  function clearFile() {
+    setFileText(null);
+    setFileName(null);
   }
 
   function toggleMic() {
@@ -93,7 +97,7 @@ export function AiFormDialog({
   function gerar() {
     setError(null);
     startTransition(async () => {
-      const res = await generateFormulario(text);
+      const res = await generateFormulario(text, fileText ?? undefined);
       if (res.error || !res.data) {
         setError(res.error ?? "Falha ao gerar.");
         return;
@@ -138,19 +142,40 @@ export function AiFormDialog({
               hidden
               onChange={onFile}
             />
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => fileRef.current?.click()}
-              disabled={importing || pending}
-            >
-              <FileUp className="h-4 w-4" />
-              {importing
-                ? "Lendo arquivo…"
-                : "Importar PDF, Word ou Excel"}
-            </Button>
+            {fileName ? (
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+                <FileCheck2 className="h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                  {fileName}
+                </span>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  lido
+                </span>
+                <button
+                  type="button"
+                  onClick={clearFile}
+                  disabled={pending}
+                  className="shrink-0 text-muted-foreground hover:text-danger"
+                  aria-label="Remover arquivo"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => fileRef.current?.click()}
+                disabled={importing || pending}
+              >
+                <FileUp className="h-4 w-4" />
+                {importing ? "Lendo arquivo…" : "Importar PDF, Word ou Excel"}
+              </Button>
+            )}
             <p className="mt-1 text-center text-xs text-muted-foreground">
-              A IA transforma seu formulário impresso em digital.
+              {fileName
+                ? 'Clique em "Gerar formulário" para criar a partir do arquivo.'
+                : "A IA lê seu formulário impresso; você gera quando quiser."}
             </p>
           </div>
 
@@ -198,7 +223,10 @@ export function AiFormDialog({
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
-          <Button onClick={gerar} disabled={pending || !text.trim()}>
+          <Button
+            onClick={gerar}
+            disabled={pending || (!text.trim() && !fileText)}
+          >
             <Sparkles className="h-4 w-4" />
             {pending ? "Gerando…" : "Gerar formulário"}
           </Button>
