@@ -1,14 +1,18 @@
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard-shell";
-import { getSessionProfile } from "@/lib/auth";
+import { getSessionContext } from "@/lib/auth";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const profile = await getSessionProfile();
+  const { profile, rede } = await getSessionContext();
   if (!profile) redirect("/login");
 
-  return <DashboardShell profile={profile}>{children}</DashboardShell>;
+  return (
+    <DashboardShell profile={profile} rede={rede}>
+      {children}
+    </DashboardShell>
+  );
 }

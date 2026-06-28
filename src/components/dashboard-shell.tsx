@@ -7,15 +7,27 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth-actions";
 import { PAPEL_LABEL, type Profile } from "@/lib/types";
+import type { RedeBrand } from "@/lib/auth";
 
 export function DashboardShell({
   profile,
+  rede,
   children,
 }: {
   profile: Profile;
+  rede?: RedeBrand | null;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const cor = rede?.cor_primaria;
+  const brandStyle = cor
+    ? ({
+        ["--primary"]: cor,
+        ["--primary-hover"]: `color-mix(in srgb, ${cor} 85%, black)`,
+        ["--ring"]: cor,
+        ["--sidebar-active"]: cor,
+      } as React.CSSProperties)
+    : undefined;
   const initials = (profile.nome || profile.email)
     .split(" ")
     .map((p) => p[0])
@@ -24,10 +36,14 @@ export function DashboardShell({
     .toUpperCase();
 
   return (
-    <div className="flex h-dvh overflow-hidden">
+    <div className="flex h-dvh overflow-hidden" style={brandStyle}>
       {/* Sidebar desktop */}
       <div className="hidden lg:block">
-        <Sidebar papel={profile.papel} />
+        <Sidebar
+          papel={profile.papel}
+          brandName={rede?.nome}
+          brandLogo={rede?.logo_url}
+        />
       </div>
 
       {/* Drawer mobile */}
@@ -38,7 +54,12 @@ export function DashboardShell({
             onClick={() => setOpen(false)}
           />
           <div className="absolute left-0 top-0 h-full">
-            <Sidebar papel={profile.papel} onNavigate={() => setOpen(false)} />
+            <Sidebar
+              papel={profile.papel}
+              brandName={rede?.nome}
+              brandLogo={rede?.logo_url}
+              onNavigate={() => setOpen(false)}
+            />
           </div>
         </div>
       )}

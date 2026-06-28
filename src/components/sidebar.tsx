@@ -9,9 +9,13 @@ import { cn } from "@/lib/utils";
 
 export function Sidebar({
   papel,
+  brandName,
+  brandLogo,
   onNavigate,
 }: {
   papel: Papel;
+  brandName?: string;
+  brandLogo?: string | null;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -20,7 +24,12 @@ export function Sidebar({
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col bg-sidebar">
       <div className="flex h-16 items-center border-b border-sidebar-border px-5">
-        <Brand onDark />
+        <Brand
+          onDark
+          name={brandName}
+          logoUrl={brandLogo}
+          subtitle={brandName ? "Gestão da Rede" : undefined}
+        />
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
