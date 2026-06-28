@@ -51,7 +51,7 @@ export const NAV: NavItem[] = [
     href: "/faturamento",
     label: "Faturamento",
     icon: Receipt,
-    roles: ["super_admin", "admin_supermercado"],
+    roles: ["super_admin"], // admin não vê faturamento
   },
   {
     href: "/auditoria",

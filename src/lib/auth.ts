@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, Papel } from "@/lib/types";
 
@@ -9,50 +10,56 @@ export type RedeBrand = {
   cor_primaria: string | null;
 };
 
-/** Profile + marca da rede (para white-label do tenant). */
-export async function getSessionContext(): Promise<{
-  profile: Profile | null;
-  rede: RedeBrand | null;
-}> {
-  const profile = await getSessionProfile();
-  if (!profile) return { profile: null, rede: null };
-  if (!profile.rede_id) return { profile, rede: null };
+/**
+ * Profile + marca da rede, em UMA query (embed) e deduplicado por request
+ * via React cache(). Layout e páginas compartilham o mesmo resultado —
+ * evita repetir getUser()/profiles()/redes() a cada navegação.
+ */
+export const getSessionContext = cache(
+  async (): Promise<{ profile: Profile | null; rede: RedeBrand | null }> => {
+    const supabase = await createClient();
+    // getClaims() verifica o token localmente (sem ida à rede quando a chave
+    // é assimétrica). A sessão já foi validada/renovada no proxy.
+    const { data: claimsData } = await supabase.auth.getClaims();
+    const claims = claimsData?.claims as
+      | { sub: string; email?: string; user_metadata?: Record<string, unknown> }
+      | undefined;
+    if (!claims?.sub) return { profile: null, rede: null };
 
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("redes")
-    .select("id,nome,logo_url,banner_url,cor_primaria")
-    .eq("id", profile.rede_id)
-    .single();
+    const { data } = await supabase
+      .from("profiles")
+      .select("*, redes(id,nome,logo_url,banner_url,cor_primaria)")
+      .eq("id", claims.sub)
+      .single();
 
-  return { profile, rede: (data as RedeBrand) ?? null };
-}
+    if (data) {
+      const { redes, ...profile } = data as Profile & {
+        redes: RedeBrand | null;
+      };
+      return {
+        profile: profile as Profile,
+        rede: (redes as RedeBrand) ?? null,
+      };
+    }
 
-/** Usuário autenticado + profile. Retorna null se não logado. */
-export async function getSessionProfile(): Promise<Profile | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+    // Fallback: schema/profile ausente → deriva do metadata do token.
+    const meta = claims.user_metadata ?? {};
+    return {
+      profile: {
+        id: claims.sub,
+        rede_id: (meta.rede_id as string) ?? null,
+        nome: (meta.nome as string) ?? "",
+        email: claims.email ?? "",
+        papel: ((meta.papel as Papel) ?? "super_admin") as Papel,
+        avatar_url: null,
+        status: "ativo",
+      },
+      rede: null,
+    };
+  },
+);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  if (profile) return profile as Profile;
-
-  // Fallback (schema ainda não aplicado ou profile ausente): deriva do metadata.
-  const meta = user.user_metadata ?? {};
-  return {
-    id: user.id,
-    rede_id: (meta.rede_id as string) ?? null,
-    nome: (meta.nome as string) ?? "",
-    email: user.email ?? "",
-    papel: ((meta.papel as Papel) ?? "super_admin") as Papel,
-    avatar_url: null,
-    status: "ativo",
-  };
-}
+/** Apenas o profile (reusa o contexto cacheado). */
+export const getSessionProfile = cache(async (): Promise<Profile | null> => {
+  return (await getSessionContext()).profile;
+});
