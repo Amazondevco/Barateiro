@@ -55,6 +55,67 @@ const THEMES = [
   { nome: "Grafite", primary: "#3b82f6", sidebar: "#18181b" },
 ];
 
+// Recorta margens vazias, centraliza num quadrado e exporta 256px (nítido p/
+// sidebar e favicon). Mantém transparência.
+async function processLogo(file: File): Promise<Blob> {
+  const bmp = await createImageBitmap(file);
+  const w = bmp.width;
+  const h = bmp.height;
+  const tmp = document.createElement("canvas");
+  tmp.width = w;
+  tmp.height = h;
+  const tctx = tmp.getContext("2d");
+  if (!tctx) return file;
+  tctx.drawImage(bmp, 0, 0);
+  const d = tctx.getImageData(0, 0, w, h).data;
+
+  let minX = w,
+    minY = h,
+    maxX = 0,
+    maxY = 0,
+    found = false;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      const a = d[i + 3];
+      const isContent =
+        a > 16 && !(d[i] > 244 && d[i + 1] > 244 && d[i + 2] > 244);
+      if (isContent) {
+        found = true;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (!found) {
+    minX = 0;
+    minY = 0;
+    maxX = w - 1;
+    maxY = h - 1;
+  }
+  const cw = maxX - minX + 1;
+  const ch = maxY - minY + 1;
+  const SIZE = 256;
+  const out = document.createElement("canvas");
+  out.width = SIZE;
+  out.height = SIZE;
+  const octx = out.getContext("2d");
+  if (!octx) return file;
+  octx.imageSmoothingEnabled = true;
+  octx.imageSmoothingQuality = "high";
+  // ocupa ~86% do quadrado, centralizado
+  const scale = (SIZE * 0.86) / Math.max(cw, ch);
+  const dw = cw * scale;
+  const dh = ch * scale;
+  octx.drawImage(bmp, minX, minY, cw, ch, (SIZE - dw) / 2, (SIZE - dh) / 2, dw, dh);
+
+  return await new Promise<Blob>((resolve) =>
+    out.toBlob((b) => resolve(b ?? file), "image/png"),
+  );
+}
+
 export function AparenciaForm({
   action,
   redeId,
@@ -94,11 +155,20 @@ export function AparenciaForm({
     setBusy(kind);
     try {
       const supabase = createClient();
-      const ext = (file.name.split(".").pop() || "png").toLowerCase();
-      const path = `${redeId}/${kind}-${Date.now()}.${ext}`;
+      let body: Blob = file;
+      let path: string;
+      let contentType: string | undefined;
+      if (kind === "logo") {
+        body = await processLogo(file); // recorta + quadra + 256px
+        path = `${redeId}/logo-${Date.now()}.png`;
+        contentType = "image/png";
+      } else {
+        const ext = (file.name.split(".").pop() || "png").toLowerCase();
+        path = `${redeId}/banner-${Date.now()}.${ext}`;
+      }
       const { error } = await supabase.storage
         .from("branding")
-        .upload(path, file, { upsert: true });
+        .upload(path, body, { upsert: true, contentType });
       if (error) throw error;
       const { data } = supabase.storage.from("branding").getPublicUrl(path);
       if (kind === "logo") setLogo(data.publicUrl);
@@ -157,10 +227,14 @@ export function AparenciaForm({
           d[i + 3] = Math.round((255 * (dist - tol)) / (tol * 0.7));
       }
       ctx.putImageData(img, 0, 0);
-      const out = await new Promise<Blob | null>((r) =>
+      const keyed = await new Promise<Blob | null>((r) =>
         canvas.toBlob(r, "image/png"),
       );
-      if (!out) throw new Error();
+      if (!keyed) throw new Error();
+      // recorta + quadra o resultado (margens agora transparentes)
+      const out = await processLogo(
+        new File([keyed], "logo.png", { type: "image/png" }),
+      );
       const supabase = createClient();
       const path = `${redeId}/logo-nobg-${Date.now()}.png`;
       const { error } = await supabase.storage
