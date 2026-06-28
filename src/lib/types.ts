@@ -27,6 +27,9 @@ export type Rede = {
   plano: string;
   modulos: string[];
   status: EntidadeStatus;
+  contato_nome: string | null;
+  contato_email: string | null;
+  contato_fone: string | null;
   horario_limite: string;
   dias_frequencia: number[];
   janela_edicao_min: number;
