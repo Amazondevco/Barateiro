@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { FormBuilder } from "../form-builder";
 import { RespostasView, type RespostaRow } from "./respostas-view";
+import { RefDatePicker } from "./ref-date-picker";
 import { cn } from "@/lib/utils";
 import type { ItemTipo, UnidadeTipo } from "@/lib/types";
 
@@ -382,12 +383,9 @@ async function RespostasTab({
           >
             <ChevronRight className="h-4 w-4" />
           </Link>
-          <Link
-            href={link(periodo)}
-            className="ml-1 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            Hoje
-          </Link>
+          <div className="ml-1">
+            <RefDatePicker periodo={periodo} refIso={fmtISO(refDate)} />
+          </div>
         </div>
       </div>
 
