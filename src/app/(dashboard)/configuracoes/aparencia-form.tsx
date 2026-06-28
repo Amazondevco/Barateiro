@@ -55,20 +55,59 @@ const THEMES = [
   { nome: "Grafite", primary: "#3b82f6", sidebar: "#18181b" },
 ];
 
-// Recorta margens vazias, centraliza num quadrado e exporta 256px (nítido p/
-// sidebar e favicon). Mantém transparência.
+// Remove o fundo (cor dos cantos), recorta margens, centraliza num quadrado e
+// exporta 256px transparente (nítido p/ sidebar e favicon).
 async function processLogo(file: File): Promise<Blob> {
   const bmp = await createImageBitmap(file);
   const w = bmp.width;
   const h = bmp.height;
-  const tmp = document.createElement("canvas");
-  tmp.width = w;
-  tmp.height = h;
-  const tctx = tmp.getContext("2d");
-  if (!tctx) return file;
-  tctx.drawImage(bmp, 0, 0);
-  const d = tctx.getImageData(0, 0, w, h).data;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return file;
+  ctx.drawImage(bmp, 0, 0);
+  const img = ctx.getImageData(0, 0, w, h);
+  const d = img.data;
 
+  // amostra os 4 cantos
+  const corners = [
+    0,
+    (w - 1) * 4,
+    (h - 1) * w * 4,
+    ((h - 1) * w + (w - 1)) * 4,
+  ];
+  let ca = 0;
+  for (const i of corners) ca += d[i + 3];
+  ca /= 4;
+
+  // só remove fundo se os cantos forem opacos (imagem com fundo sólido)
+  if (ca > 200) {
+    let br = 0,
+      bg = 0,
+      bb = 0;
+    for (const i of corners) {
+      br += d[i];
+      bg += d[i + 1];
+      bb += d[i + 2];
+    }
+    br /= 4;
+    bg /= 4;
+    bb /= 4;
+    const tol = 60;
+    for (let i = 0; i < d.length; i += 4) {
+      const dist = Math.sqrt(
+        (d[i] - br) ** 2 + (d[i + 1] - bg) ** 2 + (d[i + 2] - bb) ** 2,
+      );
+      if (dist < tol) d[i + 3] = 0;
+      else if (dist < tol * 1.7)
+        d[i + 3] = Math.round((d[i + 3] * (dist - tol)) / (tol * 0.7));
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  // bounding box pelo alpha
+  const d2 = ctx.getImageData(0, 0, w, h).data;
   let minX = w,
     minY = h,
     maxX = 0,
@@ -76,11 +115,7 @@ async function processLogo(file: File): Promise<Blob> {
     found = false;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4;
-      const a = d[i + 3];
-      const isContent =
-        a > 16 && !(d[i] > 244 && d[i + 1] > 244 && d[i + 2] > 244);
-      if (isContent) {
+      if (d2[(y * w + x) * 4 + 3] > 16) {
         found = true;
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
@@ -97,6 +132,7 @@ async function processLogo(file: File): Promise<Blob> {
   }
   const cw = maxX - minX + 1;
   const ch = maxY - minY + 1;
+
   const SIZE = 256;
   const out = document.createElement("canvas");
   out.width = SIZE;
@@ -105,11 +141,21 @@ async function processLogo(file: File): Promise<Blob> {
   if (!octx) return file;
   octx.imageSmoothingEnabled = true;
   octx.imageSmoothingQuality = "high";
-  // ocupa ~86% do quadrado, centralizado
-  const scale = (SIZE * 0.86) / Math.max(cw, ch);
+  const scale = (SIZE * 0.9) / Math.max(cw, ch);
   const dw = cw * scale;
   const dh = ch * scale;
-  octx.drawImage(bmp, minX, minY, cw, ch, (SIZE - dw) / 2, (SIZE - dh) / 2, dw, dh);
+  // desenha do canvas JÁ com fundo removido
+  octx.drawImage(
+    canvas,
+    minX,
+    minY,
+    cw,
+    ch,
+    (SIZE - dw) / 2,
+    (SIZE - dh) / 2,
+    dw,
+    dh,
+  );
 
   return await new Promise<Blob>((resolve) =>
     out.toBlob((b) => resolve(b ?? file), "image/png"),
