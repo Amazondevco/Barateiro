@@ -103,6 +103,7 @@ export default async function ConfiguracoesPage({
               logoUrl={rede.logo_url}
               bannerUrl={rede.banner_url}
               cor={rede.cor_primaria}
+              corSidebar={rede.cor_sidebar}
               nome={rede.nome}
             />
           )}

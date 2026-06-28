@@ -17,11 +17,28 @@ import { cn } from "@/lib/utils";
 import type { FormState } from "./actions";
 
 const DEFAULT_COLOR = "#2563eb";
+const SIDEBAR_DEFAULT = "#0f172a";
 const PALETTE = [
   "#2563eb", "#1d4ed8", "#0ea5e9", "#06b6d4", "#14b8a6", "#16a34a",
   "#22c55e", "#84cc16", "#eab308", "#f59e0b", "#f97316", "#ef4444",
   "#dc2626", "#ec4899", "#d946ef", "#a855f7", "#8b5cf6", "#6366f1",
   "#64748b", "#0f172a",
+];
+// Tons escuros (mantêm o texto claro legível na barra)
+const SIDEBAR_PALETTE = [
+  "#0f172a", "#1e293b", "#0b1120", "#18181b", "#1c1917", "#0c4a6e",
+  "#064e3b", "#1e1b4b", "#3b0764", "#172554", "#450a0a", "#334155",
+];
+// Temas prontos: aplicam cor primária + barra lateral de uma vez
+const THEMES = [
+  { nome: "Azul", primary: "#2563eb", sidebar: "#0f172a" },
+  { nome: "Índigo", primary: "#6366f1", sidebar: "#1e1b4b" },
+  { nome: "Esmeralda", primary: "#10b981", sidebar: "#064e3b" },
+  { nome: "Vermelho", primary: "#dc2626", sidebar: "#1c1917" },
+  { nome: "Roxo", primary: "#8b5cf6", sidebar: "#2e1065" },
+  { nome: "Laranja", primary: "#f97316", sidebar: "#1c1917" },
+  { nome: "Rosa", primary: "#ec4899", sidebar: "#172554" },
+  { nome: "Grafite", primary: "#3b82f6", sidebar: "#18181b" },
 ];
 
 export function AparenciaForm({
@@ -31,6 +48,7 @@ export function AparenciaForm({
   logoUrl,
   bannerUrl,
   cor,
+  corSidebar,
 }: {
   action: (prev: FormState, fd: FormData) => Promise<FormState>;
   redeId: string;
@@ -38,11 +56,13 @@ export function AparenciaForm({
   logoUrl: string | null;
   bannerUrl: string | null;
   cor: string | null;
+  corSidebar: string | null;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
   const [logo, setLogo] = useState(logoUrl ?? "");
   const [banner, setBanner] = useState(bannerUrl ?? "");
   const [color, setColor] = useState(cor ?? DEFAULT_COLOR);
+  const [sidebar, setSidebar] = useState(corSidebar ?? SIDEBAR_DEFAULT);
   const [preview, setPreview] = useState<"light" | "dark">("light");
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -146,6 +166,7 @@ export function AparenciaForm({
     setLogo(logoUrl ?? "");
     setBanner(bannerUrl ?? "");
     setColor(cor ?? DEFAULT_COLOR);
+    setSidebar(corSidebar ?? SIDEBAR_DEFAULT);
     setErr(null);
   }
 
@@ -154,6 +175,7 @@ export function AparenciaForm({
       <input type="hidden" name="logo_url" value={logo} />
       <input type="hidden" name="banner_url" value={banner} />
       <input type="hidden" name="cor_primaria" value={color} />
+      <input type="hidden" name="cor_sidebar" value={sidebar} />
 
       {/* BANNER */}
       <section>
@@ -276,51 +298,121 @@ export function AparenciaForm({
       </section>
 
       {/* TEMA */}
-      <section>
+      <section className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Tema</h3>
           <button
             type="button"
-            onClick={() => setColor(DEFAULT_COLOR)}
+            onClick={() => {
+              setColor(DEFAULT_COLOR);
+              setSidebar(SIDEBAR_DEFAULT);
+            }}
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <RotateCcw className="h-3.5 w-3.5" /> Redefinir para o padrão
           </button>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Cor primária da marca, aplicada em todo o ambiente da rede.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {PALETTE.map((c) => {
-            const selected = color.toLowerCase() === c.toLowerCase();
-            return (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setColor(c)}
-                aria-label={c}
-                className={cn(
-                  "relative h-9 w-9 rounded-full ring-offset-2 ring-offset-background transition",
-                  selected && "ring-2 ring-foreground",
-                )}
-                style={{ background: c }}
-              >
-                {selected && (
-                  <Check className="absolute inset-0 m-auto h-4 w-4 text-white" />
-                )}
-              </button>
-            );
-          })}
-          {/* Cor personalizada */}
-          <label className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-dashed border-border text-lg text-muted-foreground hover:border-primary hover:text-primary">
-            +
-            <input
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="sr-only"
-            />
-          </label>
+
+        {/* Temas prontos */}
+        <div>
+          <p className="mb-2 text-sm font-medium">Temas prontos</p>
+          <div className="flex flex-wrap gap-2">
+            {THEMES.map((t) => {
+              const active =
+                color.toLowerCase() === t.primary.toLowerCase() &&
+                sidebar.toLowerCase() === t.sidebar.toLowerCase();
+              return (
+                <button
+                  key={t.nome}
+                  type="button"
+                  onClick={() => {
+                    setColor(t.primary);
+                    setSidebar(t.sidebar);
+                  }}
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg border p-1.5 pr-3 text-sm transition",
+                    active
+                      ? "border-primary ring-1 ring-primary"
+                      : "border-border hover:bg-muted",
+                  )}
+                >
+                  <span
+                    className="flex h-7 w-7 items-center justify-center rounded-md"
+                    style={{ background: t.sidebar }}
+                  >
+                    <span
+                      className="h-3 w-3 rounded-full"
+                      style={{ background: t.primary }}
+                    />
+                  </span>
+                  {t.nome}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Cor primária */}
+        <div>
+          <p className="mb-2 text-sm font-medium">Cor primária</p>
+          <div className="flex flex-wrap gap-2">
+            {PALETTE.map((c) => {
+              const selected = color.toLowerCase() === c.toLowerCase();
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  aria-label={c}
+                  className={cn(
+                    "relative h-9 w-9 rounded-full ring-offset-2 ring-offset-background transition",
+                    selected && "ring-2 ring-foreground",
+                  )}
+                  style={{ background: c }}
+                >
+                  {selected && (
+                    <Check className="absolute inset-0 m-auto h-4 w-4 text-white" />
+                  )}
+                </button>
+              );
+            })}
+            <label className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-dashed border-border text-lg text-muted-foreground hover:border-primary hover:text-primary">
+              +
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="sr-only"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Cor da barra lateral */}
+        <div>
+          <p className="mb-2 text-sm font-medium">Cor da barra lateral</p>
+          <div className="flex flex-wrap gap-2">
+            {SIDEBAR_PALETTE.map((c) => {
+              const selected = sidebar.toLowerCase() === c.toLowerCase();
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setSidebar(c)}
+                  aria-label={c}
+                  className={cn(
+                    "relative h-9 w-9 rounded-lg ring-offset-2 ring-offset-background transition",
+                    selected && "ring-2 ring-foreground",
+                  )}
+                  style={{ background: c }}
+                >
+                  {selected && (
+                    <Check className="absolute inset-0 m-auto h-4 w-4 text-white" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -352,46 +444,65 @@ export function AparenciaForm({
           </div>
         </div>
         <div className={preview === "dark" ? "dark" : ""}>
-          <div
-            className="mt-3 space-y-3 rounded-xl border border-border bg-background p-4"
-            style={{ ["--primary"]: color } as React.CSSProperties}
-          >
-            <div className="flex items-center gap-2.5">
-              {logo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={logo}
-                  alt={nome}
-                  className="h-9 w-9 rounded-lg object-contain"
-                />
-              ) : (
-                <span
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold text-white"
-                  style={{ background: color }}
-                >
-                  {nome.charAt(0)}
+          <div className="mt-3 flex overflow-hidden rounded-xl border border-border">
+            {/* Mini barra lateral */}
+            <div
+              className="flex w-40 shrink-0 flex-col gap-2 p-3"
+              style={{ background: sidebar }}
+            >
+              <div className="flex items-center gap-2">
+                {logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logo}
+                    alt={nome}
+                    className="h-7 w-7 rounded-md object-contain"
+                  />
+                ) : (
+                  <span
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold text-white"
+                    style={{ background: color }}
+                  >
+                    {nome.charAt(0)}
+                  </span>
+                )}
+                <span className="truncate text-xs font-bold text-white">
+                  {nome}
                 </span>
-              )}
-              <span className="flex flex-col leading-none">
-                <span className="text-sm font-bold text-foreground">{nome}</span>
-                <span className="text-[11px] text-muted-foreground">
-                  Gestão da Rede
-                </span>
-              </span>
-            </div>
-            <div className="flex gap-2">
+              </div>
               <span
-                className="inline-flex h-9 items-center rounded-lg px-4 text-sm font-medium text-white"
+                className="mt-1 rounded-md px-2 py-1 text-xs font-medium text-white"
                 style={{ background: color }}
               >
-                Botão primário
+                Visão geral
               </span>
-              <span
-                className="inline-flex h-9 items-center rounded-lg border px-4 text-sm font-medium"
-                style={{ borderColor: color, color }}
-              >
-                Outline
+              <span className="rounded-md px-2 py-1 text-xs text-slate-300">
+                Formulários
               </span>
+              <span className="rounded-md px-2 py-1 text-xs text-slate-300">
+                Relatórios
+              </span>
+            </div>
+            {/* Conteúdo */}
+            <div
+              className="flex flex-1 flex-col gap-3 bg-background p-4"
+              style={{ ["--primary"]: color } as React.CSSProperties}
+            >
+              <div className="text-sm font-bold text-foreground">{nome}</div>
+              <div className="flex gap-2">
+                <span
+                  className="inline-flex h-9 items-center rounded-lg px-4 text-sm font-medium text-white"
+                  style={{ background: color }}
+                >
+                  Botão primário
+                </span>
+                <span
+                  className="inline-flex h-9 items-center rounded-lg border px-4 text-sm font-medium"
+                  style={{ borderColor: color, color }}
+                >
+                  Outline
+                </span>
+              </div>
             </div>
           </div>
         </div>

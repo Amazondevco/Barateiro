@@ -42,13 +42,21 @@ export function DashboardShell({
   }
 
   const cor = rede?.cor_primaria;
-  const brandStyle = cor
-    ? ({
-        ["--primary"]: cor,
-        ["--primary-hover"]: `color-mix(in srgb, ${cor} 85%, black)`,
-        ["--ring"]: cor,
-        ["--sidebar-active"]: cor,
-      } as React.CSSProperties)
+  const sb = rede?.cor_sidebar;
+  const vars: Record<string, string> = {};
+  if (cor) {
+    vars["--primary"] = cor;
+    vars["--primary-hover"] = `color-mix(in srgb, ${cor} 85%, black)`;
+    vars["--ring"] = cor;
+    vars["--sidebar-active"] = cor;
+  }
+  if (sb) {
+    vars["--sidebar"] = sb;
+    vars["--sidebar-hover"] = `color-mix(in srgb, ${sb} 85%, white)`;
+    vars["--sidebar-border"] = `color-mix(in srgb, ${sb} 80%, white)`;
+  }
+  const brandStyle = Object.keys(vars).length
+    ? (vars as React.CSSProperties)
     : undefined;
   const initials = (profile.nome || profile.email)
     .split(" ")

@@ -8,6 +8,7 @@ export type RedeBrand = {
   logo_url: string | null;
   banner_url: string | null;
   cor_primaria: string | null;
+  cor_sidebar: string | null;
 };
 
 /**
@@ -28,7 +29,7 @@ export const getSessionContext = cache(
 
     const { data } = await supabase
       .from("profiles")
-      .select("*, redes(id,nome,logo_url,banner_url,cor_primaria)")
+      .select("*, redes(id,nome,logo_url,banner_url,cor_primaria,cor_sidebar)")
       .eq("id", claims.sub)
       .single();
 
