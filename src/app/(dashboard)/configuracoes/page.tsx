@@ -28,6 +28,12 @@ import { updateAparencia } from "./actions";
 import { updateAparenciaPlataforma } from "./plataforma-actions";
 import { AparenciaForm } from "./aparencia-form";
 import { PadroesForm } from "./padroes-form";
+import {
+  DepartamentosPadraoForm,
+  UnidadesPadraoForm,
+  UsuariosPadraoForm,
+  AplicativoPadraoForm,
+} from "./padroes-avancados";
 import { PermissoesTab } from "./permissoes-tab";
 
 export const metadata = { title: "Configurações — Amazon Dev & Co." };
@@ -67,8 +73,13 @@ export default async function ConfiguracoesPage({
       .single();
     const PLAT_TABS = [
       { key: "aparencia", label: "Aparência" },
+      { key: "padroes", label: "Padrões gerais" },
+      { key: "departamentos", label: "Departamentos" },
+      { key: "unidades", label: "Unidades" },
+      { key: "usuarios", label: "Usuários" },
+      { key: "permissoes", label: "Permissões" },
+      { key: "aplicativo", label: "Aplicativo" },
       { key: "auditoria", label: "Auditoria" },
-      { key: "padroes", label: "Padrões" },
     ];
     const ptab = PLAT_TABS.some((t) => t.key === tab) ? tab : "aparencia";
 
@@ -114,6 +125,39 @@ export default async function ConfiguracoesPage({
             janela={plat.default_janela_edicao}
             retencao={plat.default_retencao_fotos}
           />
+        )}
+        {ptab === "departamentos" && plat && (
+          <DepartamentosPadraoForm lista={plat.default_departamentos ?? []} />
+        )}
+        {ptab === "unidades" && plat && (
+          <UnidadesPadraoForm tipos={plat.default_unidade_tipos ?? []} />
+        )}
+        {ptab === "usuarios" && plat && (
+          <UsuariosPadraoForm
+            papel={plat.default_papel_usuario ?? "gerente"}
+            status={plat.default_status_usuario ?? "ativo"}
+            limite={plat.default_limite_usuarios ?? null}
+          />
+        )}
+        {ptab === "aplicativo" && plat && (
+          <AplicativoPadraoForm
+            foto={plat.app_foto_obrigatoria ?? true}
+            geo={plat.app_geolocalizacao ?? true}
+            assinatura={plat.app_assinatura ?? false}
+            offline={plat.app_offline ?? true}
+          />
+        )}
+        {ptab === "permissoes" && (
+          <Card>
+            <CardContent className="space-y-2 py-8 text-center">
+              <p className="font-medium">Permissões padrão</p>
+              <p className="mx-auto max-w-md text-sm text-muted-foreground">
+                Os papéis e permissões iniciais de cada rede vêm do conjunto de
+                cargos do sistema. A edição desses padrões entra na próxima
+                etapa — me avise para habilitar.
+              </p>
+            </CardContent>
+          </Card>
         )}
       </>
     );

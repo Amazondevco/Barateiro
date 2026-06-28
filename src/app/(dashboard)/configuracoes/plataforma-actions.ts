@@ -70,3 +70,66 @@ export async function updatePadroes(
   revalidatePath("/configuracoes");
   return { ok: true };
 }
+
+async function savePlataforma(patch: Record<string, unknown>): Promise<FormState> {
+  if (!(await ensureSuper())) return { error: "Sem permissão." };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("plataforma")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", true);
+  if (error) return { error: error.message };
+  revalidatePath("/configuracoes");
+  return { ok: true };
+}
+
+/** Departamentos padrão (um por linha) que toda rede nova já vem criada. */
+export async function updateDepartamentosPadrao(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const lista = String(formData.get("departamentos") ?? "")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return savePlataforma({ default_departamentos: lista });
+}
+
+/** Tipos de unidade habilitados por padrão para novas redes. */
+export async function updateUnidadesPadrao(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const tipos = formData.getAll("tipos").map((t) => String(t));
+  return savePlataforma({
+    default_unidade_tipos: tipos.length ? tipos : ["loja"],
+  });
+}
+
+/** Padrões de novos usuários (papel, status e limite por rede). */
+export async function updateUsuariosPadrao(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const limiteRaw = String(formData.get("limite") ?? "").trim();
+  const limite = limiteRaw ? parseInt(limiteRaw, 10) : null;
+  return savePlataforma({
+    default_papel_usuario: String(formData.get("papel") ?? "gerente"),
+    default_status_usuario: String(formData.get("status") ?? "ativo"),
+    default_limite_usuarios:
+      limite && !Number.isNaN(limite) && limite > 0 ? limite : null,
+  });
+}
+
+/** Padrões do aplicativo dos gerentes. */
+export async function updateAplicativoPadrao(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return savePlataforma({
+    app_foto_obrigatoria: formData.get("foto") === "on",
+    app_geolocalizacao: formData.get("geo") === "on",
+    app_assinatura: formData.get("assinatura") === "on",
+    app_offline: formData.get("offline") === "on",
+  });
+}
