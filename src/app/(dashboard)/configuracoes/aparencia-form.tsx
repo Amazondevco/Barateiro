@@ -70,38 +70,45 @@ async function processLogo(file: File): Promise<Blob> {
   const img = ctx.getImageData(0, 0, w, h);
   const d = img.data;
 
-  // amostra os 4 cantos
-  const corners = [
+  // amostra a borda (cantos + meios das bordas) p/ estimar a cor do fundo
+  const mx = w >> 1;
+  const my = h >> 1;
+  const edgePts = [
     0,
     (w - 1) * 4,
     (h - 1) * w * 4,
     ((h - 1) * w + (w - 1)) * 4,
+    mx * 4,
+    ((h - 1) * w + mx) * 4,
+    my * w * 4,
+    (my * w + (w - 1)) * 4,
   ];
-  let ca = 0;
-  for (const i of corners) ca += d[i + 3];
-  ca /= 4;
+  let ca = 0,
+    br = 0,
+    bg = 0,
+    bb = 0;
+  for (const i of edgePts) {
+    ca += d[i + 3];
+    br += d[i];
+    bg += d[i + 1];
+    bb += d[i + 2];
+  }
+  const n = edgePts.length;
+  ca /= n;
+  br /= n;
+  bg /= n;
+  bb /= n;
 
-  // só remove fundo se os cantos forem opacos (imagem com fundo sólido)
-  if (ca > 200) {
-    let br = 0,
-      bg = 0,
-      bb = 0;
-    for (const i of corners) {
-      br += d[i];
-      bg += d[i + 1];
-      bb += d[i + 2];
-    }
-    br /= 4;
-    bg /= 4;
-    bb /= 4;
-    const tol = 60;
+  // remove fundo sempre que a borda for opaca (imagem com fundo sólido)
+  if (ca > 150) {
+    const tol = 72;
     for (let i = 0; i < d.length; i += 4) {
       const dist = Math.sqrt(
         (d[i] - br) ** 2 + (d[i + 1] - bg) ** 2 + (d[i + 2] - bb) ** 2,
       );
       if (dist < tol) d[i + 3] = 0;
-      else if (dist < tol * 1.7)
-        d[i + 3] = Math.round((d[i + 3] * (dist - tol)) / (tol * 0.7));
+      else if (dist < tol * 1.6)
+        d[i + 3] = Math.round((d[i + 3] * (dist - tol)) / (tol * 0.6));
     }
     ctx.putImageData(img, 0, 0);
   }
