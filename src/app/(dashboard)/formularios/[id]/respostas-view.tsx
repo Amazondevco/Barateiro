@@ -234,7 +234,7 @@ export function RespostasView({
                 : "border-warning/40 bg-warning-bg text-warning hover:opacity-90",
             )}
           >
-            Hoje
+            {ehHoje ? "Hoje" : "Ir para Hoje"}
           </Link>
         </div>
       </div>
