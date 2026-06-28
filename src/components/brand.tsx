@@ -39,11 +39,11 @@ export function Brand({
           src={finalLogo}
           alt={name}
           onError={() => setImgError(true)}
-          className="h-9 w-9 shrink-0 rounded-lg bg-white object-contain p-0.5"
+          className="h-11 w-11 shrink-0 rounded-xl bg-white object-contain p-1 shadow-sm"
         />
       ) : (
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-          <Boxes className="h-5 w-5" />
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+          <Boxes className="h-6 w-6" />
         </span>
       )}
       {!compact && (
