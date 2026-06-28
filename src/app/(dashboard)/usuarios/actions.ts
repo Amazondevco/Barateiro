@@ -76,6 +76,63 @@ export async function createUsuario(
   return { ok: true };
 }
 
+export async function updateUsuario(
+  id: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const caller = await getSessionProfile();
+  if (!caller) return { error: "Sessão expirada." };
+  if (caller.papel !== "super_admin" && caller.papel !== "admin_supermercado")
+    return { error: "Sem permissão." };
+
+  const admin = createAdminClient();
+  const { data: alvo } = await admin
+    .from("profiles")
+    .select("rede_id")
+    .eq("id", id)
+    .single();
+  if (!alvo) return { error: "Usuário não encontrado." };
+
+  const nome = String(formData.get("nome") ?? "").trim();
+  const papel = String(formData.get("papel") ?? "gerente") as Papel;
+  const departamentoId =
+    String(formData.get("departamento_id") ?? "").trim() || null;
+  const status =
+    String(formData.get("status") ?? "ativo") === "inativo"
+      ? "inativo"
+      : "ativo";
+
+  if (!nome) return { error: "Informe o nome." };
+
+  // Admin só edita usuários da própria rede e não promove a Super Admin
+  if (caller.papel === "admin_supermercado") {
+    if (alvo.rede_id !== caller.rede_id)
+      return { error: "Sem permissão." };
+    if (papel === "super_admin")
+      return { error: "Você não pode definir Super Admin." };
+  }
+
+  if (alvo.rede_id && !departamentoId)
+    return { error: "Selecione o departamento do usuário." };
+
+  const { error } = await admin
+    .from("profiles")
+    .update({
+      nome,
+      papel,
+      status,
+      departamento_id: alvo.rede_id ? departamentoId : null,
+    })
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/usuarios");
+  revalidatePath("/configuracoes");
+  if (alvo.rede_id) revalidatePath(`/clientes/${alvo.rede_id}`);
+  return { ok: true };
+}
+
 export async function setUsuarioStatus(
   id: string,
   status: "ativo" | "inativo",

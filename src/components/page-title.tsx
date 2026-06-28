@@ -95,7 +95,7 @@ export function TopbarTitle() {
               {c.href ? (
                 <Link
                   href={c.href}
-                  className="font-semibold text-primary hover:underline"
+                  className="font-semibold text-foreground/90 hover:underline"
                 >
                   {c.label}
                 </Link>

@@ -19,6 +19,9 @@ import {
   setDepartamentoStatus,
 } from "./departamento-actions";
 import { AddDepartamentoForm } from "./add-departamento-form";
+import { EditUnidadeButton } from "@/app/(dashboard)/clientes/[id]/edit-unidade-button";
+import { EditDepartamentoButton } from "./edit-departamento-button";
+import { EditUsuarioButton } from "@/components/edit-usuario-button";
 import { updateAparencia } from "./actions";
 import { AparenciaForm } from "./aparencia-form";
 import { PermissoesTab } from "./permissoes-tab";
@@ -125,7 +128,7 @@ type SB = Awaited<ReturnType<typeof createClient>>;
 async function UnidadesTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
   const { data: unidades } = await supabase
     .from("unidades")
-    .select("id,nome,codigo,tipo,cidade,uf,status")
+    .select("id,nome,codigo,tipo,endereco,cidade,uf,geo_lat,geo_lng,status")
     .eq("rede_id", redeId)
     .order("nome");
 
@@ -144,7 +147,7 @@ async function UnidadesTab({ supabase, redeId }: { supabase: SB; redeId: string 
               <TH>Tipo</TH>
               <TH>Cidade</TH>
               <TH>Status</TH>
-              <TH className="w-28" />
+              <TH className="w-40" />
             </TR>
           </THead>
           <tbody>
@@ -162,11 +165,14 @@ async function UnidadesTab({ supabase, redeId }: { supabase: SB; redeId: string 
                   <Badge tone={u.status === "ativo" ? "success" : "neutral"}>{u.status}</Badge>
                 </TD>
                 <TD>
-                  <form action={setUnidadeStatus.bind(null, u.id, redeId, u.status === "ativo" ? "inativo" : "ativo")}>
-                    <button className="text-sm text-muted-foreground hover:text-foreground" type="submit">
-                      {u.status === "ativo" ? "Desativar" : "Ativar"}
-                    </button>
-                  </form>
+                  <div className="flex items-center gap-3">
+                    <EditUnidadeButton unidade={u} redeId={redeId} />
+                    <form action={setUnidadeStatus.bind(null, u.id, redeId, u.status === "ativo" ? "inativo" : "ativo")}>
+                      <button className="text-sm text-muted-foreground hover:text-foreground" type="submit">
+                        {u.status === "ativo" ? "Desativar" : "Ativar"}
+                      </button>
+                    </form>
+                  </div>
                 </TD>
               </TR>
             ))}
@@ -181,7 +187,7 @@ async function DepartamentosTab({ supabase, redeId }: { supabase: SB; redeId: st
   const [{ data: deptos }, { data: unidades }] = await Promise.all([
     supabase
       .from("departamentos")
-      .select("id,nome,escopo,status,unidades(nome)")
+      .select("id,nome,escopo,status,unidade_id,unidades(nome)")
       .eq("rede_id", redeId)
       .order("nome"),
     supabase.from("unidades").select("id,nome").eq("rede_id", redeId).order("nome"),
@@ -202,7 +208,7 @@ async function DepartamentosTab({ supabase, redeId }: { supabase: SB; redeId: st
               <TH>Departamento</TH>
               <TH>Escopo</TH>
               <TH>Status</TH>
-              <TH className="w-28" />
+              <TH className="w-40" />
             </TR>
           </THead>
           <tbody>
@@ -216,11 +222,22 @@ async function DepartamentosTab({ supabase, redeId }: { supabase: SB; redeId: st
                     <Badge tone={d.status === "ativo" ? "success" : "neutral"}>{d.status}</Badge>
                   </TD>
                   <TD>
-                    <form action={setDepartamentoStatus.bind(null, d.id, d.status === "ativo" ? "inativo" : "ativo")}>
-                      <button className="text-sm text-muted-foreground hover:text-foreground" type="submit">
-                        {d.status === "ativo" ? "Desativar" : "Ativar"}
-                      </button>
-                    </form>
+                    <div className="flex items-center gap-3">
+                      <EditDepartamentoButton
+                        departamento={{
+                          id: d.id,
+                          nome: d.nome,
+                          escopo: d.escopo,
+                          unidade_id: d.unidade_id,
+                        }}
+                        unidades={unidadeOpts}
+                      />
+                      <form action={setDepartamentoStatus.bind(null, d.id, d.status === "ativo" ? "inativo" : "ativo")}>
+                        <button className="text-sm text-muted-foreground hover:text-foreground" type="submit">
+                          {d.status === "ativo" ? "Desativar" : "Ativar"}
+                        </button>
+                      </form>
+                    </div>
                   </TD>
                 </TR>
               );
@@ -237,7 +254,7 @@ async function UsuariosTab({ supabase, redeId }: { supabase: SB; redeId: string 
     await Promise.all([
       supabase
         .from("profiles")
-        .select("id,nome,email,papel,status,departamentos(nome)")
+        .select("id,nome,email,papel,status,departamento_id,departamentos(nome)")
         .eq("rede_id", redeId)
         .order("nome"),
       supabase.from("unidades").select("id,nome").eq("rede_id", redeId).order("nome"),
@@ -272,6 +289,7 @@ async function UsuariosTab({ supabase, redeId }: { supabase: SB; redeId: string 
               <TH>Papel</TH>
               <TH>Departamento</TH>
               <TH>Status</TH>
+              <TH className="w-20" />
             </TR>
           </THead>
           <tbody>
@@ -285,6 +303,21 @@ async function UsuariosTab({ supabase, redeId }: { supabase: SB; redeId: string 
                   <TD>{depto?.nome ?? "—"}</TD>
                   <TD>
                     <Badge tone={u.status === "ativo" ? "success" : "neutral"}>{u.status}</Badge>
+                  </TD>
+                  <TD>
+                    <EditUsuarioButton
+                      usuario={{
+                        id: u.id,
+                        nome: u.nome,
+                        email: u.email,
+                        papel: u.papel,
+                        status: u.status,
+                        departamento_id:
+                          (u as { departamento_id: string | null })
+                            .departamento_id ?? null,
+                      }}
+                      departamentos={deptoOpts}
+                    />
                   </TD>
                 </TR>
               );

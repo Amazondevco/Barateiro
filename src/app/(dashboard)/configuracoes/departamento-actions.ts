@@ -34,6 +34,34 @@ export async function createDepartamento(
   return { ok: true };
 }
 
+export async function updateDepartamento(
+  id: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const nome = String(formData.get("nome") ?? "").trim();
+  if (!nome) return { error: "Informe o nome do departamento." };
+
+  const escopo = String(formData.get("escopo") ?? "unidade");
+  const unidadeId = String(formData.get("unidade_id") ?? "").trim() || null;
+  if (escopo === "unidade" && !unidadeId)
+    return { error: "Selecione a unidade do departamento." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("departamentos")
+    .update({
+      nome,
+      escopo,
+      unidade_id: escopo === "rede" ? null : unidadeId,
+    })
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/configuracoes");
+  return { ok: true };
+}
+
 export async function setDepartamentoStatus(
   id: string,
   status: "ativo" | "inativo",

@@ -77,6 +77,16 @@ export function DashboardShell({
   const brandStyle = Object.keys(vars).length
     ? (vars as React.CSSProperties)
     : undefined;
+
+  // Topbar usa a mesma cor da sidebar (remapeia os tokens no seu subtree)
+  const headerStyle = {
+    background: "var(--sidebar)",
+    ["--foreground"]: "var(--sidebar-strong)",
+    ["--muted-foreground"]: "var(--sidebar-muted)",
+    ["--muted"]: "var(--sidebar-hover)",
+    ["--border"]: "var(--sidebar-border)",
+    ["--card"]: "var(--sidebar)",
+  } as React.CSSProperties;
   const initials = (profile.nome || profile.email)
     .split(" ")
     .map((p) => p[0])
@@ -117,7 +127,10 @@ export function DashboardShell({
 
       {/* Coluna principal */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
+        <header
+          className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4 lg:px-6"
+          style={headerStyle}
+        >
           <div className="flex min-w-0 flex-1 items-center gap-2">
             {/* Recolher/expandir sidebar (desktop) */}
             <Button
