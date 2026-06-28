@@ -64,6 +64,7 @@ export default async function VisaoGeralPage() {
     <>
       <PageHeader
         title={`Olá, ${profile?.nome?.split(" ")[0] || "bem-vindo"} 👋`}
+        crumb="Visão geral"
         subtitle={
           isSuper
             ? "Visão consolidada de todas as redes."

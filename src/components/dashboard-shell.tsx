@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, X, LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu, X, LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,25 @@ export function DashboardShell({
   rede?: RedeBrand | null;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false); // drawer mobile
+  const [collapsed, setCollapsed] = useState(false); // sidebar desktop recolhida
+
+  // persiste o estado recolhido
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem("sidebar-collapsed") === "1");
+    } catch {}
+  }, []);
+  function toggleCollapsed() {
+    setCollapsed((v) => {
+      const next = !v;
+      try {
+        localStorage.setItem("sidebar-collapsed", next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+  }
+
   const cor = rede?.cor_primaria;
   const brandStyle = cor
     ? ({
@@ -40,8 +58,12 @@ export function DashboardShell({
 
   return (
     <div className="flex h-dvh overflow-hidden" style={brandStyle}>
-      {/* Sidebar desktop */}
-      <div className="hidden lg:block">
+      {/* Sidebar desktop (recolhível) */}
+      <div
+        className={`hidden shrink-0 overflow-hidden transition-[width] duration-200 lg:block ${
+          collapsed ? "w-0" : "w-64"
+        }`}
+      >
         <Sidebar
           papel={profile.papel}
           brandName={rede?.nome}
@@ -70,17 +92,35 @@ export function DashboardShell({
       {/* Coluna principal */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setOpen((v) => !v)}
-            aria-label="Menu"
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+          <div className="flex items-center gap-1">
+            {/* Recolher/expandir sidebar (desktop) */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden lg:flex"
+              onClick={toggleCollapsed}
+              aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+              title={collapsed ? "Expandir menu" : "Recolher menu"}
+            >
+              {collapsed ? (
+                <PanelLeftOpen className="h-5 w-5" />
+              ) : (
+                <PanelLeftClose className="h-5 w-5" />
+              )}
+            </Button>
+            {/* Menu (mobile) */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setOpen((v) => !v)}
+              aria-label="Menu"
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
 
-          <div className="flex flex-1 items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-2">
             <ThemeToggle />
 
             <div className="flex items-center gap-3 border-l border-border pl-3">
