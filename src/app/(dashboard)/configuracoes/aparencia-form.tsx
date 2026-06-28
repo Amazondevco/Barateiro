@@ -1,7 +1,16 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
-import { Upload, ImageIcon, RotateCcw, Check, Sun, Moon } from "lucide-react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Upload,
+  ImageIcon,
+  RotateCcw,
+  Check,
+  Sun,
+  Moon,
+  Eraser,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -39,6 +48,12 @@ export function AparenciaForm({
   const [err, setErr] = useState<string | null>(null);
   const logoInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  // Após salvar, atualiza os Server Components (sidebar inclusive) sem F5
+  useEffect(() => {
+    if (state.ok) router.refresh();
+  }, [state.ok, router]);
 
   async function upload(file: File, kind: "logo" | "banner") {
     setErr(null);
@@ -56,6 +71,72 @@ export function AparenciaForm({
       else setBanner(data.publicUrl);
     } catch {
       setErr("Falha no upload. Tente uma imagem menor (PNG/JPG).");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // Remove o fundo da logo no navegador: torna transparente a cor dos cantos.
+  async function removeBackground() {
+    if (!logo) return;
+    setErr(null);
+    setBusy("nobg");
+    try {
+      const res = await fetch(logo, { cache: "no-store" });
+      const bmp = await createImageBitmap(await res.blob());
+      const canvas = document.createElement("canvas");
+      canvas.width = bmp.width;
+      canvas.height = bmp.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error();
+      ctx.drawImage(bmp, 0, 0);
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = img.data;
+      const w = canvas.width;
+      const h = canvas.height;
+      // cor de fundo = média dos 4 cantos
+      const corners = [
+        0,
+        (w - 1) * 4,
+        (h - 1) * w * 4,
+        ((h - 1) * w + (w - 1)) * 4,
+      ];
+      let br = 0,
+        bgc = 0,
+        bb = 0;
+      for (const i of corners) {
+        br += d[i];
+        bgc += d[i + 1];
+        bb += d[i + 2];
+      }
+      br /= 4;
+      bgc /= 4;
+      bb /= 4;
+      const tol = 60; // tolerância da cor de fundo
+      for (let i = 0; i < d.length; i += 4) {
+        const dr = d[i] - br;
+        const dg = d[i + 1] - bgc;
+        const db = d[i + 2] - bb;
+        const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+        if (dist < tol) d[i + 3] = 0;
+        else if (dist < tol * 1.7)
+          d[i + 3] = Math.round((255 * (dist - tol)) / (tol * 0.7));
+      }
+      ctx.putImageData(img, 0, 0);
+      const out = await new Promise<Blob | null>((r) =>
+        canvas.toBlob(r, "image/png"),
+      );
+      if (!out) throw new Error();
+      const supabase = createClient();
+      const path = `${redeId}/logo-nobg-${Date.now()}.png`;
+      const { error } = await supabase.storage
+        .from("branding")
+        .upload(path, out, { upsert: true, contentType: "image/png" });
+      if (error) throw error;
+      const { data } = supabase.storage.from("branding").getPublicUrl(path);
+      setLogo(data.publicUrl);
+    } catch {
+      setErr("Não consegui remover o fundo dessa imagem.");
     } finally {
       setBusy(null);
     }
@@ -156,10 +237,22 @@ export function AparenciaForm({
             type="button"
             variant="outline"
             onClick={() => logoInput.current?.click()}
+            disabled={!!busy}
           >
             <Upload className="h-4 w-4" />
             {busy === "logo" ? "Enviando…" : "Carregar imagem"}
           </Button>
+          {logo && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={removeBackground}
+              disabled={!!busy}
+            >
+              <Eraser className="h-4 w-4" />
+              {busy === "nobg" ? "Removendo…" : "Remover fundo"}
+            </Button>
+          )}
           {logo && (
             <button
               type="button"
@@ -316,7 +409,7 @@ export function AparenciaForm({
       )}
       {state.ok && (
         <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success">
-          Salvo. Recarregue para ver o tema aplicado no ambiente.
+          Salvo e aplicado no ambiente.
         </p>
       )}
 

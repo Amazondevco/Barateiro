@@ -24,6 +24,6 @@ export async function updateAparencia(
     .eq("id", redeId);
 
   if (error) return { error: error.message };
-  revalidatePath("/configuracoes");
+  revalidatePath("/", "layout"); // atualiza também o sidebar (logo/cor)
   return { ok: true };
 }
