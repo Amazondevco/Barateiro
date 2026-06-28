@@ -39,7 +39,7 @@ export default async function FormularioDetailPage({
     <div className="space-y-4">
       <Link
         href="/formularios"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
       >
         <ArrowLeft className="h-4 w-4" /> Formulários
       </Link>
