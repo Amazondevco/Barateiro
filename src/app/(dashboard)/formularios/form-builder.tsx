@@ -10,6 +10,8 @@ import {
   GripVertical,
   Settings2,
   ArrowLeft,
+  Camera,
+  PenLine,
 } from "lucide-react";
 import {
   DndContext,
@@ -287,7 +289,7 @@ export function FormBuilder({
   }
 
   return (
-    <div className="max-w-4xl space-y-6 pb-4">
+    <div className="space-y-4 pb-4">
       <div className="flex items-center gap-2">
         <Button
           type="button"
@@ -296,7 +298,7 @@ export function FormBuilder({
         >
           <ArrowLeft className="h-4 w-4" /> Voltar
         </Button>
-        <Button type="button" variant="outline" onClick={() => setAiOpen(true)}>
+        <Button type="button" variant="primary" onClick={() => setAiOpen(true)}>
           <Sparkles className="h-4 w-4" /> Criar com IA
         </Button>
       </div>
@@ -304,6 +306,8 @@ export function FormBuilder({
         <AiFormDialog onClose={() => setAiOpen(false)} onGenerated={applyAi} />
       )}
 
+      <div className="flex gap-6">
+        <div className="min-w-0 flex-1 space-y-6 xl:max-w-3xl">
       {/* Dados */}
       <Card>
         <CardContent className="space-y-4">
@@ -443,6 +447,151 @@ export function FormBuilder({
           {pending ? "Salvando…" : "Salvar formulário"}
         </Button>
       </div>
+        </div>
+
+        {/* Prévia no celular (iPhone) */}
+        <div className="hidden xl:block">
+          <PhonePreview nome={nome} secoes={secoes} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Prévia iPhone ---------------- */
+
+const DUO: Record<string, [string, string]> = {
+  ok_nao: ["OK", "NÃO"],
+  sim_nao: ["Sim", "Não"],
+  abastecido_ruptura: ["Abastecido", "Ruptura"],
+};
+
+function PreviewControl({ item }: { item: BItem }) {
+  if (DUO[item.tipo]) {
+    const [a, b] = DUO[item.tipo];
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        <span className="rounded-lg border border-border py-1.5 text-center text-xs font-medium">
+          {a}
+        </span>
+        <span className="rounded-lg border border-border py-1.5 text-center text-xs font-medium">
+          {b}
+        </span>
+      </div>
+    );
+  }
+  if (item.tipo === "multipla_escolha") {
+    return (
+      <div className="space-y-1.5">
+        {item.opcoes.filter((o) => o.trim()).length === 0 ? (
+          <p className="text-xs text-muted-foreground">Sem opções</p>
+        ) : (
+          item.opcoes
+            .filter((o) => o.trim())
+            .map((o, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs">
+                <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-border" />
+                {o}
+              </div>
+            ))
+        )}
+      </div>
+    );
+  }
+  if (item.tipo === "foto") {
+    return (
+      <div className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-border py-3 text-xs text-muted-foreground">
+        <Camera className="h-4 w-4" /> Tirar foto
+      </div>
+    );
+  }
+  if (item.tipo === "assinatura") {
+    return (
+      <div className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-border py-4 text-xs text-muted-foreground">
+        <PenLine className="h-4 w-4" /> Assinar aqui
+      </div>
+    );
+  }
+  const placeholder =
+    item.tipo === "numero"
+      ? "0"
+      : item.tipo === "data"
+        ? "dd/mm/aaaa"
+        : "Resposta…";
+  return (
+    <div className="flex h-8 items-center rounded-lg border border-border bg-muted/40 px-2 text-xs text-muted-foreground">
+      {placeholder}
+    </div>
+  );
+}
+
+function PreviewItem({ item }: { item: BItem }) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-2.5">
+      <p className="text-xs font-medium text-foreground">
+        {item.texto || "Item de verificação"}
+      </p>
+      {item.ajuda && (
+        <p className="mt-0.5 text-[11px] text-muted-foreground">{item.ajuda}</p>
+      )}
+      <div className="mt-2">
+        <PreviewControl item={item} />
+      </div>
+    </div>
+  );
+}
+
+function PhonePreview({
+  nome,
+  secoes,
+}: {
+  nome: string;
+  secoes: BSecao[];
+}) {
+  return (
+    <div className="sticky top-4 w-[300px]">
+      <div className="mx-auto rounded-[2.5rem] border-[10px] border-slate-900 bg-slate-900 shadow-xl">
+        <div className="relative h-[600px] overflow-hidden rounded-[1.8rem] bg-background">
+          {/* notch */}
+          <div className="absolute left-1/2 top-0 z-10 h-6 w-28 -translate-x-1/2 rounded-b-2xl bg-slate-900" />
+          <div className="h-full overflow-y-auto">
+            {/* header do app (cor primária) */}
+            <div className="bg-primary px-4 pb-3 pt-8 text-primary-foreground">
+              <p className="truncate text-sm font-semibold">
+                {nome || "Novo formulário"}
+              </p>
+              <p className="text-[11px] opacity-80">Checklist · hoje</p>
+            </div>
+            <div className="space-y-4 p-3">
+              {secoes.map((sec, si) => (
+                <div key={sec._id} className="space-y-2">
+                  {sec.quebra_pagina && si > 0 && (
+                    <div className="flex items-center gap-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                      <span className="h-px flex-1 bg-primary/30" /> Etapa{" "}
+                      {si + 1} <span className="h-px flex-1 bg-primary/30" />
+                    </div>
+                  )}
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    {sec.titulo || `Seção ${si + 1}`}
+                  </p>
+                  {sec.itens.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Sem itens</p>
+                  ) : (
+                    sec.itens.map((it) => <PreviewItem key={it._id} item={it} />)
+                  )}
+                </div>
+              ))}
+              {/* botão enviar */}
+              <div className="rounded-xl bg-primary py-2 text-center text-sm font-semibold text-primary-foreground">
+                Enviar checklist
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p className="mt-2 text-center text-xs text-muted-foreground">
+        Prévia no app do gerente
+      </p>
     </div>
   );
 }
