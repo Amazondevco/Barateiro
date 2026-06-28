@@ -16,6 +16,7 @@ import {
 import { AiFormDialog } from "./ai-form-dialog";
 import type { AiForm } from "./ai-actions";
 import type { ItemTipo, UnidadeTipo } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const TIPO_ITEM: { v: ItemTipo; l: string }[] = [
   { v: "ok_nao", l: "OK / NÃO" },
@@ -213,14 +214,20 @@ export function FormBuilder({
       {secoes.map((sec, si) => (
         <Card key={si}>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Input
+            <div className="flex items-center gap-3 border-b border-border pb-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-sm font-semibold text-primary">
+                {si + 1}
+              </span>
+              <input
                 value={sec.titulo}
                 onChange={(e) => patchSecao(si, { titulo: e.target.value })}
                 placeholder={`Seção ${si + 1} (ex.: Hortifrúti)`}
-                className="font-medium"
+                className="flex-1 bg-transparent text-base font-semibold outline-none placeholder:font-normal placeholder:text-muted-foreground"
               />
-              <label className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
+              <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
+                {sec.itens.length} {sec.itens.length === 1 ? "item" : "itens"}
+              </span>
+              <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
                 <input
                   type="checkbox"
                   checked={sec.permite_na}
@@ -231,69 +238,90 @@ export function FormBuilder({
                 />
                 Permite N/A
               </label>
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                size="icon"
                 onClick={() =>
                   setSecoes((s) => s.filter((_, idx) => idx !== si))
                 }
                 aria-label="Remover seção"
+                className="shrink-0 text-muted-foreground hover:text-danger"
               >
-                <Trash2 className="h-4 w-4 text-danger" />
-              </Button>
+                <Trash2 className="h-4 w-4" />
+              </button>
             </div>
 
-            {/* Itens */}
-            <div className="space-y-2">
+            {/* Itens (tabela) */}
+            <div className="overflow-hidden rounded-lg border border-border">
+              {sec.itens.length > 0 && (
+                <div className="hidden items-center gap-2 bg-muted/50 px-3 py-2 text-xs font-medium text-muted-foreground sm:flex">
+                  <span className="w-5" />
+                  <span className="flex-1">Item de verificação</span>
+                  <span className="w-44">Resposta</span>
+                  <span className="w-[7.5rem] text-center">
+                    Exige no &quot;Não&quot;
+                  </span>
+                  <span className="w-5" />
+                </div>
+              )}
               {sec.itens.map((it, ii) => (
                 <div
                   key={ii}
-                  className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2"
+                  className="flex flex-wrap items-center gap-2 border-t border-border px-3 py-2 first:border-t-0 sm:flex-nowrap"
                 >
-                  <Input
+                  <span className="w-5 shrink-0 text-center text-xs text-muted-foreground">
+                    {ii + 1}
+                  </span>
+                  <input
                     value={it.texto}
                     onChange={(e) =>
                       patchItem(si, ii, { texto: e.target.value })
                     }
-                    placeholder="Texto do item de verificação"
-                    className="min-w-50 flex-1"
+                    placeholder="Descreva o que verificar…"
+                    className="min-w-40 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                   />
-                  <Select
+                  <select
                     value={it.tipo}
                     onChange={(e) =>
                       patchItem(si, ii, { tipo: e.target.value as ItemTipo })
                     }
-                    className="w-44"
+                    className="h-8 w-full shrink-0 rounded-md border border-input bg-card px-2 text-xs outline-none focus:ring-2 focus:ring-ring sm:w-44"
                   >
                     {TIPO_ITEM.map((t) => (
                       <option key={t.v} value={t.v}>
                         {t.l}
                       </option>
                     ))}
-                  </Select>
-                  <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={it.obriga_obs}
-                      onChange={(e) =>
-                        patchItem(si, ii, { obriga_obs: e.target.checked })
+                  </select>
+                  <div className="flex w-[7.5rem] shrink-0 justify-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        patchItem(si, ii, { obriga_obs: !it.obriga_obs })
                       }
-                      className="accent-[var(--primary)]"
-                    />
-                    Obs.
-                  </label>
-                  <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={it.obriga_foto}
-                      onChange={(e) =>
-                        patchItem(si, ii, { obriga_foto: e.target.checked })
+                      className={cn(
+                        "rounded-md px-2 py-1 text-xs font-medium transition",
+                        it.obriga_obs
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      Obs.
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        patchItem(si, ii, { obriga_foto: !it.obriga_foto })
                       }
-                      className="accent-[var(--primary)]"
-                    />
-                    Foto
-                  </label>
+                      className={cn(
+                        "rounded-md px-2 py-1 text-xs font-medium transition",
+                        it.obriga_foto
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      Foto
+                    </button>
+                  </div>
                   <button
                     type="button"
                     onClick={() =>
@@ -301,17 +329,15 @@ export function FormBuilder({
                         itens: sec.itens.filter((_, j) => j !== ii),
                       })
                     }
-                    className="text-muted-foreground hover:text-danger"
+                    className="shrink-0 text-muted-foreground hover:text-danger"
                     aria-label="Remover item"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
               ))}
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={() =>
                   patchSecao(si, {
                     itens: [
@@ -325,9 +351,10 @@ export function FormBuilder({
                     ],
                   })
                 }
+                className="flex w-full items-center justify-center gap-1.5 border-t border-border py-2.5 text-sm font-medium text-primary hover:bg-muted"
               >
                 <Plus className="h-4 w-4" /> Adicionar item
-              </Button>
+              </button>
             </div>
           </CardContent>
         </Card>
