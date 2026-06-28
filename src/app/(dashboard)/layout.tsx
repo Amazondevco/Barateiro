@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const { rede } = await getSessionContext();
   return {
     title: rede?.nome ?? "Amazon Dev & Co.",
-    icons: { icon: rede?.logo_url ?? "/icon.svg" },
+    icons: { icon: rede?.favicon_url ?? rede?.logo_url ?? "/icon.svg" },
   };
 }
 

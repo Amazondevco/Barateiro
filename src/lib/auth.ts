@@ -6,6 +6,7 @@ export type RedeBrand = {
   id: string;
   nome: string;
   logo_url: string | null;
+  favicon_url: string | null;
   banner_url: string | null;
   cor_primaria: string | null;
   cor_sidebar: string | null;
@@ -29,7 +30,9 @@ export const getSessionContext = cache(
 
     const { data } = await supabase
       .from("profiles")
-      .select("*, redes(id,nome,logo_url,banner_url,cor_primaria,cor_sidebar)")
+      .select(
+        "*, redes(id,nome,logo_url,favicon_url,banner_url,cor_primaria,cor_sidebar)",
+      )
       .eq("id", claims.sub)
       .single();
 
@@ -58,7 +61,7 @@ export const getSessionContext = cache(
     if (!profile.rede_id) {
       const { data: plat } = await supabase
         .from("plataforma")
-        .select("nome,logo_url,banner_url,cor_primaria,cor_sidebar")
+        .select("nome,logo_url,favicon_url,banner_url,cor_primaria,cor_sidebar")
         .eq("id", true)
         .single();
       if (plat) {
@@ -66,6 +69,7 @@ export const getSessionContext = cache(
           id: "plataforma",
           nome: plat.nome,
           logo_url: plat.logo_url,
+          favicon_url: plat.favicon_url,
           banner_url: plat.banner_url,
           cor_primaria: plat.cor_primaria,
           cor_sidebar: plat.cor_sidebar,

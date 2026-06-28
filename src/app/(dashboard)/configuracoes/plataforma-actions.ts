@@ -20,6 +20,7 @@ export async function updateAparenciaPlataforma(
 
   const payload = {
     logo_url: String(formData.get("logo_url") ?? "").trim() || null,
+    favicon_url: String(formData.get("favicon_url") ?? "").trim() || null,
     banner_url: String(formData.get("banner_url") ?? "").trim() || null,
     cor_primaria: String(formData.get("cor_primaria") ?? "#2563eb"),
     cor_sidebar: String(formData.get("cor_sidebar") ?? "").trim() || null,

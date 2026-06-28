@@ -169,11 +169,49 @@ async function processLogo(file: File): Promise<Blob> {
   );
 }
 
+function roundRectPath(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// Favicon = logo (transparente) sobre tile arredondado cinza claro.
+async function makeFavicon(logoBlob: Blob): Promise<Blob> {
+  const bmp = await createImageBitmap(logoBlob);
+  const SIZE = 256;
+  const c = document.createElement("canvas");
+  c.width = SIZE;
+  c.height = SIZE;
+  const ctx = c.getContext("2d");
+  if (!ctx) return logoBlob;
+  ctx.fillStyle = "#e5e7eb"; // cinza claro
+  roundRectPath(ctx, 0, 0, SIZE, SIZE, 52);
+  ctx.fill();
+  const pad = 40;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(bmp, pad, pad, SIZE - 2 * pad, SIZE - 2 * pad);
+  return await new Promise<Blob>((res) =>
+    c.toBlob((b) => res(b ?? logoBlob), "image/png"),
+  );
+}
+
 export function AparenciaForm({
   action,
   redeId,
   nome,
   logoUrl,
+  faviconUrl,
   bannerUrl,
   cor,
   corSidebar,
@@ -182,12 +220,14 @@ export function AparenciaForm({
   redeId: string;
   nome: string;
   logoUrl: string | null;
+  faviconUrl: string | null;
   bannerUrl: string | null;
   cor: string | null;
   corSidebar: string | null;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
   const [logo, setLogo] = useState(logoUrl ?? "");
+  const [favicon, setFavicon] = useState(faviconUrl ?? "");
   const [banner, setBanner] = useState(bannerUrl ?? "");
   const [color, setColor] = useState(cor ?? DEFAULT_COLOR);
   const [sidebar, setSidebar] = useState(corSidebar ?? SIDEBAR_DEFAULT);
@@ -208,24 +248,33 @@ export function AparenciaForm({
     setBusy(kind);
     try {
       const supabase = createClient();
-      let body: Blob = file;
-      let path: string;
-      let contentType: string | undefined;
+      const pub = (p: string) =>
+        supabase.storage.from("branding").getPublicUrl(p).data.publicUrl;
+
       if (kind === "logo") {
-        body = await processLogo(file); // recorta + quadra + 256px
-        path = `${redeId}/logo-${Date.now()}.png`;
-        contentType = "image/png";
+        const logoBlob = await processLogo(file); // remove fundo + quadra + 256
+        const lp = `${redeId}/logo-${Date.now()}.png`;
+        const { error: le } = await supabase.storage
+          .from("branding")
+          .upload(lp, logoBlob, { upsert: true, contentType: "image/png" });
+        if (le) throw le;
+        setLogo(pub(lp));
+        // favicon = logo sobre tile cinza arredondado
+        const favBlob = await makeFavicon(logoBlob);
+        const fp = `${redeId}/favicon-${Date.now()}.png`;
+        const { error: fe } = await supabase.storage
+          .from("branding")
+          .upload(fp, favBlob, { upsert: true, contentType: "image/png" });
+        if (!fe) setFavicon(pub(fp));
       } else {
         const ext = (file.name.split(".").pop() || "png").toLowerCase();
-        path = `${redeId}/banner-${Date.now()}.${ext}`;
+        const bp = `${redeId}/banner-${Date.now()}.${ext}`;
+        const { error: be } = await supabase.storage
+          .from("branding")
+          .upload(bp, file, { upsert: true });
+        if (be) throw be;
+        setBanner(pub(bp));
       }
-      const { error } = await supabase.storage
-        .from("branding")
-        .upload(path, body, { upsert: true, contentType });
-      if (error) throw error;
-      const { data } = supabase.storage.from("branding").getPublicUrl(path);
-      if (kind === "logo") setLogo(data.publicUrl);
-      else setBanner(data.publicUrl);
     } catch {
       setErr("Falha no upload. Tente uma imagem menor (PNG/JPG).");
     } finally {
@@ -294,8 +343,16 @@ export function AparenciaForm({
         .from("branding")
         .upload(path, out, { upsert: true, contentType: "image/png" });
       if (error) throw error;
-      const { data } = supabase.storage.from("branding").getPublicUrl(path);
-      setLogo(data.publicUrl);
+      setLogo(supabase.storage.from("branding").getPublicUrl(path).data.publicUrl);
+      const favBlob = await makeFavicon(out);
+      const fp = `${redeId}/favicon-${Date.now()}.png`;
+      const { error: fe } = await supabase.storage
+        .from("branding")
+        .upload(fp, favBlob, { upsert: true, contentType: "image/png" });
+      if (!fe)
+        setFavicon(
+          supabase.storage.from("branding").getPublicUrl(fp).data.publicUrl,
+        );
     } catch {
       setErr("Não consegui remover o fundo dessa imagem.");
     } finally {
@@ -305,6 +362,7 @@ export function AparenciaForm({
 
   function resetAll() {
     setLogo(logoUrl ?? "");
+    setFavicon(faviconUrl ?? "");
     setBanner(bannerUrl ?? "");
     setColor(cor ?? DEFAULT_COLOR);
     setSidebar(corSidebar ?? SIDEBAR_DEFAULT);
@@ -314,6 +372,7 @@ export function AparenciaForm({
   return (
     <form action={formAction} className="max-w-3xl space-y-8 pb-4">
       <input type="hidden" name="logo_url" value={logo} />
+      <input type="hidden" name="favicon_url" value={favicon} />
       <input type="hidden" name="banner_url" value={banner} />
       <input type="hidden" name="cor_primaria" value={color} />
       <input type="hidden" name="cor_sidebar" value={sidebar} />

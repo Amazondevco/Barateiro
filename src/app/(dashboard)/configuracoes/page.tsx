@@ -99,6 +99,7 @@ export default async function ConfiguracoesPage({
             action={updateAparenciaPlataforma}
             redeId="plataforma"
             logoUrl={plat.logo_url}
+            faviconUrl={plat.favicon_url}
             bannerUrl={plat.banner_url}
             cor={plat.cor_primaria}
             corSidebar={plat.cor_sidebar}
@@ -179,6 +180,7 @@ export default async function ConfiguracoesPage({
               action={updateAparencia.bind(null, redeId)}
               redeId={redeId}
               logoUrl={rede.logo_url}
+              faviconUrl={rede.favicon_url}
               bannerUrl={rede.banner_url}
               cor={rede.cor_primaria}
               corSidebar={rede.cor_sidebar}
