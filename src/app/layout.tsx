@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Amazon Dev & Co. — Gestão",
   description: "Plataforma de gestão para redes de supermercado",
+  icons: { icon: "/icon.svg" },
 };
 
 export default function RootLayout({
