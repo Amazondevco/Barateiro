@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth-actions";
 import { PAPEL_LABEL, type Profile } from "@/lib/types";
 import type { RedeBrand } from "@/lib/auth";
+import { UserSwitcher } from "@/components/user-switcher";
+
+const isDev = process.env.NODE_ENV !== "production";
 
 export function DashboardShell({
   profile,
@@ -92,6 +95,7 @@ export function DashboardShell({
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                 {initials}
               </span>
+              {isDev && <UserSwitcher currentEmail={profile.email} />}
               <form action={signOut}>
                 <Button
                   variant="ghost"
