@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { ArrowRightLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DEV_ACCOUNTS, quickSwitch } from "@/lib/dev-switch-actions";
+import { DEV_ACCOUNTS } from "@/lib/dev-accounts";
+import { quickSwitch } from "@/lib/dev-switch-actions";
 
 /** DEV: alterna entre contas de teste. Só renderizado em desenvolvimento. */
 export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
