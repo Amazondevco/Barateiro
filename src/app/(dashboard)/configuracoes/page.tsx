@@ -21,6 +21,7 @@ import {
 import { AddDepartamentoForm } from "./add-departamento-form";
 import { updateAparencia } from "./actions";
 import { AparenciaForm } from "./aparencia-form";
+import { PermissoesTab } from "./permissoes-tab";
 
 export const metadata = { title: "Configurações — Amazon Dev & Co." };
 
@@ -28,6 +29,7 @@ const TABS = [
   { key: "unidades", label: "Unidades" },
   { key: "departamentos", label: "Departamentos" },
   { key: "usuarios", label: "Usuários" },
+  { key: "permissoes", label: "Permissões" },
   { key: "auditoria", label: "Auditoria" },
   { key: "aparencia", label: "Aparência" },
 ];
@@ -92,6 +94,9 @@ export default async function ConfiguracoesPage({
           )}
           {tab === "usuarios" && (
             <UsuariosTab supabase={supabase} redeId={redeId} />
+          )}
+          {tab === "permissoes" && (
+            <CargosTab supabase={supabase} redeId={redeId} />
           )}
           {tab === "auditoria" && (
             <AuditoriaTab supabase={supabase} redeId={redeId} />
@@ -267,6 +272,16 @@ async function UsuariosTab({ supabase, redeId }: { supabase: SB; redeId: string 
       )}
     </div>
   );
+}
+
+async function CargosTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
+  const { data: cargos } = await supabase
+    .from("cargos")
+    .select("id,nome,slug,descricao,sistema,permissoes")
+    .eq("rede_id", redeId)
+    .order("sistema", { ascending: false })
+    .order("nome");
+  return <PermissoesTab redeId={redeId} cargos={cargos ?? []} />;
 }
 
 async function AuditoriaTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
