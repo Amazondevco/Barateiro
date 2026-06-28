@@ -33,20 +33,17 @@ export const getSessionContext = cache(
       .eq("id", claims.sub)
       .single();
 
-    if (data) {
-      const { redes, ...profile } = data as Profile & {
-        redes: RedeBrand | null;
-      };
-      return {
-        profile: profile as Profile,
-        rede: (redes as RedeBrand) ?? null,
-      };
-    }
+    let profile: Profile;
+    let rede: RedeBrand | null = null;
 
-    // Fallback: schema/profile ausente → deriva do metadata do token.
-    const meta = claims.user_metadata ?? {};
-    return {
-      profile: {
+    if (data) {
+      const { redes, ...p } = data as Profile & { redes: RedeBrand | null };
+      profile = p as Profile;
+      rede = (redes as RedeBrand) ?? null;
+    } else {
+      // Fallback: schema/profile ausente → deriva do metadata do token.
+      const meta = claims.user_metadata ?? {};
+      profile = {
         id: claims.sub,
         rede_id: (meta.rede_id as string) ?? null,
         nome: (meta.nome as string) ?? "",
@@ -54,9 +51,29 @@ export const getSessionContext = cache(
         papel: ((meta.papel as Papel) ?? "super_admin") as Papel,
         avatar_url: null,
         status: "ativo",
-      },
-      rede: null,
-    };
+      };
+    }
+
+    // Super admin (sem rede) usa a marca da PLATAFORMA
+    if (!profile.rede_id) {
+      const { data: plat } = await supabase
+        .from("plataforma")
+        .select("nome,logo_url,banner_url,cor_primaria,cor_sidebar")
+        .eq("id", true)
+        .single();
+      if (plat) {
+        rede = {
+          id: "plataforma",
+          nome: plat.nome,
+          logo_url: plat.logo_url,
+          banner_url: plat.banner_url,
+          cor_primaria: plat.cor_primaria,
+          cor_sidebar: plat.cor_sidebar,
+        };
+      }
+    }
+
+    return { profile, rede };
   },
 );
 

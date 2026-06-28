@@ -106,6 +106,11 @@ export function DashboardShell({
           papel={profile.papel}
           brandName={rede?.nome}
           brandLogo={rede?.logo_url}
+          brandSubtitle={
+            profile.papel === "super_admin"
+              ? "Plataforma de Gestão"
+              : "Gestão da Rede"
+          }
           collapsed={collapsed}
         />
       </div>
@@ -122,6 +127,11 @@ export function DashboardShell({
               papel={profile.papel}
               brandName={rede?.nome}
               brandLogo={rede?.logo_url}
+              brandSubtitle={
+                profile.papel === "super_admin"
+                  ? "Plataforma de Gestão"
+                  : "Gestão da Rede"
+              }
               onNavigate={() => setOpen(false)}
             />
           </div>

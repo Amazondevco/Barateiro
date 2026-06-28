@@ -5,7 +5,6 @@ import {
   Users,
   BarChart3,
   Receipt,
-  ScrollText,
   LifeBuoy,
   Settings,
   type LucideIcon,
@@ -52,12 +51,6 @@ export const NAV: NavItem[] = [
     label: "Faturamento",
     icon: Receipt,
     roles: ["super_admin"], // admin não vê faturamento
-  },
-  {
-    href: "/auditoria",
-    label: "Auditoria",
-    icon: ScrollText,
-    roles: ["super_admin"], // admin vê em Configurações
   },
   {
     href: "/suporte",

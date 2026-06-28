@@ -11,12 +11,14 @@ export function Sidebar({
   papel,
   brandName,
   brandLogo,
+  brandSubtitle,
   collapsed = false,
   onNavigate,
 }: {
   papel: Papel;
   brandName?: string;
   brandLogo?: string | null;
+  brandSubtitle?: string;
   collapsed?: boolean;
   onNavigate?: () => void;
 }) {
@@ -41,7 +43,7 @@ export function Sidebar({
           compact={collapsed}
           name={brandName}
           logoUrl={brandLogo}
-          subtitle={brandName ? "Gestão da Rede" : undefined}
+          subtitle={brandSubtitle}
         />
       </div>
 

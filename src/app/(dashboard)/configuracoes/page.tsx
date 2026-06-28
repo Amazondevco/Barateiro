@@ -25,7 +25,9 @@ import { EditUnidadeButton } from "@/app/(dashboard)/clientes/[id]/edit-unidade-
 import { EditDepartamentoButton } from "./edit-departamento-button";
 import { EditUsuarioButton } from "@/components/edit-usuario-button";
 import { updateAparencia } from "./actions";
+import { updateAparenciaPlataforma } from "./plataforma-actions";
 import { AparenciaForm } from "./aparencia-form";
+import { PadroesForm } from "./padroes-form";
 import { PermissoesTab } from "./permissoes-tab";
 
 export const metadata = { title: "Configurações — Amazon Dev & Co." };
@@ -55,6 +57,66 @@ export default async function ConfiguracoesPage({
   const { profile, rede } = await getSessionContext();
   const redeId = profile?.rede_id ?? null;
   const supabase = await createClient();
+
+  // ---- Super Admin: configurações da PLATAFORMA ----
+  if (profile?.papel === "super_admin") {
+    const { data: plat } = await supabase
+      .from("plataforma")
+      .select("*")
+      .eq("id", true)
+      .single();
+    const PLAT_TABS = [
+      { key: "aparencia", label: "Aparência" },
+      { key: "auditoria", label: "Auditoria" },
+      { key: "padroes", label: "Padrões" },
+    ];
+    const ptab = PLAT_TABS.some((t) => t.key === tab) ? tab : "aparencia";
+
+    return (
+      <>
+        <PageHeader
+          title="Configurações"
+          subtitle="Plataforma — Amazon Dev & Co."
+        />
+        <div className="mb-6 flex gap-1 overflow-x-auto border-b border-border">
+          {PLAT_TABS.map((t) => (
+            <Link
+              key={t.key}
+              href={`/configuracoes?tab=${t.key}`}
+              className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+                ptab === t.key
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+            </Link>
+          ))}
+        </div>
+
+        {ptab === "aparencia" && plat && (
+          <AparenciaForm
+            action={updateAparenciaPlataforma}
+            redeId="plataforma"
+            logoUrl={plat.logo_url}
+            bannerUrl={plat.banner_url}
+            cor={plat.cor_primaria}
+            corSidebar={plat.cor_sidebar}
+            nome={plat.nome}
+          />
+        )}
+        {ptab === "auditoria" && <AuditoriaGlobal supabase={supabase} />}
+        {ptab === "padroes" && plat && (
+          <PadroesForm
+            horario={plat.default_horario_limite}
+            dias={plat.default_dias}
+            janela={plat.default_janela_edicao}
+            retencao={plat.default_retencao_fotos}
+          />
+        )}
+      </>
+    );
+  }
 
   // Auditoria e Aparência são exclusivas do admin da rede
   const isAdminRede = profile?.papel === "admin_supermercado";
@@ -384,6 +446,52 @@ async function AuditoriaTab({ supabase, redeId }: { supabase: SB; redeId: string
           return (
             <TR key={String(l.id)}>
               <TD>{new Date(l.created_at).toLocaleString("pt-BR")}</TD>
+              <TD>{autor?.nome ?? "—"}</TD>
+              <TD>{l.acao}</TD>
+              <TD>{l.entidade}</TD>
+            </TR>
+          );
+        })}
+      </tbody>
+    </Table>
+  );
+}
+
+async function AuditoriaGlobal({ supabase }: { supabase: SB }) {
+  const { data: logs } = await supabase
+    .from("audit_logs")
+    .select("id,acao,entidade,created_at,profiles(nome),redes(nome)")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if ((logs ?? []).length === 0) {
+    return (
+      <EmptyState
+        title="Sem registros ainda"
+        description="As ações na plataforma e nas redes aparecerão aqui."
+      />
+    );
+  }
+
+  return (
+    <Table>
+      <THead>
+        <TR>
+          <TH>Quando</TH>
+          <TH>Rede</TH>
+          <TH>Usuário</TH>
+          <TH>Ação</TH>
+          <TH>Entidade</TH>
+        </TR>
+      </THead>
+      <tbody>
+        {(logs ?? []).map((l) => {
+          const autor = l.profiles as unknown as { nome: string } | null;
+          const r = l.redes as unknown as { nome: string } | null;
+          return (
+            <TR key={String(l.id)}>
+              <TD>{new Date(l.created_at).toLocaleString("pt-BR")}</TD>
+              <TD>{r?.nome ?? "—"}</TD>
               <TD>{autor?.nome ?? "—"}</TD>
               <TD>{l.acao}</TD>
               <TD>{l.entidade}</TD>
