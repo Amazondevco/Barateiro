@@ -101,7 +101,7 @@ export function RefDatePicker({
         )}
       >
         <CalendarDays className="h-4 w-4" />
-        Hoje
+        Calendário
       </button>
 
       {open && (
