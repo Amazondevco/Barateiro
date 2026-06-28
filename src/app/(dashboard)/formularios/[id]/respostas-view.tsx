@@ -222,6 +222,11 @@ export function RespostasView({
           </div>
           <Link
             href={link(periodo)}
+            title={
+              ehHoje
+                ? "Você está vendo o dia de hoje"
+                : "Voltar para o dia de hoje"
+            }
             className={cn(
               "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
               ehHoje

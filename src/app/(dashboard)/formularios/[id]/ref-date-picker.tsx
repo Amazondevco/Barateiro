@@ -96,6 +96,7 @@ export function RefDatePicker({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Abrir calendário"
+        title="Escolher data no calendário"
         className={cn(
           "flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card transition-colors hover:text-foreground",
           open ? "text-foreground" : "text-muted-foreground",
