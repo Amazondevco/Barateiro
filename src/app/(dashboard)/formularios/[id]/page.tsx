@@ -386,6 +386,12 @@ async function RespostasTab({
           <div className="ml-1">
             <RefDatePicker periodo={periodo} refIso={fmtISO(refDate)} />
           </div>
+          <Link
+            href={link(periodo)}
+            className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            Hoje
+          </Link>
         </div>
       </div>
 

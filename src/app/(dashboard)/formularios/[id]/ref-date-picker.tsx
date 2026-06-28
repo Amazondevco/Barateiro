@@ -95,13 +95,13 @@ export function RefDatePicker({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-label="Abrir calendário"
         className={cn(
-          "flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium transition-colors hover:text-foreground",
+          "flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card transition-colors hover:text-foreground",
           open ? "text-foreground" : "text-muted-foreground",
         )}
       >
         <CalendarDays className="h-4 w-4" />
-        Calendário
       </button>
 
       {open && (
