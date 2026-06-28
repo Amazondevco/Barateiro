@@ -9,6 +9,7 @@ import {
   Sparkles,
   GripVertical,
   Settings2,
+  ArrowLeft,
 } from "lucide-react";
 import {
   DndContext,
@@ -287,7 +288,14 @@ export function FormBuilder({
 
   return (
     <div className="max-w-4xl space-y-6 pb-4">
-      <div className="flex justify-end">
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.push("/formularios")}
+        >
+          <ArrowLeft className="h-4 w-4" /> Voltar
+        </Button>
         <Button type="button" variant="outline" onClick={() => setAiOpen(true)}>
           <Sparkles className="h-4 w-4" /> Criar com IA
         </Button>

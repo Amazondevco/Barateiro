@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
@@ -35,12 +33,6 @@ export default async function NovoFormularioPage() {
 
   return (
     <>
-      <Link
-        href="/formularios"
-        className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" /> Formulários
-      </Link>
       <PageHeader title="Novo formulário" />
       <FormBuilder redeId={redeId} formId={null} departamentos={deps ?? []} />
     </>

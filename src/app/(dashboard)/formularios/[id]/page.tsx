@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
@@ -82,12 +80,6 @@ export default async function EditarFormularioPage({
 
   return (
     <>
-      <Link
-        href="/formularios"
-        className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" /> Formulários
-      </Link>
       <PageHeader title={form.nome} />
       <FormBuilder
         redeId={redeId}
