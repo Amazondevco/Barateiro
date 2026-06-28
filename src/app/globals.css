@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ===========================================================
-   Design tokens — SASI LDR Hub / Super Barateiro
+   Design tokens — Super Barateiro
    Primária azul · acentos cinza/rosa · light + dark
    =========================================================== */
 :root {
@@ -27,7 +27,7 @@
   --accent: #ec4899;
   --accent-foreground: #ffffff;
 
-  /* Sidebar (sempre escura no tema claro também — estilo SASI) */
+  /* Sidebar (sempre escura, inclusive no tema claro) */
   --sidebar: #0f172a;
   --sidebar-foreground: #cbd5e1;
   --sidebar-muted: #94a3b8;

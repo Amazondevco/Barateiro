@@ -8,7 +8,7 @@
 
 | Nível | Quem é | Enxerga |
 |---|---|---|
-| **Super Admin** | SASI (você) | **Tudo, de todos os clientes** (todas as redes, todas as lojas) |
+| **Super Admin** | Você (operador da plataforma) | **Tudo, de todos os clientes** (todas as redes, todas as lojas) |
 | **Admin do supermercado** | Dono + sócios da rede | **Tudo da própria rede** (suas lojas, usuários, relatórios) |
 | **Gerente** | Gerente de loja | **Só o que lhe compete** (preencher checklist da(s) sua(s) loja(s)) |
 
@@ -27,7 +27,7 @@ Menu final (ordem do menu lateral):
 5. **Relatórios** — consolidados: conformidade, pendências, comparativo entre lojas/redes.
 6. **Faturamento / Licenças** — cobrança por cliente e por módulo (licença + suporte).
 7. **Auditoria / Logs** — quem fez o quê (criou, editou, apagou); rastreabilidade entre clientes.
-8. **Suporte / Sugestões** — canal de suporte e caixa de sugestões (padrão SASI).
+8. **Suporte / Sugestões** — canal de suporte e caixa de sugestões.
 9. **Configurações** — do sistema (Super Admin) e da conta (logo, dias da frequência, retenção, etc.).
 
 > **Nota de acesso:** como o **Admin do supermercado não vê "Clientes (Redes)"**, a gestão das Unidades dele precisará aparecer em outro lugar na visão dele (ex.: dentro de Configurações ou uma página "Unidades" própria do tenant). Revisitar ao detalhar a visão do Admin.

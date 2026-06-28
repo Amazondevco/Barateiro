@@ -23,7 +23,7 @@ Temos "login/senha", mas falta o ciclo todo:
 - Como o usuário é **criado** (convite por e-mail? admin cadastra e define senha?).
 - **Primeiro acesso** (definir senha).
 - **"Esqueci minha senha"** (recuperação).
-- Login por **e-mail** (como no print SASI) ou usuário?
+- Login por **e-mail** ou usuário?
 - Sessão longa no celular + "salvar senha" no navegador (já planejado).
 
 ### B2. 🔴 Notificações e lembretes
@@ -62,7 +62,7 @@ Crítico para custo (Supabase free ≈ 1GB) e para dados móveis:
 - Consentimento/termos no primeiro acesso.
 
 ### B8. 🟡 White-label além da logo
-- Permitir **cor primária por tenant** (Barateiro = azul; SASI = índigo).
+- Permitir **cor primária por tenant** (ex.: Barateiro = azul).
 - Nome do ambiente, favicon.
 
 ### B9. ✅ Edição/correção de um envio — DECIDIDO

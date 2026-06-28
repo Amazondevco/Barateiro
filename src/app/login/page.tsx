@@ -7,7 +7,7 @@ export const metadata = { title: "Entrar — Super Barateiro" };
 export default function LoginPage() {
   return (
     <main className="grid min-h-dvh lg:grid-cols-2">
-      {/* Painel de marca (lado esquerdo, escuro estilo SASI) */}
+      {/* Painel de marca (lado esquerdo, escuro) */}
       <div className="relative hidden flex-col justify-between bg-sidebar p-12 text-white lg:flex">
         <Brand onDark />
         <div className="space-y-4">
@@ -20,7 +20,7 @@ export default function LoginPage() {
           </p>
         </div>
         <p className="text-xs text-sidebar-muted">
-          © {new Date().getFullYear()} SASI · Plataforma de gestão para redes de
+          © {new Date().getFullYear()} Super Barateiro · Gestão para redes de
           supermercado
         </p>
       </div>
