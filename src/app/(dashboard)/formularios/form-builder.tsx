@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Camera,
   PenLine,
+  ChevronDown,
 } from "lucide-react";
 import {
   DndContext,
@@ -155,6 +156,7 @@ export function FormBuilder({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
+  const [dadosOpen, setDadosOpen] = useState(true);
 
   const [nome, setNome] = useState(initial?.nome ?? "");
   const [descricao, setDescricao] = useState(initial?.descricao ?? "");
@@ -329,7 +331,28 @@ export function FormBuilder({
       {/* Dados */}
       <Card>
         <CardContent className="space-y-4">
-          <h3 className="font-semibold">Dados do formulário</h3>
+          <button
+            type="button"
+            onClick={() => setDadosOpen((v) => !v)}
+            className="flex w-full items-center justify-between"
+          >
+            <h3 className="font-semibold">
+              Dados do formulário
+              {!dadosOpen && nome ? (
+                <span className="ml-2 font-normal text-muted-foreground">
+                  · {nome}
+                </span>
+              ) : null}
+            </h3>
+            <ChevronDown
+              className={cn(
+                "h-5 w-5 text-muted-foreground transition-transform",
+                dadosOpen && "rotate-180",
+              )}
+            />
+          </button>
+          {dadosOpen && (
+            <>
           <div>
             <Label htmlFor="nome">Nome *</Label>
             <Input
@@ -401,6 +424,8 @@ export function FormBuilder({
               </div>
             </div>
           </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
