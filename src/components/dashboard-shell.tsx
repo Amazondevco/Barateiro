@@ -78,9 +78,11 @@ export function DashboardShell({
     ? (vars as React.CSSProperties)
     : undefined;
 
-  // Topbar usa a mesma cor da sidebar (remapeia os tokens no seu subtree)
+  // Topbar usa a mesma cor da sidebar (remapeia os tokens no seu subtree).
+  // `color` precisa ser explícito: o texto herda a cor já calculada do body.
   const headerStyle = {
     background: "var(--sidebar)",
+    color: "var(--sidebar-strong)",
     ["--foreground"]: "var(--sidebar-strong)",
     ["--muted-foreground"]: "var(--sidebar-muted)",
     ["--muted"]: "var(--sidebar-hover)",
