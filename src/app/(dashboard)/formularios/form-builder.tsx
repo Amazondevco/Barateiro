@@ -33,6 +33,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { saveFormulario, type FormularioPayload } from "./actions";
 import { AiFormDialog } from "./ai-form-dialog";
 import type { AiForm } from "./ai-actions";
@@ -141,12 +142,14 @@ export function FormBuilder({
   departamentos,
   usuarios,
   initial,
+  hideBack = false,
 }: {
   redeId: string;
   formId: string | null;
   departamentos: { id: string; nome: string }[];
   usuarios: { id: string; nome: string; departamento_id: string | null }[];
   initial?: Initial;
+  hideBack?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -162,23 +165,16 @@ export function FormBuilder({
     initial?.status ?? "ativo",
   );
   const [deps, setDeps] = useState<string[]>(initial?.departamentos ?? []);
-  const [depMode, setDepMode] = useState<"todos" | "especificos">(
-    initial?.departamentos?.length ? "especificos" : "todos",
-  );
   const [usuariosSel, setUsuariosSel] = useState<string[]>(
     initial?.usuarios ?? [],
   );
-  const [userMode, setUserMode] = useState<"todos" | "especificos">(
-    initial?.usuarios?.length ? "especificos" : "todos",
-  );
   const [secoes, setSecoes] = useState<BSecao[]>(() => initialSecoes(initial));
 
-  const usuariosVisiveis =
-    depMode === "especificos" && deps.length
-      ? usuarios.filter(
-          (u) => u.departamento_id && deps.includes(u.departamento_id),
-        )
-      : usuarios;
+  const usuariosVisiveis = deps.length
+    ? usuarios.filter(
+        (u) => u.departamento_id && deps.includes(u.departamento_id),
+      )
+    : usuarios;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -285,8 +281,8 @@ export function FormBuilder({
       descricao,
       tipo_unidade: tipoUnidade,
       status,
-      departamentos: depMode === "especificos" ? deps : [],
-      usuarios: userMode === "especificos" ? usuariosSel : [],
+      departamentos: deps,
+      usuarios: usuariosSel,
       secoes: secoes.map((s) => ({
         titulo: s.titulo,
         permite_na: s.permite_na,
@@ -311,13 +307,15 @@ export function FormBuilder({
   return (
     <div className="space-y-4 pb-4">
       <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push("/formularios")}
-        >
-          <ArrowLeft className="h-4 w-4" /> Voltar
-        </Button>
+        {!hideBack && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/formularios")}
+          >
+            <ArrowLeft className="h-4 w-4" /> Voltar
+          </Button>
+        )}
         <Button type="button" variant="primary" onClick={() => setAiOpen(true)}>
           <Sparkles className="h-4 w-4" /> Criar com IA
         </Button>
@@ -377,126 +375,31 @@ export function FormBuilder({
               </Select>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Quem preenche */}
-      <Card>
-        <CardContent className="space-y-6">
-          <h3 className="font-semibold">Quem preenche</h3>
-
-          {/* Departamentos */}
-          <div className="space-y-2">
-            <Label>Departamentos</Label>
-            <div className="flex flex-wrap gap-2">
-              {(["todos", "especificos"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setDepMode(m)}
-                  className={cn(
-                    "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
-                    depMode === m
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-input hover:bg-muted",
-                  )}
-                >
-                  {m === "todos" ? "Todos da unidade" : "Departamentos específicos"}
-                </button>
-              ))}
+          {/* Quem preenche */}
+          <div className="space-y-4 border-t border-border pt-4">
+            <h4 className="text-sm font-semibold">Quem preenche</h4>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label>Departamentos</Label>
+                <MultiSelect
+                  emptyLabel="Todos da unidade"
+                  options={departamentos}
+                  selected={deps}
+                  onChange={setDeps}
+                  emptyHint="Crie em Configurações → Departamentos."
+                />
+              </div>
+              <div>
+                <Label>Usuários</Label>
+                <MultiSelect
+                  emptyLabel="Todos do departamento"
+                  options={usuariosVisiveis}
+                  selected={usuariosSel}
+                  onChange={setUsuariosSel}
+                  emptyHint="Nenhum usuário disponível."
+                />
+              </div>
             </div>
-            {depMode === "especificos" &&
-              (departamentos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Nenhum departamento. Crie em Configurações → Departamentos.
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {departamentos.map((d) => {
-                    const on = deps.includes(d.id);
-                    return (
-                      <label
-                        key={d.id}
-                        className={cn(
-                          "flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm",
-                          on
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-input hover:bg-muted",
-                        )}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={on}
-                          onChange={() =>
-                            setDeps((v) =>
-                              on ? v.filter((x) => x !== d.id) : [...v, d.id],
-                            )
-                          }
-                          className="accent-[var(--primary)]"
-                        />
-                        {d.nome}
-                      </label>
-                    );
-                  })}
-                </div>
-              ))}
-          </div>
-
-          {/* Usuários */}
-          <div className="space-y-2">
-            <Label>Usuários</Label>
-            <div className="flex flex-wrap gap-2">
-              {(["todos", "especificos"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setUserMode(m)}
-                  className={cn(
-                    "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
-                    userMode === m
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-input hover:bg-muted",
-                  )}
-                >
-                  {m === "todos" ? "Todos do departamento" : "Usuários específicos"}
-                </button>
-              ))}
-            </div>
-            {userMode === "especificos" &&
-              (usuariosVisiveis.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Nenhum usuário disponível.
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {usuariosVisiveis.map((u) => {
-                    const on = usuariosSel.includes(u.id);
-                    return (
-                      <label
-                        key={u.id}
-                        className={cn(
-                          "flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm",
-                          on
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-input hover:bg-muted",
-                        )}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={on}
-                          onChange={() =>
-                            setUsuariosSel((v) =>
-                              on ? v.filter((x) => x !== u.id) : [...v, u.id],
-                            )
-                          }
-                          className="accent-[var(--primary)]"
-                        />
-                        {u.nome}
-                      </label>
-                    );
-                  })}
-                </div>
-              ))}
           </div>
         </CardContent>
       </Card>
