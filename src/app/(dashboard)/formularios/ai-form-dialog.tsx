@@ -1,10 +1,14 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Sparkles, Mic, MicOff, X } from "lucide-react";
+import { Sparkles, Mic, MicOff, X, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { generateFormulario, type AiForm } from "./ai-actions";
+import {
+  generateFormulario,
+  importFormulario,
+  type AiForm,
+} from "./ai-actions";
 
 export function AiFormDialog({
   onClose,
@@ -16,8 +20,28 @@ export function AiFormDialog({
   const [text, setText] = useState("");
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
   const [pending, startTransition] = useTransition();
   const recRef = useRef<{ stop: () => void } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setError(null);
+    setImporting(true);
+    const fd = new FormData();
+    fd.append("file", f);
+    const res = await importFormulario(fd);
+    setImporting(false);
+    e.target.value = "";
+    if (res.error || !res.data) {
+      setError(res.error ?? "Falha ao importar.");
+      return;
+    }
+    onGenerated(res.data);
+    onClose();
+  }
 
   function toggleMic() {
     setError(null);
@@ -101,9 +125,41 @@ export function AiFormDialog({
 
         <div className="space-y-3 p-4">
           <p className="text-sm text-muted-foreground">
-            Descreva o que o checklist deve verificar. Pode escrever ou
-            <strong> ditar por voz</strong> — o agente monta as seções e itens.
+            Importe um formulário impresso ou descreva — o agente monta as
+            seções e itens, otimizados para o preenchimento no celular.
           </p>
+
+          {/* Importar arquivo */}
+          <div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".pdf,.docx,.xlsx,.xls,.csv,.txt"
+              hidden
+              onChange={onFile}
+            />
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => fileRef.current?.click()}
+              disabled={importing || pending}
+            >
+              <FileUp className="h-4 w-4" />
+              {importing
+                ? "Lendo arquivo…"
+                : "Importar PDF, Word ou Excel"}
+            </Button>
+            <p className="mt-1 text-center text-xs text-muted-foreground">
+              A IA transforma seu formulário impresso em digital.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            ou descreva
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
           <div className="relative">
             <Textarea
               value={text}
