@@ -24,11 +24,25 @@ const PALETTE = [
   "#dc2626", "#ec4899", "#d946ef", "#a855f7", "#8b5cf6", "#6366f1",
   "#64748b", "#0f172a",
 ];
-// Tons escuros (mantêm o texto claro legível na barra)
+// Tons escuros e claros — a cor do texto se ajusta automaticamente
 const SIDEBAR_PALETTE = [
-  "#0f172a", "#1e293b", "#0b1120", "#18181b", "#1c1917", "#0c4a6e",
-  "#064e3b", "#1e1b4b", "#3b0764", "#172554", "#450a0a", "#334155",
+  // escuros
+  "#0f172a", "#1e293b", "#18181b", "#1c1917", "#0c4a6e", "#064e3b",
+  "#1e1b4b", "#3b0764", "#172554", "#450a0a", "#334155",
+  // claros
+  "#ffffff", "#f1f5f9", "#e2e8f0", "#dbeafe", "#dcfce7", "#fef9c3",
+  "#fee2e2", "#f3e8ff",
 ];
+
+// true = cor clara → texto escuro
+function isLight(hex: string): boolean {
+  const m = hex.replace("#", "");
+  if (m.length < 6) return false;
+  const r = parseInt(m.slice(0, 2), 16);
+  const g = parseInt(m.slice(2, 4), 16);
+  const b = parseInt(m.slice(4, 6), 16);
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.6;
+}
 // Temas prontos: aplicam cor primária + barra lateral de uma vez
 const THEMES = [
   { nome: "Azul", primary: "#2563eb", sidebar: "#0f172a" },
@@ -466,7 +480,12 @@ export function AparenciaForm({
                     {nome.charAt(0)}
                   </span>
                 )}
-                <span className="truncate text-xs font-bold text-white">
+                <span
+                  className={cn(
+                    "truncate text-xs font-bold",
+                    isLight(sidebar) ? "text-slate-900" : "text-white",
+                  )}
+                >
                   {nome}
                 </span>
               </div>
@@ -476,10 +495,20 @@ export function AparenciaForm({
               >
                 Visão geral
               </span>
-              <span className="rounded-md px-2 py-1 text-xs text-slate-300">
+              <span
+                className={cn(
+                  "rounded-md px-2 py-1 text-xs",
+                  isLight(sidebar) ? "text-slate-600" : "text-slate-300",
+                )}
+              >
                 Formulários
               </span>
-              <span className="rounded-md px-2 py-1 text-xs text-slate-300">
+              <span
+                className={cn(
+                  "rounded-md px-2 py-1 text-xs",
+                  isLight(sidebar) ? "text-slate-600" : "text-slate-300",
+                )}
+              >
                 Relatórios
               </span>
             </div>

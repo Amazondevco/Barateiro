@@ -33,6 +33,7 @@
   --sidebar-muted: #94a3b8;
   --sidebar-active: #2563eb;
   --sidebar-active-foreground: #ffffff;
+  --sidebar-strong: #ffffff;
   --sidebar-hover: #1e293b;
   --sidebar-border: #1e293b;
 
@@ -67,6 +68,7 @@
   --sidebar-muted: #64748b;
   --sidebar-active: #3b82f6;
   --sidebar-active-foreground: #ffffff;
+  --sidebar-strong: #ffffff;
   --sidebar-hover: #131c2e;
   --sidebar-border: #1e293b;
 

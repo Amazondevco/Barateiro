@@ -41,8 +41,9 @@ export function Brand({
           <span
             className={cn(
               "text-base font-bold tracking-tight",
-              onDark ? "text-white" : "text-foreground",
+              !onDark && "text-foreground",
             )}
+            style={onDark ? { color: "var(--sidebar-strong)" } : undefined}
           >
             {name}
           </span>

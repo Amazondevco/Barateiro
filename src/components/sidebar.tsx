@@ -63,7 +63,7 @@ export function Sidebar({
                 collapsed ? "justify-center px-0" : "gap-3 px-3",
                 active
                   ? "bg-sidebar-active text-sidebar-active-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-white",
+                  : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-[color:var(--sidebar-strong)]",
               )}
             >
               <Icon className="h-[18px] w-[18px] shrink-0" />

@@ -13,6 +13,17 @@ import { PageTitleProvider, TopbarTitle } from "@/components/page-title";
 
 const isDev = process.env.NODE_ENV !== "production";
 
+// true se a cor (hex) for clara → texto escuro fica legível
+function isLightHex(hex: string): boolean {
+  const m = hex.replace("#", "");
+  if (m.length < 6) return false;
+  const r = parseInt(m.slice(0, 2), 16);
+  const g = parseInt(m.slice(2, 4), 16);
+  const b = parseInt(m.slice(4, 6), 16);
+  const L = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return L > 0.6;
+}
+
 export function DashboardShell({
   profile,
   rede,
@@ -51,9 +62,17 @@ export function DashboardShell({
     vars["--sidebar-active"] = cor;
   }
   if (sb) {
+    const light = isLightHex(sb);
     vars["--sidebar"] = sb;
-    vars["--sidebar-hover"] = `color-mix(in srgb, ${sb} 85%, white)`;
-    vars["--sidebar-border"] = `color-mix(in srgb, ${sb} 80%, white)`;
+    vars["--sidebar-hover"] = light
+      ? `color-mix(in srgb, ${sb} 88%, black)`
+      : `color-mix(in srgb, ${sb} 85%, white)`;
+    vars["--sidebar-border"] = light
+      ? `color-mix(in srgb, ${sb} 82%, black)`
+      : `color-mix(in srgb, ${sb} 80%, white)`;
+    vars["--sidebar-foreground"] = light ? "#334155" : "#cbd5e1";
+    vars["--sidebar-muted"] = light ? "#64748b" : "#94a3b8";
+    vars["--sidebar-strong"] = light ? "#0f172a" : "#ffffff";
   }
   const brandStyle = Object.keys(vars).length
     ? (vars as React.CSSProperties)
