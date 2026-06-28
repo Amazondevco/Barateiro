@@ -195,7 +195,7 @@ async function makeFavicon(logoBlob: Blob): Promise<Blob> {
   c.height = SIZE;
   const ctx = c.getContext("2d");
   if (!ctx) return logoBlob;
-  ctx.fillStyle = "#e5e7eb"; // cinza claro
+  ctx.fillStyle = "#94a3b8"; // cinza mais escuro (visível na aba)
   roundRectPath(ctx, 0, 0, SIZE, SIZE, 52);
   ctx.fill();
   const pad = 40;

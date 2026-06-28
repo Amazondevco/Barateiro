@@ -735,6 +735,7 @@ function SectionCard({
   onPatchItem: (sid: string, iid: string, patch: Partial<BItem>) => void;
   onRemoveItem: (sid: string, iid: string) => void;
 }) {
+  const [collapsed, setCollapsed] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: sec._id });
   const style = {
@@ -754,7 +755,12 @@ function SectionCard({
       )}
       <Card>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-border pb-3">
+          <div
+            className={cn(
+              "flex items-center gap-2 border-b border-border",
+              collapsed ? "pb-0 border-b-0" : "pb-3",
+            )}
+          >
             <button
               type="button"
               className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
@@ -763,6 +769,20 @@ function SectionCard({
               aria-label="Arrastar seção"
             >
               <GripVertical className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setCollapsed((v) => !v)}
+              aria-label={collapsed ? "Expandir seção" : "Minimizar seção"}
+              aria-expanded={!collapsed}
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+            >
+              <ChevronDown
+                className={cn(
+                  "h-5 w-5 transition-transform",
+                  collapsed && "-rotate-90",
+                )}
+              />
             </button>
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-sm font-semibold text-primary">
               {index + 1}
@@ -773,6 +793,12 @@ function SectionCard({
               placeholder={`Seção ${index + 1} (ex.: Hortifrúti)`}
               className="flex-1 bg-transparent text-base font-semibold outline-none placeholder:font-normal placeholder:text-muted-foreground"
             />
+            {collapsed && (
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {sec.itens.length}{" "}
+                {sec.itens.length === 1 ? "item" : "itens"}
+              </span>
+            )}
             <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
               <input
                 type="checkbox"
@@ -805,29 +831,31 @@ function SectionCard({
             </button>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-border">
-            <SortableContext
-              items={sec.itens.map((it) => it._id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {sec.itens.map((it) => (
-                <ItemRow
-                  key={it._id}
-                  sid={sec._id}
-                  item={it}
-                  onPatch={onPatchItem}
-                  onRemove={onRemoveItem}
-                />
-              ))}
-            </SortableContext>
-            <button
-              type="button"
-              onClick={() => onAddItem(sec._id)}
-              className="flex w-full items-center justify-center gap-1.5 border-t border-border py-2.5 text-sm font-medium text-primary hover:bg-muted"
-            >
-              <Plus className="h-4 w-4" /> Adicionar item
-            </button>
-          </div>
+          {!collapsed && (
+            <div className="overflow-hidden rounded-lg border border-border">
+              <SortableContext
+                items={sec.itens.map((it) => it._id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {sec.itens.map((it) => (
+                  <ItemRow
+                    key={it._id}
+                    sid={sec._id}
+                    item={it}
+                    onPatch={onPatchItem}
+                    onRemove={onRemoveItem}
+                  />
+                ))}
+              </SortableContext>
+              <button
+                type="button"
+                onClick={() => onAddItem(sec._id)}
+                className="flex w-full items-center justify-center gap-1.5 border-t border-border py-2.5 text-sm font-medium text-primary hover:bg-muted"
+              >
+                <Plus className="h-4 w-4" /> Adicionar item
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
