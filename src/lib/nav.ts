@@ -30,12 +30,6 @@ export const NAV: NavItem[] = [
     roles: ["super_admin"],
   },
   {
-    href: "/unidades",
-    label: "Unidades",
-    icon: Building2,
-    roles: ["admin_supermercado"],
-  },
-  {
     href: "/formularios",
     label: "Formulários",
     icon: ClipboardList,
@@ -45,7 +39,7 @@ export const NAV: NavItem[] = [
     href: "/usuarios",
     label: "Usuários",
     icon: Users,
-    roles: ["super_admin", "admin_supermercado"],
+    roles: ["super_admin"], // admin gerencia em Configurações
   },
   {
     href: "/relatorios",
@@ -63,7 +57,7 @@ export const NAV: NavItem[] = [
     href: "/auditoria",
     label: "Auditoria",
     icon: ScrollText,
-    roles: ["super_admin", "admin_supermercado"],
+    roles: ["super_admin"], // admin vê em Configurações
   },
   {
     href: "/suporte",
