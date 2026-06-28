@@ -1,18 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Search,
   SlidersHorizontal,
   ChevronLeft,
   ChevronRight,
+  Eye,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/table";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Tooltip } from "@/components/ui/tooltip";
 import { RefDatePicker } from "./ref-date-picker";
+import {
+  RespostasVisual,
+  VisualizacaoModal,
+  VISUALIZACOES,
+  type Visualizacao,
+} from "./respostas-visualizacoes";
 import { cn } from "@/lib/utils";
 
 export type RespostaRow = {
@@ -20,6 +26,7 @@ export type RespostaRow = {
   data_referencia: string;
   status: string;
   total_nao: number;
+  total_itens: number;
   unidade_id: string;
   unidade_nome: string;
   usuario_id: string;
@@ -30,11 +37,6 @@ export type RespostaRow = {
 type Unidade = { id: string; nome: string };
 type Departamento = { id: string; nome: string; unidade_id: string | null };
 type Usuario = { id: string; nome: string; departamento_id: string | null };
-
-function parseISO(s: string): Date {
-  const [y, m, d] = s.split("-").map(Number);
-  return new Date(y, m - 1, d);
-}
 
 type Periodo = "dia" | "semana" | "mes";
 
@@ -66,6 +68,20 @@ export function RespostasView({
   const [selDeps, setSelDeps] = useState<string[]>([]);
   const [selUsuarios, setSelUsuarios] = useState<string[]>([]);
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
+  const [visual, setVisual] = useState<Visualizacao>("tabela");
+  const [visualModal, setVisualModal] = useState(false);
+
+  // Aplica a preferência salva após montar (evita mismatch de hidratação)
+  useEffect(() => {
+    const v = window.localStorage.getItem("respostas_visualizacao");
+    if (v && VISUALIZACOES.some((x) => x.id === v))
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setVisual(v as Visualizacao);
+  }, []);
+  function escolherVisual(v: Visualizacao) {
+    setVisual(v);
+    window.localStorage.setItem("respostas_visualizacao", v);
+  }
 
   const link = (p: Periodo, r?: string) =>
     `?tab=respostas&periodo=${p}${r ? `&ref=${r}` : ""}`;
@@ -141,17 +157,6 @@ export function RespostasView({
   const totalNao = filtered.reduce((a, r) => a + (r.total_nao ?? 0), 0);
   const comPendencia = filtered.filter((r) => (r.total_nao ?? 0) > 0).length;
 
-  // Agrupa por dia
-  const grupos = useMemo(() => {
-    const m = new Map<string, RespostaRow[]>();
-    for (const r of filtered) {
-      const arr = m.get(r.data_referencia);
-      if (arr) arr.push(r);
-      else m.set(r.data_referencia, [r]);
-    }
-    return [...m.entries()];
-  }, [filtered]);
-
   return (
     <div className="space-y-4">
       {/* Barra de período + navegação */}
@@ -197,6 +202,15 @@ export function RespostasView({
                 {filtrosAtivos}
               </span>
             )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setVisualModal(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Eye className="h-4 w-4" />
+            Visualização
           </button>
         </div>
 
@@ -311,27 +325,19 @@ export function RespostasView({
           description="Ajuste a busca, os filtros ou navegue para outro período."
         />
       ) : (
-        <Table>
-          <THead>
-            <TR>
-              <TH>Data</TH>
-              <TH>Unidade</TH>
-              <TH>Gerente</TH>
-              <TH>Não-conformidades</TH>
-              <TH>Status</TH>
-            </TR>
-          </THead>
-          <tbody>
-            {grupos.map(([dia, linhas]) => (
-              <Grupo
-                key={dia}
-                dia={dia}
-                linhas={linhas}
-                mostraDia={agruparPorDia}
-              />
-            ))}
-          </tbody>
-        </Table>
+        <RespostasVisual
+          visual={visual}
+          rows={filtered}
+          agruparPorDia={agruparPorDia}
+        />
+      )}
+
+      {visualModal && (
+        <VisualizacaoModal
+          atual={visual}
+          onSelect={escolherVisual}
+          onClose={() => setVisualModal(false)}
+        />
       )}
     </div>
   );
@@ -359,54 +365,6 @@ function StatCard({
         {value}
       </p>
     </div>
-  );
-}
-
-function Grupo({
-  dia,
-  linhas,
-  mostraDia,
-}: {
-  dia: string;
-  linhas: RespostaRow[];
-  mostraDia: boolean;
-}) {
-  return (
-    <>
-      {mostraDia && (
-        <tr className="bg-muted/40">
-          <td
-            colSpan={5}
-            className="px-4 py-1.5 text-xs font-semibold capitalize text-muted-foreground"
-          >
-            {parseISO(dia).toLocaleDateString("pt-BR", {
-              weekday: "long",
-              day: "2-digit",
-              month: "long",
-            })}
-          </td>
-        </tr>
-      )}
-      {linhas.map((r) => (
-        <TR key={r.id}>
-          <TD>{parseISO(r.data_referencia).toLocaleDateString("pt-BR")}</TD>
-          <TD>{r.unidade_nome || "—"}</TD>
-          <TD>{r.usuario_nome || "—"}</TD>
-          <TD>
-            {r.total_nao > 0 ? (
-              <Badge tone="danger">{r.total_nao}</Badge>
-            ) : (
-              <Badge tone="success">0</Badge>
-            )}
-          </TD>
-          <TD>
-            <Badge tone={r.status === "no_prazo" ? "success" : "warning"}>
-              {r.status === "no_prazo" ? "No prazo" : "Fora do prazo"}
-            </Badge>
-          </TD>
-        </TR>
-      ))}
-    </>
   );
 }
 
