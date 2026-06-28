@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { Tooltip } from "@/components/ui/tooltip";
 import { RefDatePicker } from "./ref-date-picker";
 import { cn } from "@/lib/utils";
 
@@ -220,22 +221,25 @@ export function RespostasView({
           <div className="ml-1">
             <RefDatePicker periodo={periodo} refIso={refIso} />
           </div>
-          <Link
-            href={link(periodo)}
-            title={
+          <Tooltip
+            label={
               ehHoje
                 ? "Você está vendo o dia de hoje"
                 : "Voltar para o dia de hoje"
             }
-            className={cn(
-              "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
-              ehHoje
-                ? "border-success/40 bg-success-bg text-success"
-                : "border-warning/40 bg-warning-bg text-warning hover:opacity-90",
-            )}
           >
-            {ehHoje ? "Hoje" : "Ir para Hoje"}
-          </Link>
+            <Link
+              href={link(periodo)}
+              className={cn(
+                "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
+                ehHoje
+                  ? "border-success/40 bg-success-bg text-success"
+                  : "border-warning/40 bg-warning-bg text-warning hover:opacity-90",
+              )}
+            >
+              {ehHoje ? "Hoje" : "Ir para Hoje"}
+            </Link>
+          </Tooltip>
         </div>
       </div>
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const MESES = [
@@ -92,18 +93,19 @@ export function RefDatePicker({
 
   return (
     <div ref={boxRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Abrir calendário"
-        title="Escolher data no calendário"
-        className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card transition-colors hover:text-foreground",
-          open ? "text-foreground" : "text-muted-foreground",
-        )}
-      >
-        <CalendarDays className="h-4 w-4" />
-      </button>
+      <Tooltip label="Escolher data no calendário">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-label="Abrir calendário"
+          className={cn(
+            "flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card transition-colors hover:text-foreground",
+            open ? "text-foreground" : "text-muted-foreground",
+          )}
+        >
+          <CalendarDays className="h-4 w-4" />
+        </button>
+      </Tooltip>
 
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
