@@ -2,11 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { FormBuilder } from "../form-builder";
+import { RespostasView, type RespostaRow } from "./respostas-view";
 import { cn } from "@/lib/utils";
 import type { ItemTipo, UnidadeTipo } from "@/lib/types";
 
@@ -71,6 +70,7 @@ export default async function FormularioDetailPage({
       {tab === "respostas" ? (
         <RespostasTab
           supabase={supabase}
+          redeId={redeId}
           formId={id}
           periodo={periodo}
           refIso={ref}
@@ -253,23 +253,26 @@ function labelFor(periodo: Periodo, start: Date, end: Date): string {
   )}`;
 }
 
-type RespRow = {
+type RespRaw = {
   id: string;
   data_referencia: string;
   status: string;
   total_nao: number;
-  enviado_em: string;
+  unidade_id: string;
+  usuario_id: string;
   unidades: unknown;
   profiles: unknown;
 };
 
 async function RespostasTab({
   supabase,
+  redeId,
   formId,
   periodo,
   refIso,
 }: {
   supabase: SB;
+  redeId: string;
   formId: string;
   periodo: Periodo;
   refIso?: string;
@@ -279,37 +282,60 @@ async function RespostasTab({
   const startISO = fmtISO(start);
   const endISO = fmtISO(end);
 
-  const { data } = await supabase
-    .from("respostas")
-    .select(
-      "id,data_referencia,status,total_nao,enviado_em,unidades(nome),profiles(nome)",
-    )
-    .eq("formulario_id", formId)
-    .gte("data_referencia", startISO)
-    .lte("data_referencia", endISO)
-    .order("data_referencia", { ascending: false })
-    .order("enviado_em", { ascending: false })
-    .limit(500);
+  const [{ data }, { data: unidadesData }, { data: deps }, { data: usuarios }] =
+    await Promise.all([
+      supabase
+        .from("respostas")
+        .select(
+          "id,data_referencia,status,total_nao,unidade_id,usuario_id,unidades(nome),profiles(nome,departamento_id)",
+        )
+        .eq("formulario_id", formId)
+        .gte("data_referencia", startISO)
+        .lte("data_referencia", endISO)
+        .order("data_referencia", { ascending: false })
+        .order("enviado_em", { ascending: false })
+        .limit(500),
+      supabase
+        .from("unidades")
+        .select("id,nome")
+        .eq("rede_id", redeId)
+        .order("nome"),
+      supabase
+        .from("departamentos")
+        .select("id,nome,unidade_id")
+        .eq("rede_id", redeId)
+        .order("nome"),
+      supabase
+        .from("profiles")
+        .select("id,nome,departamento_id")
+        .eq("rede_id", redeId)
+        .order("nome"),
+    ]);
 
-  const respostas = (data ?? []) as RespRow[];
-
-  // Resumo do período
-  const totalEnvios = respostas.length;
-  const totalNao = respostas.reduce((a, r) => a + (r.total_nao ?? 0), 0);
-  const comPendencia = respostas.filter((r) => (r.total_nao ?? 0) > 0).length;
+  const rows: RespostaRow[] = ((data ?? []) as RespRaw[]).map((r) => {
+    const uni = r.unidades as { nome: string } | null;
+    const ger = r.profiles as {
+      nome: string;
+      departamento_id: string | null;
+    } | null;
+    return {
+      id: r.id,
+      data_referencia: r.data_referencia,
+      status: r.status,
+      total_nao: r.total_nao ?? 0,
+      unidade_id: r.unidade_id,
+      unidade_nome: uni?.nome ?? "",
+      usuario_id: r.usuario_id,
+      usuario_nome: ger?.nome ?? "",
+      departamento_id: ger?.departamento_id ?? null,
+    };
+  });
 
   // Navegação preservando o período
   const prevRef = fmtISO(shiftRef(periodo, refDate, -1));
   const nextRef = fmtISO(shiftRef(periodo, refDate, 1));
   const link = (p: Periodo, r?: string) =>
     `?tab=respostas&periodo=${p}${r ? `&ref=${r}` : ""}`;
-
-  // Agrupa por dia (relevante em semana/mês)
-  const grupos = new Map<string, RespRow[]>();
-  for (const r of respostas) {
-    const k = r.data_referencia;
-    (grupos.get(k) ?? grupos.set(k, []).get(k)!).push(r);
-  }
 
   return (
     <div className="space-y-4">
@@ -365,126 +391,13 @@ async function RespostasTab({
         </div>
       </div>
 
-      {/* Resumo */}
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Envios" value={totalEnvios} />
-        <StatCard
-          label="Com pendência"
-          value={comPendencia}
-          tone={comPendencia > 0 ? "warning" : "default"}
-        />
-        <StatCard
-          label="Não-conformidades"
-          value={totalNao}
-          tone={totalNao > 0 ? "danger" : "default"}
-        />
-      </div>
-
-      {totalEnvios === 0 ? (
-        <EmptyState
-          title="Nenhuma resposta neste período"
-          description="Use as setas para navegar ou troque entre Dia, Semana e Mês."
-        />
-      ) : (
-        <Table>
-          <THead>
-            <TR>
-              <TH>Data</TH>
-              <TH>Unidade</TH>
-              <TH>Gerente</TH>
-              <TH>Não-conformidades</TH>
-              <TH>Status</TH>
-            </TR>
-          </THead>
-          <tbody>
-            {[...grupos.entries()].map(([dia, linhas]) => (
-              <RespostaGrupo
-                key={dia}
-                dia={dia}
-                linhas={linhas}
-                mostraDia={periodo !== "dia"}
-              />
-            ))}
-          </tbody>
-        </Table>
-      )}
+      <RespostasView
+        rows={rows}
+        unidades={unidadesData ?? []}
+        departamentos={deps ?? []}
+        usuarios={usuarios ?? []}
+        agruparPorDia={periodo !== "dia"}
+      />
     </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  tone = "default",
-}: {
-  label: string;
-  value: number;
-  tone?: "default" | "warning" | "danger";
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p
-        className={cn(
-          "mt-1 text-2xl font-bold",
-          tone === "danger" && "text-danger",
-          tone === "warning" && "text-warning",
-        )}
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function RespostaGrupo({
-  dia,
-  linhas,
-  mostraDia,
-}: {
-  dia: string;
-  linhas: RespRow[];
-  mostraDia: boolean;
-}) {
-  return (
-    <>
-      {mostraDia && (
-        <tr className="bg-muted/40">
-          <td
-            colSpan={5}
-            className="px-4 py-1.5 text-xs font-semibold capitalize text-muted-foreground"
-          >
-            {parseRef(dia).toLocaleDateString("pt-BR", {
-              weekday: "long",
-              day: "2-digit",
-              month: "long",
-            })}
-          </td>
-        </tr>
-      )}
-      {linhas.map((r) => {
-        const uni = r.unidades as { nome: string } | null;
-        const ger = r.profiles as { nome: string } | null;
-        return (
-          <TR key={r.id}>
-            <TD>{parseRef(r.data_referencia).toLocaleDateString("pt-BR")}</TD>
-            <TD>{uni?.nome ?? "—"}</TD>
-            <TD>{ger?.nome ?? "—"}</TD>
-            <TD>
-              {r.total_nao > 0 ? (
-                <Badge tone="danger">{r.total_nao}</Badge>
-              ) : (
-                <Badge tone="success">0</Badge>
-              )}
-            </TD>
-            <TD>
-              <Badge tone={r.status === "no_prazo" ? "success" : "warning"}>
-                {r.status === "no_prazo" ? "No prazo" : "Fora do prazo"}
-              </Badge>
-            </TD>
-          </TR>
-        );
-      })}
-    </>
   );
 }
