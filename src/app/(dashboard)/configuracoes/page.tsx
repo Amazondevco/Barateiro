@@ -19,6 +19,8 @@ import {
   setDepartamentoStatus,
 } from "./departamento-actions";
 import { AddDepartamentoForm } from "./add-departamento-form";
+import { Power } from "lucide-react";
+import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
 import { EditUnidadeButton } from "@/app/(dashboard)/clientes/[id]/edit-unidade-button";
 import { EditDepartamentoButton } from "./edit-departamento-button";
 import { EditUsuarioButton } from "@/components/edit-usuario-button";
@@ -165,13 +167,15 @@ async function UnidadesTab({ supabase, redeId }: { supabase: SB; redeId: string 
                   <Badge tone={u.status === "ativo" ? "success" : "neutral"}>{u.status}</Badge>
                 </TD>
                 <TD>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
                     <EditUnidadeButton unidade={u} redeId={redeId} />
-                    <form action={setUnidadeStatus.bind(null, u.id, redeId, u.status === "ativo" ? "inativo" : "ativo")}>
-                      <button className="text-sm text-muted-foreground hover:text-foreground" type="submit">
-                        {u.status === "ativo" ? "Desativar" : "Ativar"}
-                      </button>
-                    </form>
+                    <Tooltip label={u.status === "ativo" ? "Desativar" : "Ativar"}>
+                      <form action={setUnidadeStatus.bind(null, u.id, redeId, u.status === "ativo" ? "inativo" : "ativo")}>
+                        <button className={iconBtnClass} type="submit">
+                          <Power className="h-4 w-4" />
+                        </button>
+                      </form>
+                    </Tooltip>
                   </div>
                 </TD>
               </TR>
@@ -222,7 +226,7 @@ async function DepartamentosTab({ supabase, redeId }: { supabase: SB; redeId: st
                     <Badge tone={d.status === "ativo" ? "success" : "neutral"}>{d.status}</Badge>
                   </TD>
                   <TD>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1">
                       <EditDepartamentoButton
                         departamento={{
                           id: d.id,
@@ -232,11 +236,13 @@ async function DepartamentosTab({ supabase, redeId }: { supabase: SB; redeId: st
                         }}
                         unidades={unidadeOpts}
                       />
-                      <form action={setDepartamentoStatus.bind(null, d.id, d.status === "ativo" ? "inativo" : "ativo")}>
-                        <button className="text-sm text-muted-foreground hover:text-foreground" type="submit">
-                          {d.status === "ativo" ? "Desativar" : "Ativar"}
-                        </button>
-                      </form>
+                      <Tooltip label={d.status === "ativo" ? "Desativar" : "Ativar"}>
+                        <form action={setDepartamentoStatus.bind(null, d.id, d.status === "ativo" ? "inativo" : "ativo")}>
+                          <button className={iconBtnClass} type="submit">
+                            <Power className="h-4 w-4" />
+                          </button>
+                        </form>
+                      </Tooltip>
                     </div>
                   </TD>
                 </TR>

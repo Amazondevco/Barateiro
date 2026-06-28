@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Pencil, Power } from "lucide-react";
+import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -136,27 +137,25 @@ async function ModelosTab({ supabase, redeId }: { supabase: SB; redeId: string }
                 </Badge>
               </TD>
               <TD>
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/formularios/${f.id}`}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Editar
-                  </Link>
-                  <form
-                    action={setFormularioStatus.bind(
-                      null,
-                      f.id,
-                      f.status === "ativo" ? "inativo" : "ativo",
-                    )}
-                  >
-                    <button
-                      type="submit"
-                      className="text-sm text-muted-foreground hover:text-foreground"
+                <div className="flex items-center gap-1">
+                  <Tooltip label="Editar">
+                    <Link href={`/formularios/${f.id}`} className={iconBtnClass}>
+                      <Pencil className="h-4 w-4" />
+                    </Link>
+                  </Tooltip>
+                  <Tooltip label={f.status === "ativo" ? "Desativar" : "Ativar"}>
+                    <form
+                      action={setFormularioStatus.bind(
+                        null,
+                        f.id,
+                        f.status === "ativo" ? "inativo" : "ativo",
+                      )}
                     >
-                      {f.status === "ativo" ? "Desativar" : "Ativar"}
-                    </button>
-                  </form>
+                      <button type="submit" className={iconBtnClass}>
+                        <Power className="h-4 w-4" />
+                      </button>
+                    </form>
+                  </Tooltip>
                 </div>
               </TD>
             </TR>

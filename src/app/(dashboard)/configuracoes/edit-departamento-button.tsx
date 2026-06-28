@@ -1,8 +1,10 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { updateDepartamento } from "./departamento-actions";
@@ -31,12 +33,11 @@ export function EditDepartamentoButton({
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="text-sm text-primary hover:underline"
-      >
-        Editar
-      </button>
+      <Tooltip label="Editar">
+        <button onClick={() => setOpen(true)} className={iconBtnClass}>
+          <Pencil className="h-4 w-4" />
+        </button>
+      </Tooltip>
       {open && (
         <Modal title="Editar departamento" onClose={() => setOpen(false)}>
           <form action={formAction} className="space-y-4">
