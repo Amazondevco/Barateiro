@@ -121,6 +121,19 @@ export async function updateUsuariosPadrao(
   });
 }
 
+/** Permissões padrão dos cargos de sistema (Admin, Gerente, Colaborador). */
+export async function updatePermissoesPadrao(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const get = (k: string) => formData.getAll(k).map((v) => String(v));
+  return savePlataforma({
+    default_perms_admin: get("admin"),
+    default_perms_gerente: get("gerente"),
+    default_perms_colaborador: get("colaborador"),
+  });
+}
+
 /** Padrões do aplicativo dos gerentes. */
 export async function updateAplicativoPadrao(
   _prev: FormState,

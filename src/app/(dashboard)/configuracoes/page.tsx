@@ -33,6 +33,7 @@ import {
   UnidadesPadraoForm,
   UsuariosPadraoForm,
   AplicativoPadraoForm,
+  PermissoesPadraoForm,
 } from "./padroes-avancados";
 import { PermissoesTab } from "./permissoes-tab";
 
@@ -147,17 +148,12 @@ export default async function ConfiguracoesPage({
             offline={plat.app_offline ?? true}
           />
         )}
-        {ptab === "permissoes" && (
-          <Card>
-            <CardContent className="space-y-2 py-8 text-center">
-              <p className="font-medium">Permissões padrão</p>
-              <p className="mx-auto max-w-md text-sm text-muted-foreground">
-                Os papéis e permissões iniciais de cada rede vêm do conjunto de
-                cargos do sistema. A edição desses padrões entra na próxima
-                etapa — me avise para habilitar.
-              </p>
-            </CardContent>
-          </Card>
+        {ptab === "permissoes" && plat && (
+          <PermissoesPadraoForm
+            admin={plat.default_perms_admin ?? []}
+            gerente={plat.default_perms_gerente ?? []}
+            colaborador={plat.default_perms_colaborador ?? []}
+          />
         )}
       </>
     );

@@ -6,11 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
+import { PERMISSOES } from "@/lib/permissoes";
 import {
   updateDepartamentosPadrao,
   updateUnidadesPadrao,
   updateUsuariosPadrao,
   updateAplicativoPadrao,
+  updatePermissoesPadrao,
   type FormState,
 } from "./plataforma-actions";
 
@@ -169,6 +171,84 @@ export function UsuariosPadraoForm({
               />
             </div>
           </div>
+          <Status state={state} />
+          <div className="flex justify-end">
+            <Button type="submit" disabled={pending}>
+              {pending ? "Salvando…" : "Salvar padrão"}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ---------- Permissões padrão ---------- */
+const CARGOS_PADRAO = [
+  { campo: "admin", nome: "Admin", desc: "Acesso total à rede." },
+  { campo: "gerente", nome: "Gerente", desc: "Gerencia a operação da loja." },
+  {
+    campo: "colaborador",
+    nome: "Colaborador",
+    desc: "Preenche checklists.",
+  },
+] as const;
+
+export function PermissoesPadraoForm({
+  admin,
+  gerente,
+  colaborador,
+}: {
+  admin: string[];
+  gerente: string[];
+  colaborador: string[];
+}) {
+  const [state, action, pending] = useActionState(
+    updatePermissoesPadrao,
+    {} as FormState,
+  );
+  const valores: Record<string, string[]> = { admin, gerente, colaborador };
+
+  return (
+    <Card>
+      <CardContent>
+        <form action={action} className="space-y-6">
+          <Header
+            titulo="Permissões padrão"
+            desc="Define o que cada cargo de sistema pode fazer ao nascer uma rede nova."
+          />
+          {CARGOS_PADRAO.map((c) => (
+            <div key={c.campo} className="space-y-3 border-t border-border pt-4">
+              <div>
+                <h4 className="text-sm font-semibold">{c.nome}</h4>
+                <p className="text-xs text-muted-foreground">{c.desc}</p>
+              </div>
+              {PERMISSOES.map((g) => (
+                <div key={g.grupo}>
+                  <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                    {g.grupo}
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {g.itens.map((it) => (
+                      <label
+                        key={it.key}
+                        className="flex cursor-pointer items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/10"
+                      >
+                        <input
+                          type="checkbox"
+                          name={c.campo}
+                          value={it.key}
+                          defaultChecked={valores[c.campo].includes(it.key)}
+                          className="accent-[var(--primary)]"
+                        />
+                        {it.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
           <Status state={state} />
           <div className="flex justify-end">
             <Button type="submit" disabled={pending}>
