@@ -32,25 +32,25 @@ export function Brand({
   const showImg = !!finalLogo && !imgError;
 
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
+    <span className={cn("inline-flex items-center gap-3", className)}>
       {showImg ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={finalLogo}
           alt={name}
           onError={() => setImgError(true)}
-          className="h-11 w-11 shrink-0 rounded-xl bg-white object-contain p-1 shadow-sm"
+          className="h-14 w-14 shrink-0 rounded-xl bg-white object-contain p-1 shadow-sm"
         />
       ) : (
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-          <Boxes className="h-6 w-6" />
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+          <Boxes className="h-7 w-7" />
         </span>
       )}
       {!compact && (
-        <span className="flex flex-col leading-none">
+        <span className="flex flex-col leading-tight">
           <span
             className={cn(
-              "text-base font-bold tracking-tight",
+              "text-lg font-bold tracking-tight",
               !onDark && "text-foreground",
             )}
             style={onDark ? { color: "var(--sidebar-strong)" } : undefined}
@@ -60,7 +60,7 @@ export function Brand({
           {subtitle && (
             <span
               className={cn(
-                "text-[11px] font-medium",
+                "text-xs font-medium",
                 onDark ? "text-sidebar-muted" : "text-muted-foreground",
               )}
             >

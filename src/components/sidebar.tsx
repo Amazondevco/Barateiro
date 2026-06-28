@@ -34,8 +34,8 @@ export function Sidebar({
     >
       <div
         className={cn(
-          "flex h-16 items-center border-b border-sidebar-border",
-          collapsed ? "justify-center px-0" : "px-5",
+          "flex items-center border-b border-sidebar-border py-4",
+          collapsed ? "justify-center px-0" : "px-4",
         )}
       >
         <Brand
