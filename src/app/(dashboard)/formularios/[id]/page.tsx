@@ -73,7 +73,7 @@ export default async function FormularioDetailPage({
           supabase={supabase}
           formId={id}
           periodo={periodo}
-          ref={ref}
+          refIso={ref}
         />
       ) : (
         <ModeloTab supabase={supabase} redeId={redeId} form={form} />
@@ -267,14 +267,14 @@ async function RespostasTab({
   supabase,
   formId,
   periodo,
-  ref,
+  refIso,
 }: {
   supabase: SB;
   formId: string;
   periodo: Periodo;
-  ref?: string;
+  refIso?: string;
 }) {
-  const refDate = parseRef(ref);
+  const refDate = parseRef(refIso);
   const { start, end } = rangeFor(periodo, refDate);
   const startISO = fmtISO(start);
   const endISO = fmtISO(end);
