@@ -2,3 +2,5 @@
 // Tenants (redes-clientes) têm a própria marca via white-label.
 export const PLATFORM_NAME = "Amazon Dev & Co.";
 export const PLATFORM_TAGLINE = "Plataforma de Gestão";
+// Logo da plataforma (super admin). Salve o arquivo em public/.
+export const PLATFORM_LOGO = "/amazondevco-logo.png";

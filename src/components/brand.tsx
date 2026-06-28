@@ -1,11 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import { Boxes } from "lucide-react";
-import { PLATFORM_NAME, PLATFORM_TAGLINE } from "@/lib/brand";
+import { PLATFORM_NAME, PLATFORM_TAGLINE, PLATFORM_LOGO } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 /**
  * Marca exibida no shell/login.
- * Padrão = plataforma (Amazon Dev & Co.). Passe `name`/`logoUrl` para
- * white-label do tenant (rede-cliente).
+ * Padrão = plataforma (Amazon Dev & Co., com logo). Passe `name`/`logoUrl`
+ * para white-label do tenant (rede-cliente).
  */
 export function Brand({
   className,
@@ -22,14 +25,21 @@ export function Brand({
   subtitle?: string;
   logoUrl?: string | null;
 }) {
+  const [imgError, setImgError] = useState(false);
+  const isPlatform = name === PLATFORM_NAME;
+  // Plataforma usa a logo fixa; tenant usa a própria (ou ícone se não tiver)
+  const finalLogo = logoUrl ?? (isPlatform ? PLATFORM_LOGO : null);
+  const showImg = !!finalLogo && !imgError;
+
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
-      {logoUrl ? (
+      {showImg ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={logoUrl}
+          src={finalLogo}
           alt={name}
-          className="h-9 w-9 shrink-0 rounded-lg object-contain"
+          onError={() => setImgError(true)}
+          className="h-9 w-9 shrink-0 rounded-lg bg-white object-contain p-0.5"
         />
       ) : (
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">

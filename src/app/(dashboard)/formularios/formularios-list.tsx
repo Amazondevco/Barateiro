@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,6 +40,7 @@ export function FormulariosList({
   departamentos: Departamento[];
   usuarios: Usuario[];
 }) {
+  const [busca, setBusca] = useState("");
   const [selTipos, setSelTipos] = useState<string[]>([]);
   const [selUnidades, setSelUnidades] = useState<string[]>([]);
   const [selDeps, setSelDeps] = useState<string[]>([]);
@@ -77,6 +78,11 @@ export function FormulariosList({
   }
 
   const filtered = forms.filter((f) => {
+    if (
+      busca.trim() &&
+      !f.nome.toLowerCase().includes(busca.trim().toLowerCase())
+    )
+      return false;
     if (selTipos.length && !selTipos.includes(f.tipo_unidade)) return false;
 
     if (selDeps.length) {
@@ -126,6 +132,20 @@ export function FormulariosList({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
+        <div className="w-64">
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+            Buscar
+          </label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar formulário…"
+              className="h-10 w-full rounded-lg border border-input bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+        </div>
         <Campo label="Tipo de formulário">
           <MultiSelect
             emptyLabel="Todos os tipos"
