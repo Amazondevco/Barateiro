@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { RedeForm } from "../rede-form";
 import { createRede } from "../actions";
 
-export const metadata = { title: "Nova rede — Super Barateiro" };
+export const metadata = { title: "Nova rede — Amazon Dev & Co." };
 
 export default function NovaRedePage() {
   return (

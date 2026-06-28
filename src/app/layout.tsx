@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Super Barateiro — Gestão",
-  description: "Sistema de gestão da rede Super Barateiro",
+  title: "Amazon Dev & Co. — Gestão",
+  description: "Plataforma de gestão para redes de supermercado",
 };
 
 export default function RootLayout({

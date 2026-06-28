@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Clientes (Redes) — Super Barateiro" };
+export const metadata = { title: "Clientes (Redes) — Amazon Dev & Co." };
 
 type RedeRow = {
   id: string;

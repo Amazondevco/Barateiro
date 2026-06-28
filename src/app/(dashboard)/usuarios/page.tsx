@@ -7,7 +7,7 @@ import { getSessionProfile } from "@/lib/auth";
 import { PAPEL_LABEL, type Papel } from "@/lib/types";
 import { createUsuario } from "./actions";
 
-export const metadata = { title: "Usuários — Super Barateiro" };
+export const metadata = { title: "Usuários — Amazon Dev & Co." };
 
 type Row = {
   id: string;
