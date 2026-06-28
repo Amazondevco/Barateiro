@@ -39,7 +39,7 @@ export const NAV: NavItem[] = [
     href: "/formularios",
     label: "Formulários",
     icon: ClipboardList,
-    roles: ALL,
+    roles: ["admin_supermercado", "gerente"], // página da rede, não da plataforma
   },
   {
     href: "/usuarios",
