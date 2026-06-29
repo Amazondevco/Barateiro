@@ -17,7 +17,8 @@ Não invente números fora do contexto. Se não souber, diga que não tem o dado
 Seja objetivo, em português do Brasil.`;
 
 const SUPER_PROMPT = `Você é o assistente do Check.AI para o SUPER ADMIN (plataforma).
-Você enxerga AGREGADOS por rede (números/totais), NÃO o conteúdo dos checklists.
+Por padrão você enxerga AGREGADOS por rede (números/totais), NÃO o conteúdo dos checklists.
+Se o usuário pediu o conteúdo de uma rede específica e ele aparecer no campo "conteudo_auditado" do CONTEXTO, pode usá-lo — esse acesso foi registrado em auditoria.
 Responda com base no CONTEXTO. Não exponha credenciais nem invente dados.
 Seja objetivo, em português do Brasil.`;
 
@@ -37,7 +38,7 @@ export async function perguntarAssistente(mensagens: Msg[]): Promise<Resposta> {
   let contexto: string;
   let system: string;
   if (profile.papel === "super_admin") {
-    contexto = await buildSuperContext();
+    contexto = await buildSuperContext(ultima);
     system = SUPER_PROMPT;
   } else {
     const supabase = await createClient();
@@ -85,8 +86,8 @@ async function buildRedeContext(
   });
 }
 
-// ---- Contexto do SUPER ADMIN (service role → SÓ agregados, sem conteúdo) ----
-async function buildSuperContext(): Promise<string> {
+// ---- Contexto do SUPER ADMIN: agregados por padrão; conteúdo SÓ sob auditoria ----
+async function buildSuperContext(pergunta: string): Promise<string> {
   const admin = createAdminClient();
   const { data: redes } = await admin.from("redes").select("id,nome").order("nome");
   const lista = redes ?? [];
@@ -112,14 +113,30 @@ async function buildSuperContext(): Promise<string> {
     admin.from("sugestoes").select("id", { count: "exact", head: true }).eq("destino", "plataforma").eq("status", "nova"),
   ]);
 
-  return JSON.stringify({
+  const base = {
     plataforma: {
       total_redes: lista.length,
       total_contas_app: identidades.count ?? 0,
       sugestoes_escaladas_novas: sugEscaladas.count ?? 0,
     },
     por_rede: porRede, // SOMENTE números — nenhum conteúdo de checklist
-  });
+  };
+
+  // Conteúdo de uma rede só se o super admin pediu explicitamente → AUDITADO.
+  const q = pergunta.toLowerCase();
+  const querConteudo =
+    /(respostas?|checklist|conte[úu]do|detalhe|preench|o que responder|fora do prazo)/.test(q);
+  const redeAlvo = lista.find((r) => r.nome && q.includes(r.nome.toLowerCase()));
+  if (querConteudo && redeAlvo) {
+    const supabase = await createClient(); // sessão do super admin → registra a auditoria com o usuário certo
+    const { data } = await supabase.rpc("super_ver_conteudo_rede", { p_rede: redeAlvo.id });
+    return JSON.stringify({
+      ...base,
+      conteudo_auditado: { rede: redeAlvo.nome, registrado_em_auditoria: true, respostas_recentes: data },
+    });
+  }
+
+  return JSON.stringify(base);
 }
 
 // ---- Groq (mesmo padrão do gerador de formulários) ----
