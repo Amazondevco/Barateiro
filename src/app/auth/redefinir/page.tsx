@@ -27,10 +27,30 @@ export default function RedefinirSenhaPage() {
     const supabase = createClient();
 
     async function carregar() {
+      // O link traz o token no # da URL. Estabelecemos a sessão explicitamente
+      // (não dependemos do detectSessionInUrl / fluxo PKCE).
+      const hash = window.location.hash.replace(/^#/, "");
+      if (hash) {
+        const p = new URLSearchParams(hash);
+        const access_token = p.get("access_token");
+        const refresh_token = p.get("refresh_token");
+        const errDesc = p.get("error_description");
+        if (errDesc) {
+          setReady(true);
+          return;
+        }
+        if (access_token && refresh_token) {
+          await supabase.auth.setSession({ access_token, refresh_token });
+          // limpa o token da URL
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+      }
+
       const { data: userData } = await supabase.auth.getUser();
       const user = userData.user;
       if (!user) {
-        setReady(true);
+        // sem token e sem sessão → não é um link válido; vai pro login
+        router.replace("/login");
         return;
       }
       const meta = (user.user_metadata ?? {}) as {
@@ -54,13 +74,8 @@ export default function RedefinirSenhaPage() {
       setReady(true);
     }
 
-    // o client (@supabase/ssr) estabelece a sessão da URL ao montar
-    const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      void carregar();
-    });
     void carregar();
-    return () => sub.subscription.unsubscribe();
-  }, []);
+  }, [router]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

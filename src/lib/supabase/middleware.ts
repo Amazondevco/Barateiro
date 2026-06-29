@@ -49,9 +49,17 @@ export async function updateSession(request: NextRequest) {
   // não entra no dashboard (onde seria tratado como super_admin pelo fallback).
   const isApp = user?.user_metadata?.tipo === "app";
 
-  // Sem sessão e rota protegida → manda pro login
+  // Sem sessão e rota protegida → manda pro login.
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
+    // Exceção: o link de convite/recuperação do Supabase cai na Site URL (raiz)
+    // com o token no # da URL. Um REDIRECT perderia o #; então fazemos REWRITE
+    // para a tela de cadastro (mesma URL), que lê o token e estabelece a sessão.
+    // Sem token, essa tela manda o visitante para o login.
+    if (pathname === "/") {
+      url.pathname = "/auth/redefinir";
+      return NextResponse.rewrite(url);
+    }
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
