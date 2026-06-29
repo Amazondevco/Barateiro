@@ -12,6 +12,7 @@ import { ProfilePage } from "./pages/profile-page";
 import { ConfigPage } from "./pages/config-page";
 import { LoadingScreen } from "./ui/loading-screen";
 import { DeepLinkHandler } from "./ui/deep-link-handler";
+import { BiometricGate } from "./ui/biometric-gate";
 
 export default function App() {
   return (
@@ -23,7 +24,9 @@ export default function App() {
           path="/app/*"
           element={
             <RequireAuth>
-              <AppShell />
+              <BiometricGate>
+                <AppShell />
+              </BiometricGate>
             </RequireAuth>
           }
         >
