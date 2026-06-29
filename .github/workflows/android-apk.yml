@@ -57,11 +57,20 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
+      - name: Nomear APK com a versão
+        id: ver
+        working-directory: native-poc
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             "android/app/build/outputs/apk/debug/check-ai-v${VERSION}.apk"
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: check-ai-apk
-          path: native-poc/android/app/build/outputs/apk/debug/app-debug.apk
+          path: native-poc/android/app/build/outputs/apk/debug/check-ai-v${{ steps.ver.outputs.version }}.apk
           if-no-files-found: error
 
       - name: Publish rolling release
@@ -72,11 +81,13 @@ jobs:
           body: |
             APK Android de debug gerado automaticamente pelo workflow.
 
-            Artefato principal:
-            - `app-debug.apk`
+            Versão: **v${{ steps.ver.outputs.version }}**
+
+            Artefato:
+            - `check-ai-v${{ steps.ver.outputs.version }}.apk`
 
             Observações:
             - Instalação apenas em Android
             - iPhone/iOS usa TestFlight ou App Store
-          files: native-poc/android/app/build/outputs/apk/debug/app-debug.apk
+          files: native-poc/android/app/build/outputs/apk/debug/check-ai-v${{ steps.ver.outputs.version }}.apk
           make_latest: true

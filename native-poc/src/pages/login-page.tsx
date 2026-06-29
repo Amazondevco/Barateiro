@@ -90,9 +90,10 @@ export function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-8 text-xs text-muted-foreground">
-          © Amazon Dev &amp; Co. · {new Date().getFullYear()}
-        </p>
+        <div className="mt-8 flex items-center justify-between text-xs text-muted-foreground">
+          <span>© Amazon Dev &amp; Co. · {new Date().getFullYear()}</span>
+          <span className="tabular-nums opacity-70">v{__APP_VERSION__}</span>
+        </div>
       </div>
     </div>
   );
