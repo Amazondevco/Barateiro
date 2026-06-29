@@ -21,23 +21,35 @@ export function NetworkHomePage() {
   useEffect(() => {
     if (!user?.id || !memberId) return;
 
+    let mounted = true;
+
+    function apply(next: NetworkHomeData) {
+      if (!mounted) return;
+      setData(next);
+      applyPrimaryColor(next.brand.primaryColor);
+    }
+
     async function load() {
       try {
-        const nextData = await fetchNetworkHome(memberId, user.id);
-        setData(nextData);
-        applyPrimaryColor(nextData.brand.primaryColor);
+        // Cache-first: resolve na hora se houver cache; revalida em 2º plano.
+        const nextData = await fetchNetworkHome(memberId, user.id, apply);
+        apply(nextData);
       } catch (loadError) {
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : "Falha ao carregar a rede.",
-        );
+        if (mounted)
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Falha ao carregar a rede.",
+          );
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 
     void load();
+    return () => {
+      mounted = false;
+    };
   }, [memberId, user?.id]);
 
   if (loading) {

@@ -10,21 +10,30 @@ export function MembershipsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
     async function load() {
       try {
-        setMemberships(await fetchMemberships());
+        // Cache-first: instantâneo se já houver cache; revalida em 2º plano.
+        const list = await fetchMemberships((fresh) => {
+          if (mounted) setMemberships(fresh);
+        });
+        if (mounted) setMemberships(list);
       } catch (loadError) {
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : "Falha ao carregar vínculos.",
-        );
+        if (mounted)
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Falha ao carregar vínculos.",
+          );
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 
     void load();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (loading) {

@@ -20,21 +20,30 @@ export function ProfilePage() {
   useEffect(() => {
     if (!user?.id) return;
 
+    let mounted = true;
     async function load() {
       try {
-        setProfile(await fetchProfile(user.id));
+        // Cache-first: instantâneo se já houver cache; revalida em 2º plano.
+        const data = await fetchProfile(user.id, (fresh) => {
+          if (mounted) setProfile(fresh);
+        });
+        if (mounted) setProfile(data);
       } catch (loadError) {
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : "Falha ao carregar o perfil.",
-        );
+        if (mounted)
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Falha ao carregar o perfil.",
+          );
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 
     void load();
+    return () => {
+      mounted = false;
+    };
   }, [user?.id]);
 
   if (loading) {

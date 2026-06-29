@@ -9,20 +9,29 @@ export function NoticesPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
     async function load() {
       try {
-        setAvisos(await fetchComunicados());
+        // Cache-first: instantâneo se já houver cache; revalida em 2º plano.
+        const lista = await fetchComunicados((fresh) => {
+          if (mounted) setAvisos(fresh);
+        });
+        if (mounted) setAvisos(lista);
       } catch (loadError) {
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : "Falha ao carregar avisos.",
-        );
+        if (mounted)
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Falha ao carregar avisos.",
+          );
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
     void load();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (loading) {

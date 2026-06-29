@@ -27,25 +27,35 @@ async function writeCache<T>(key: string, data: T) {
   }
 }
 
-// Network-first com fallback de cache. Offline, lê o cache direto (sem esperar
-// a rede falhar). Online, busca fresco e atualiza o cache.
+// Cache-first (stale-while-revalidate): se há cache, devolve NA HORA (navegação
+// instantânea, sem spinner) e revalida em segundo plano — quando o dado fresco
+// chega, chama onRevalidate para a tela se atualizar. Sem cache, busca normal.
 export async function withCache<T>(
   key: string,
   fetcher: () => Promise<T>,
+  onRevalidate?: (fresh: T) => void,
 ): Promise<T> {
-  if (!online()) {
-    const cached = await readCache<T>(key);
-    if (cached !== null) return cached;
+  const cached = await readCache<T>(key);
+
+  if (cached !== null) {
+    if (online()) {
+      void (async () => {
+        try {
+          const fresh = await fetcher();
+          await writeCache(key, fresh);
+          onRevalidate?.(fresh);
+        } catch {
+          /* sem rede / falha → mantém o cache exibido */
+        }
+      })();
+    }
+    return cached;
   }
-  try {
-    const fresh = await fetcher();
-    void writeCache(key, fresh);
-    return fresh;
-  } catch (err) {
-    const cached = await readCache<T>(key);
-    if (cached !== null) return cached;
-    throw err;
-  }
+
+  // Primeira vez (sem cache): precisa buscar.
+  const fresh = await fetcher();
+  void writeCache(key, fresh);
+  return fresh;
 }
 
 // Limpa o cache (ex.: no logout, para não vazar dados entre contas).

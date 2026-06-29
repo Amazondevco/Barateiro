@@ -35,8 +35,8 @@ export type NetworkHomeData = {
   }>;
 };
 
-export function fetchMemberships() {
-  return withCache("memberships", _fetchMemberships);
+export function fetchMemberships(onFresh?: (v: Membership[]) => void) {
+  return withCache("memberships", _fetchMemberships, onFresh);
 }
 
 async function _fetchMemberships() {
@@ -59,8 +59,12 @@ async function _fetchMemberships() {
   })) satisfies Membership[];
 }
 
-export function fetchNetworkHome(memberId: string, userId: string) {
-  return withCache(`home:${memberId}`, () => _fetchNetworkHome(memberId, userId));
+export function fetchNetworkHome(
+  memberId: string,
+  userId: string,
+  onFresh?: (v: NetworkHomeData) => void,
+) {
+  return withCache(`home:${memberId}`, () => _fetchNetworkHome(memberId, userId), onFresh);
 }
 
 async function _fetchNetworkHome(memberId: string, userId: string) {
@@ -174,8 +178,8 @@ async function _fetchNetworkHome(memberId: string, userId: string) {
   } satisfies NetworkHomeData;
 }
 
-export function fetchProfile(userId: string) {
-  return withCache(`profile:${userId}`, () => _fetchProfile(userId));
+export function fetchProfile(userId: string, onFresh?: (v: ProfileData) => void) {
+  return withCache(`profile:${userId}`, () => _fetchProfile(userId), onFresh);
 }
 
 async function _fetchProfile(userId: string) {
@@ -226,8 +230,10 @@ export type Comunicado = {
 
 // Avisos do operador: a RLS já entrega só os comunicados direcionados a ele
 // (todos da rede / sua unidade / departamento / cargo / ele mesmo).
-export function fetchComunicados(): Promise<Comunicado[]> {
-  return withCache("comunicados", _fetchComunicados);
+export function fetchComunicados(
+  onFresh?: (v: Comunicado[]) => void,
+): Promise<Comunicado[]> {
+  return withCache("comunicados", _fetchComunicados, onFresh);
 }
 
 async function _fetchComunicados(): Promise<Comunicado[]> {
