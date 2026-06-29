@@ -79,31 +79,37 @@ async function syncRecord(record: QueueRecord) {
 
 export async function syncQueue() {
   if (typeof navigator !== "undefined" && navigator.onLine === false) {
-    return { sent: 0, online: false };
+    return { sent: 0, failed: 0, online: false };
   }
 
   const items = await getQueueItems();
   let sent = 0;
+  let failed = 0;
 
   for (const item of items) {
     if (item.status === "synced") continue;
 
     try {
       await syncRecord(item);
-      await markQueueItemStatus(item.id, "synced", null);
       await removeQueueItem(item.id);
       sent += 1;
     } catch (error) {
+      // Não interrompe a fila: marca o erro e segue para o próximo item
+      // (será re-tentado no próximo gatilho de sincronização).
       await markQueueItemStatus(
         item.id,
         "error",
         error instanceof Error ? error.message : "Falha ao sincronizar.",
       );
-      throw error;
+      failed += 1;
     }
   }
 
-  return { sent, online: true };
+  if (sent > 0 && typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("checkai:queue-synced", { detail: { sent } }));
+  }
+
+  return { sent, failed, online: true };
 }
 
 export async function compressPhoto(file: File, maxSide = 1280, quality = 0.72) {

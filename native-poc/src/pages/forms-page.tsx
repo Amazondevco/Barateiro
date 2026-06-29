@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { getQueueItems } from "../lib/queue-store";
 import type { QueueRecord } from "../lib/operator-types";
 import { syncQueue } from "../lib/sync";
+import { runSync } from "../lib/auto-sync";
 import { Button } from "../ui/button";
 
 const STATUS_SELO: Record<
@@ -25,6 +26,12 @@ export function FormsPage() {
 
   useEffect(() => {
     void refresh();
+    // Tenta sincronizar ao abrir a tela (cobre navegação interna com internet).
+    void runSync();
+    // Atualiza a lista quando o auto-sync esvazia a fila em segundo plano.
+    const onSynced = () => void refresh();
+    window.addEventListener("checkai:queue-synced", onSynced);
+    return () => window.removeEventListener("checkai:queue-synced", onSynced);
   }, []);
 
   const pendingCount = useMemo(

@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getSession, signIn, signOut, subscribeToAuthChanges, type SessionUser } from "../lib/auth";
 import { registerPush, unregisterPush } from "../lib/push";
+import { startAutoSync, stopAutoSync } from "../lib/auto-sync";
+import { clearCache } from "../lib/offline-cache";
 
 type AuthContextValue = {
   loading: boolean;
@@ -23,7 +25,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!mounted) return;
       setUser(sessionUser);
       setLoading(false);
-      if (sessionUser) void registerPush();
+      if (sessionUser) {
+        void registerPush();
+        void startAutoSync();
+      }
     }
 
     void load();
@@ -31,7 +36,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = subscribeToAuthChanges((nextUser) => {
       setUser(nextUser);
       setLoading(false);
-      if (nextUser) void registerPush();
+      if (nextUser) {
+        void registerPush();
+        void startAutoSync();
+      }
     });
 
     return () => {
@@ -47,7 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         signInWithPassword: signIn,
         signOutUser: async () => {
+          stopAutoSync();
           await unregisterPush();
+          await clearCache();
           await signOut();
         },
       }}

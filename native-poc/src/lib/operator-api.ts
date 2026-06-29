@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { withCache } from "./offline-cache";
 import type { FormDefinition, ProfileData } from "./operator-types";
 
 export type Membership = {
@@ -34,7 +35,11 @@ export type NetworkHomeData = {
   }>;
 };
 
-export async function fetchMemberships() {
+export function fetchMemberships() {
+  return withCache("memberships", _fetchMemberships);
+}
+
+async function _fetchMemberships() {
   const { data, error } = await supabase
     .from("rede_membros")
     .select("id, rede_id, status, redes(nome), unidades(nome)")
@@ -54,7 +59,11 @@ export async function fetchMemberships() {
   })) satisfies Membership[];
 }
 
-export async function fetchNetworkHome(memberId: string, userId: string) {
+export function fetchNetworkHome(memberId: string, userId: string) {
+  return withCache(`home:${memberId}`, () => _fetchNetworkHome(memberId, userId));
+}
+
+async function _fetchNetworkHome(memberId: string, userId: string) {
   const [{ data: member, error: memberError }, { data: todayAnswers, error: answersError }] =
     await Promise.all([
       supabase
@@ -131,6 +140,13 @@ export async function fetchNetworkHome(memberId: string, userId: string) {
       enviadoHoje: sentToday.has(String(form.id)),
     }));
 
+  // Pré-carrega (best-effort) as definições dos formulários listados, para que
+  // qualquer um deles possa ser aberto/preenchido offline depois. Cada chamada
+  // grava no cache; não bloqueia o retorno desta função.
+  void Promise.allSettled(
+    filteredForms.map((form) => fetchFormDefinition(memberId, form.id)),
+  );
+
   return {
     membership: {
       id: String(member.id),
@@ -158,7 +174,11 @@ export async function fetchNetworkHome(memberId: string, userId: string) {
   } satisfies NetworkHomeData;
 }
 
-export async function fetchProfile(userId: string) {
+export function fetchProfile(userId: string) {
+  return withCache(`profile:${userId}`, () => _fetchProfile(userId));
+}
+
+async function _fetchProfile(userId: string) {
   const { data, error } = await supabase
     .from("identidades")
     .select("nome, email, foto_url, cpf, celular, cidade")
@@ -206,7 +226,11 @@ export type Comunicado = {
 
 // Avisos do operador: a RLS já entrega só os comunicados direcionados a ele
 // (todos da rede / sua unidade / departamento / cargo / ele mesmo).
-export async function fetchComunicados(): Promise<Comunicado[]> {
+export function fetchComunicados(): Promise<Comunicado[]> {
+  return withCache("comunicados", _fetchComunicados);
+}
+
+async function _fetchComunicados(): Promise<Comunicado[]> {
   const { data, error } = await supabase
     .from("comunicados")
     .select("id, titulo, corpo, created_at")
@@ -232,7 +256,13 @@ export function applyPrimaryColor(color: string | null) {
   root.setProperty("--primary-hover", `color-mix(in srgb, ${color} 85%, black)`);
 }
 
-export async function fetchFormDefinition(memberId: string, formId: string) {
+export function fetchFormDefinition(memberId: string, formId: string) {
+  return withCache(`form:${memberId}:${formId}`, () =>
+    _fetchFormDefinition(memberId, formId),
+  );
+}
+
+async function _fetchFormDefinition(memberId: string, formId: string) {
   const [{ data: member, error: memberError }, { data: form, error: formError }] = await Promise.all([
     supabase.from("rede_membros").select("assinatura_svg").eq("id", memberId).maybeSingle(),
     supabase
