@@ -42,14 +42,15 @@ export default async function AppLoggedLayout({
       supabase.from("identidades").select("nome").eq("id", c.sub).maybeSingle(),
       supabase
         .from("rede_membros")
-        .select("redes(cor_primaria)")
+        .select("redes(app_cor, cor_primaria)")
         .eq("identidade_id", c.sub)
         .eq("status", "ativo")
         .limit(1)
         .maybeSingle(),
     ]);
     nome = ident?.nome ?? undefined;
-    cor = (membro as { redes?: { cor_primaria?: string | null } } | null)?.redes?.cor_primaria ?? null;
+    const rede = (membro as { redes?: { app_cor?: string | null; cor_primaria?: string | null } } | null)?.redes;
+    cor = rede?.app_cor || rede?.cor_primaria || null;
   }
 
   // Cor primária da rede vale para o app todo (barra, botões, banner…)

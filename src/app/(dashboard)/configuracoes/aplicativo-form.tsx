@@ -6,17 +6,22 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { updateAplicativoRede, type AppRedeState } from "./aplicativo-actions";
 
+const CORES = ["#2563eb", "#F97316", "#16a34a", "#7c3aed", "#dc2626", "#0d9488", "#db2777", "#0f172a"];
+
 export function AplicativoForm({
   redeId,
   iconeUrl,
   bannerUrl,
+  cor,
 }: {
   redeId: string;
   iconeUrl: string | null;
   bannerUrl: string | null;
+  cor: string | null;
 }) {
   const [icone, setIcone] = useState(iconeUrl ?? "");
   const [banner, setBanner] = useState(bannerUrl ?? "");
+  const [appCor, setAppCor] = useState(cor ?? "#2563eb");
   const [state, formAction, pending] = useActionState(
     updateAplicativoRede.bind(null, redeId),
     {} as AppRedeState,
@@ -48,6 +53,39 @@ export function AplicativoForm({
         wide
         name="banner_url"
       />
+
+      {/* Cor interna do app (barra inferior, botões) */}
+      <div>
+        <label className="mb-1.5 block text-sm font-medium">Cor do app</label>
+        <input type="hidden" name="app_cor" value={appCor} />
+        <p className="mb-2 text-xs text-muted-foreground">
+          Cor dos botões e da barra dentro do aplicativo.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          {CORES.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setAppCor(c)}
+              className="h-8 w-8 rounded-full transition-transform hover:scale-110"
+              style={{
+                backgroundColor: c,
+                boxShadow: appCor.toLowerCase() === c ? `0 0 0 2px white, 0 0 0 3.5px ${c}` : undefined,
+              }}
+              aria-label={`Cor ${c}`}
+            />
+          ))}
+          <label className="ml-1 flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-input px-2 text-xs text-muted-foreground">
+            <input
+              type="color"
+              value={appCor}
+              onChange={(e) => setAppCor(e.target.value)}
+              className="h-5 w-5 cursor-pointer rounded border-0 bg-transparent p-0"
+            />
+            Outra
+          </label>
+        </div>
+      </div>
 
       {state.error && (
         <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">{state.error}</p>

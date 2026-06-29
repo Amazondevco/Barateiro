@@ -26,6 +26,7 @@ export async function updateAplicativoRede(
     .update({
       app_icone_url: String(formData.get("app_icone_url") ?? "").trim() || null,
       banner_url: String(formData.get("banner_url") ?? "").trim() || null,
+      app_cor: String(formData.get("app_cor") ?? "").trim() || null,
     })
     .eq("id", redeId);
 

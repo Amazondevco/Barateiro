@@ -11,14 +11,14 @@ export function LoginForm() {
   const [state, formAction, pending] = useActionState(login, initial);
 
   return (
-    <form action={formAction} className="space-y-4" autoComplete="off">
+    <form action={formAction} className="space-y-4">
       <div>
         <Label htmlFor="email">E-mail</Label>
         <Input
           id="email"
           name="email"
           type="email"
-          autoComplete="off"
+          autoComplete="username"
           placeholder="voce@empresa.com.br"
           required
         />
@@ -30,7 +30,7 @@ export function LoginForm() {
           id="password"
           name="password"
           type="password"
-          autoComplete="new-password"
+          autoComplete="current-password"
           placeholder="••••••••"
           required
         />

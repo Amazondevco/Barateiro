@@ -17,18 +17,18 @@ export async function GET() {
     if (sub) {
       const { data: membro } = await supabase
         .from("rede_membros")
-        .select("redes(nome, app_icone_url, logo_url, cor_primaria)")
+        .select("redes(nome, app_icone_url, logo_url, app_cor, cor_primaria)")
         .eq("identidade_id", sub)
         .eq("status", "ativo")
         .limit(1)
         .maybeSingle();
       const rede = (membro as {
-        redes?: { nome: string; app_icone_url: string | null; logo_url: string | null; cor_primaria: string | null };
+        redes?: { nome: string; app_icone_url: string | null; logo_url: string | null; app_cor: string | null; cor_primaria: string | null };
       } | null)?.redes;
       if (rede) {
         name = rede.nome;
         icone = rede.app_icone_url || rede.logo_url || icone;
-        cor = rede.cor_primaria || cor;
+        cor = rede.app_cor || rede.cor_primaria || cor;
         start = "/app";
       }
     }
