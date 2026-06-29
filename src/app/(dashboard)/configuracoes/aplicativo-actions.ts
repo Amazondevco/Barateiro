@@ -32,5 +32,8 @@ export async function updateAplicativoRede(
 
   if (error) return { error: error.message };
   revalidatePath("/configuracoes");
+  // Propaga ícone/banner/cor para o app de todos os membros da rede.
+  revalidatePath("/app", "layout");
+  revalidatePath("/api/manifest");
   return { ok: true };
 }
