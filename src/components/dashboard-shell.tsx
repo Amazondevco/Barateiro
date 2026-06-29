@@ -10,6 +10,7 @@ import { PAPEL_LABEL, type Profile } from "@/lib/types";
 import type { RedeBrand } from "@/lib/auth";
 import { UserSwitcher } from "@/components/user-switcher";
 import { SuggestionFab } from "@/components/suggestion-fab";
+import { AssistantFab } from "@/components/assistant-fab";
 import { DEV_EMAILS } from "@/lib/dev-accounts";
 import { PageTitleProvider, TopbarTitle } from "@/components/page-title";
 import { TopbarSearch } from "@/components/topbar-search";
@@ -210,8 +211,11 @@ export function DashboardShell({
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
       </div>
-      {/* Admin da rede escala sugestões para a plataforma */}
-      {profile.papel === "admin_supermercado" && <SuggestionFab />}
+      {/* Chat IA (super admin + admin da rede). Sugestão (só admin, acima do chat). */}
+      {(profile.papel === "super_admin" || profile.papel === "admin_supermercado") && (
+        <AssistantFab papel={profile.papel} />
+      )}
+      {profile.papel === "admin_supermercado" && <SuggestionFab raised />}
     </div>
     </PageTitleProvider>
   );
