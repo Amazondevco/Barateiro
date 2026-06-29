@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "261458795574",
+    "project_id": "checkai-c0a4d",
+    "storage_bucket": "checkai-c0a4d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:261458795574:android:170b7debe67d4d793b0c97",
+        "android_client_info": {
+          "package_name": "ai.check.poc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuqxqDsK3K1sLwW9mXhMtXr2xsCq6yvuE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

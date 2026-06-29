@@ -41,4 +41,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Push (Android 13+ exige a permissão de runtime para exibir notificações). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

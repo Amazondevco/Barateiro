@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
+import { sendPush } from "@/lib/fcm";
 
 export type AlvoTipo = "todos" | "usuario" | "unidade" | "departamento" | "cargo";
 
@@ -65,6 +66,37 @@ export async function getRedeAlvos(redeId: string): Promise<RedeAlvos> {
   };
 }
 
+// Resolve os device_tokens dos membros atingidos pelo alvo do comunicado.
+// Espelha a lógica de RLS de `comunicados_app_select`.
+async function tokensDoAlvo(
+  rede: string,
+  alvoTipo: AlvoTipo,
+  alvoIds: string[],
+): Promise<string[]> {
+  const admin = createAdminClient();
+
+  let q = admin
+    .from("rede_membros")
+    .select("identidade_id")
+    .eq("rede_id", rede)
+    .eq("status", "ativo");
+
+  if (alvoTipo === "usuario") q = q.in("identidade_id", alvoIds);
+  else if (alvoTipo === "unidade") q = q.in("unidade_id", alvoIds);
+  else if (alvoTipo === "departamento") q = q.in("departamento_id", alvoIds);
+  else if (alvoTipo === "cargo") q = q.in("cargo_id", alvoIds);
+
+  const { data: membros } = await q;
+  const ids = [...new Set((membros ?? []).map((m) => String(m.identidade_id)))];
+  if (ids.length === 0) return [];
+
+  const { data: tokens } = await admin
+    .from("device_tokens")
+    .select("token")
+    .in("identidade_id", ids);
+  return (tokens ?? []).map((t) => String(t.token));
+}
+
 export async function enviarComunicado(input: {
   redeId: string | null;
   titulo: string;
@@ -100,8 +132,24 @@ export async function enviarComunicado(input: {
   });
   if (error) return { error: error.message };
 
-  // TODO (Fase 4 — push): ao ter Firebase, resolver os device_tokens do alvo
-  // e disparar FCM aqui. Por ora o comunicado já chega via inbox (aba Avisos).
+  // Push (best effort): resolve os tokens do alvo e dispara via FCM. Se a
+  // credencial não estiver configurada, sendPush é no-op — o comunicado já
+  // chega pela inbox (aba Avisos). Nunca falha o envio por causa do push.
+  try {
+    const tokens = await tokensDoAlvo(rede, input.alvoTipo, alvoIds);
+    if (tokens.length > 0) {
+      const { invalid } = await sendPush(tokens, {
+        title: titulo,
+        body: corpo,
+        data: { tipo: "comunicado", rede_id: rede },
+      });
+      if (invalid.length > 0) {
+        await createAdminClient().from("device_tokens").delete().in("token", invalid);
+      }
+    }
+  } catch (e) {
+    console.error("[comunicado] push falhou (ignorado):", e);
+  }
 
   revalidatePath("/comunicados");
   return { ok: true };

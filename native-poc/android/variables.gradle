@@ -14,4 +14,6 @@ ext {
     androidxJunitVersion = '1.1.5'
     androidxEspressoCoreVersion = '3.5.1'
     cordovaAndroidVersion = '10.1.1'
+    // Push (@capacitor/push-notifications referencia esta variável).
+    firebaseMessagingVersion = '24.0.0'
 }
