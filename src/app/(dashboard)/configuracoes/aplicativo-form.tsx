@@ -11,16 +11,13 @@ const CORES = ["#2563eb", "#F97316", "#16a34a", "#7c3aed", "#dc2626", "#0d9488",
 export function AplicativoForm({
   redeId,
   iconeUrl,
-  bannerUrl,
   cor,
 }: {
   redeId: string;
   iconeUrl: string | null;
-  bannerUrl: string | null;
   cor: string | null;
 }) {
   const [icone, setIcone] = useState(iconeUrl ?? "");
-  const [banner, setBanner] = useState(bannerUrl ?? "");
   const [appCor, setAppCor] = useState(cor ?? "#2563eb");
   const [state, formAction, pending] = useActionState(
     updateAplicativoRede.bind(null, redeId),
@@ -31,7 +28,7 @@ export function AplicativoForm({
     <form action={formAction} className="max-w-lg space-y-6">
       <p className="text-sm text-muted-foreground">
         Defina como o app da sua rede aparece no celular: o ícone na tela inicial
-        e o banner dentro do app.
+        e a cor do app (fundo da tela inicial, barra e botões).
       </p>
 
       <ImageField
@@ -44,22 +41,12 @@ export function AplicativoForm({
         name="app_icone_url"
       />
 
-      <ImageField
-        label="Banner do app"
-        hint="Imagem de fundo no topo da tela inicial do app."
-        value={banner}
-        onChange={setBanner}
-        previewSize={120}
-        wide
-        name="banner_url"
-      />
-
-      {/* Cor interna do app (barra inferior, botões) */}
+      {/* Cor do app: fundo da Início + barra/botões */}
       <div>
         <label className="mb-1.5 block text-sm font-medium">Cor do app</label>
         <input type="hidden" name="app_cor" value={appCor} />
         <p className="mb-2 text-xs text-muted-foreground">
-          Cor dos botões e da barra dentro do aplicativo.
+          Fundo da tela inicial (atrás da logo e do nome), barra e botões.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {CORES.map((c) => (

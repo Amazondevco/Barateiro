@@ -7,6 +7,16 @@ import { FormsBoard, type FormItem } from "./forms-board";
 
 export const metadata = { title: "Meu app — Check.AI" };
 
+// true se a cor (hex) for clara → usar texto escuro por cima
+function isLightHex(hex: string): boolean {
+  const m = hex.replace("#", "");
+  if (m.length < 6) return false;
+  const r = parseInt(m.slice(0, 2), 16);
+  const g = parseInt(m.slice(2, 4), 16);
+  const b = parseInt(m.slice(4, 6), 16);
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.6;
+}
+
 export default async function AppRedePage({
   params,
 }: {
@@ -95,21 +105,16 @@ export default async function AppRedePage({
       enviadoHoje: enviados.has(f.id),
     }));
 
-  const cor = marca?.app_cor || marca?.cor_primaria || "var(--primary)";
+  const cor = marca?.app_cor || marca?.cor_primaria || "#0f172a";
   const redeNome = marca?.nome ?? "Minha rede";
-  const banner = marca?.banner_url;
-  const bannerStyle: React.CSSProperties = banner
-    ? {
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.5)), url(${banner})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }
-    : { background: cor };
+  // Fundo = cor sólida do Admin. Texto adapta (escuro em cor clara).
+  const textoCor = isLightHex(cor) ? "#0f172a" : "#ffffff";
+  const bannerStyle: React.CSSProperties = { background: cor, color: textoCor };
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Banner da REDE: logo + nome centralizados */}
-      <div className="relative px-5 pb-7 pt-4 text-white" style={bannerStyle}>
+      {/* Banner da REDE: cor sólida do Admin + logo + nome centralizados */}
+      <div className="relative px-5 pb-7 pt-4" style={bannerStyle}>
         <div className="flex flex-col items-center gap-2.5 pt-2">
           {marca?.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -125,7 +130,7 @@ export default async function AppRedePage({
           )}
           <p className="text-2xl font-bold tracking-tight">{redeNome}</p>
           {(m.unidades?.nome || m.cargos?.nome) && (
-            <p className="text-sm text-white/85">
+            <p className="text-sm opacity-80">
               {[m.unidades?.nome, m.cargos?.nome].filter(Boolean).join(" · ")}
             </p>
           )}

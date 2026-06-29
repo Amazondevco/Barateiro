@@ -262,14 +262,13 @@ function fmtCpf(cpf: string) {
 async function AplicativoTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
   const { data: rede } = await supabase
     .from("redes")
-    .select("app_icone_url, banner_url, logo_url, app_cor, cor_primaria")
+    .select("app_icone_url, logo_url, app_cor, cor_primaria")
     .eq("id", redeId)
     .single();
   return (
     <AplicativoForm
       redeId={redeId}
       iconeUrl={rede?.app_icone_url ?? rede?.logo_url ?? null}
-      bannerUrl={rede?.banner_url ?? null}
       cor={rede?.app_cor ?? rede?.cor_primaria ?? null}
     />
   );
