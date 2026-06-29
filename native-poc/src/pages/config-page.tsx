@@ -1,18 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  Fingerprint,
-  LogOut,
-  Monitor,
-  Moon,
-  RefreshCcw,
-  Sun,
-  Wifi,
-  WifiOff,
-} from "lucide-react";
+import { Fingerprint, LogOut, Monitor, Moon, Sun } from "lucide-react";
 import { useAuth } from "../context/auth-context";
-import { getQueueItems } from "../lib/queue-store";
-import { syncQueue } from "../lib/sync";
-import { useNetworkStatus } from "../lib/use-network-status";
 import {
   isBiometricAvailable,
   isBiometricEnabled,
@@ -20,14 +8,6 @@ import {
   verifyBiometric,
 } from "../lib/biometric";
 import { Button } from "../ui/button";
-
-type QueueSummary = {
-  pending: number;
-  synced: number;
-  errors: number;
-};
-
-const emptyQueue: QueueSummary = { pending: 0, synced: 0, errors: 0 };
 
 type Theme = "system" | "light" | "dark";
 
@@ -54,11 +34,6 @@ const THEME_OPTS: { v: Theme; label: string; icon: typeof Sun }[] = [
 
 export function ConfigPage() {
   const { signOutUser } = useAuth();
-  const network = useNetworkStatus();
-  const [queue, setQueue] = useState<QueueSummary>(emptyQueue);
-  const [syncing, setSyncing] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<Theme>(() => readTheme());
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioOn, setBioOn] = useState(() => isBiometricEnabled());
@@ -84,53 +59,9 @@ export function ConfigPage() {
     setBioOn(true);
   }
 
-  async function refreshQueue() {
-    const items = await getQueueItems();
-    setQueue({
-      pending: items.filter((item) => item.status === "pending").length,
-      synced: items.filter((item) => item.status === "synced").length,
-      errors: items.filter((item) => item.status === "error").length,
-    });
-  }
-
-  useEffect(() => {
-    void refreshQueue();
-    const intervalId = window.setInterval(() => void refreshQueue(), 4000);
-    return () => window.clearInterval(intervalId);
-  }, []);
-
   function escolherTema(t: Theme) {
     setTheme(t);
     applyTheme(t);
-  }
-
-  async function handleSyncNow() {
-    setMessage(null);
-    setError(null);
-
-    if (!network.connected) {
-      setError(
-        "Sem internet no momento. O app mantém os envios na fila e sincroniza quando voltar.",
-      );
-      return;
-    }
-
-    try {
-      setSyncing(true);
-      await syncQueue();
-      await refreshQueue();
-      setMessage(
-        "Fila verificada. Envios pendentes foram sincronizados quando possível.",
-      );
-    } catch (syncError) {
-      setError(
-        syncError instanceof Error
-          ? syncError.message
-          : "Não foi possível sincronizar agora.",
-      );
-    } finally {
-      setSyncing(false);
-    }
   }
 
   return (
@@ -210,72 +141,6 @@ export function ConfigPage() {
           </div>
         </section>
       ) : null}
-
-      {/* Conexão & sincronização */}
-      <section>
-        <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Conexão & sincronização
-        </p>
-        <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              {network.connected ? (
-                <Wifi className="h-5 w-5" />
-              ) : (
-                <WifiOff className="h-5 w-5" />
-              )}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium">
-                {network.connected ? "Online" : "Offline"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Tipo:{" "}
-                {network.loading
-                  ? "verificando…"
-                  : network.connectionType || "desconhecido"}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              ["Pendentes", queue.pending],
-              ["Sincronizados", queue.synced],
-              ["Com erro", queue.errors],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                className="rounded-lg bg-muted p-3 text-center"
-              >
-                <p className="text-xs text-muted-foreground">{label}</p>
-                <p className="text-xl font-semibold">{value}</p>
-              </div>
-            ))}
-          </div>
-
-          {message ? (
-            <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success">
-              {message}
-            </p>
-          ) : null}
-          {error ? (
-            <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
-              {error}
-            </p>
-          ) : null}
-
-          <Button
-            type="button"
-            className="w-full"
-            onClick={handleSyncNow}
-            disabled={syncing}
-          >
-            <RefreshCcw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Sincronizando…" : "Sincronizar agora"}
-          </Button>
-        </div>
-      </section>
 
       {/* Conta */}
       <section>

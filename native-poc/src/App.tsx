@@ -5,8 +5,6 @@ import { LoginPage } from "./pages/login-page";
 import { MembershipsPage } from "./pages/memberships-page";
 import { NetworkHomePage } from "./pages/network-home-page";
 import { NoticesPage } from "./pages/notices-page";
-import { FormsPage } from "./pages/forms-page";
-import { OfflineTestFormPage } from "./pages/offline-test-form-page";
 import { FillFormPage } from "./pages/fill-form-page";
 import { ProfilePage } from "./pages/profile-page";
 import { ConfigPage } from "./pages/config-page";
@@ -34,8 +32,6 @@ export default function App() {
           <Route path="rede/:memberId" element={<NetworkHomePage />} />
           <Route path="rede/:memberId/form/:formId" element={<FillFormPage />} />
           <Route path="avisos" element={<NoticesPage />} />
-          <Route path="formularios" element={<FormsPage />} />
-          <Route path="formularios/teste-offline" element={<OfflineTestFormPage />} />
           <Route path="perfil" element={<ProfilePage />} />
           <Route path="config" element={<ConfigPage />} />
         </Route>
