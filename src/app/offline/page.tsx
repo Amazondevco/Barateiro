@@ -1,4 +1,4 @@
-export const metadata = { title: "Offline — Barateiro" };
+export const metadata = { title: "Offline — Check.AI" };
 
 export default function OfflinePage() {
   return (

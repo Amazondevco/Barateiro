@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 
-export const metadata = { title: "Conta confirmada — Barateiro" };
+export const metadata = { title: "Conta confirmada — Check.AI" };
 
 export default function ConfirmadoPage() {
   return (

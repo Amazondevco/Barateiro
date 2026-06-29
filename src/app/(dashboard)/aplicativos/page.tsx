@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { IconeSection } from "./icone-section";
 import type { AppIcone } from "./icone-types";
 
-export const metadata = { title: "Aplicativos — Barateiro" };
+export const metadata = { title: "Aplicativos — Check.AI" };
 
 export default async function AplicativosPage() {
   const profile = await getSessionProfile();

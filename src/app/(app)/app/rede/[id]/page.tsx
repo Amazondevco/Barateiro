@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ClipboardList, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Rede — Barateiro" };
+export const metadata = { title: "Rede — Check.AI" };
 
 export default async function AppRedePage({
   params,

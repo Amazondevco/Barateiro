@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MailCheck } from "lucide-react";
 
-export const metadata = { title: "Confirme seu e-mail — Barateiro" };
+export const metadata = { title: "Confirme seu e-mail — Check.AI" };
 
 export default function ConfirmePage() {
   return (

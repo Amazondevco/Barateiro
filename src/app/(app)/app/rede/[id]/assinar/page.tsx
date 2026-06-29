@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AssinarForm } from "./assinar-form";
 
-export const metadata = { title: "Sua assinatura — Barateiro" };
+export const metadata = { title: "Sua assinatura — Check.AI" };
 
 export default async function AssinarPage({
   params,

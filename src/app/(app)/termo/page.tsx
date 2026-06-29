@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { TERMO_PRIVACIDADE } from "@/lib/termo-privacidade";
 
-export const metadata = { title: "Termo de Privacidade — Barateiro" };
+export const metadata = { title: "Termo de Privacidade — Check.AI" };
 
 // Render simples do termo (markdown leve → blocos).
 export default function TermoPage() {

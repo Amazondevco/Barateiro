@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { FillForm, type FormData } from "./fill-form";
 
-export const metadata = { title: "Formulário — Barateiro" };
+export const metadata = { title: "Formulário — Check.AI" };
 
 export default async function FillPage({
   params,

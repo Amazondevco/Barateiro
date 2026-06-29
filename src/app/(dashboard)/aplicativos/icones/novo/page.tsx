@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { IconeEditor } from "../../icone-editor";
 import { carregarOpcoes } from "../../icone-data";
 
-export const metadata = { title: "Novo ícone — Barateiro" };
+export const metadata = { title: "Novo ícone — Check.AI" };
 
 export default async function NovoIconePage() {
   const profile = await getSessionProfile();

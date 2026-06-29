@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { RegistroRedeForm, type ConviteInfo } from "./registro-form";
 
-export const metadata = { title: "Entrar na rede — Barateiro" };
+export const metadata = { title: "Entrar na rede — Check.AI" };
 
 export default async function RegistroRedePage({
   searchParams,

@@ -6,7 +6,7 @@ import { signOut } from "@/lib/auth-actions";
 import { UserSwitcher } from "@/components/user-switcher";
 import { DEV_EMAILS } from "@/lib/dev-accounts";
 
-export const metadata = { title: "Meu app — Barateiro" };
+export const metadata = { title: "Meu app — Check.AI" };
 
 type Membro = {
   id: string;
