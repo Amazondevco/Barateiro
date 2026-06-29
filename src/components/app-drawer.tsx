@@ -20,7 +20,7 @@ export function AppDrawer({ nome }: { nome?: string }) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground hover:bg-muted"
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-current hover:bg-black/10"
         aria-label="Menu"
       >
         <Menu className="h-6 w-6" />

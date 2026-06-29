@@ -20,20 +20,24 @@ export function AppChrome({
 }) {
   const pathname = usePathname();
   const telaCheia = /\/form\/|\/assinar$/.test(pathname);
-
   if (telaCheia) return <>{children}</>;
+
+  // A tela Início (/app/rede) tem banner próprio (logo da rede) → sem topo padrão.
+  const semTopo = pathname.startsWith("/app/rede");
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-card px-3 py-2.5">
-        <AppDrawer nome={nome} />
-        <div className="flex flex-1 items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/amazondevco-logo.png" alt="" className="h-7 w-7 object-contain" />
-          <span className="font-semibold">Check.AI</span>
-        </div>
-        {DEV_EMAILS.includes(email) && <UserSwitcher currentEmail={email} />}
-      </header>
+      {!semTopo && (
+        <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-card px-3 py-2.5">
+          <AppDrawer nome={nome} />
+          <div className="flex flex-1 items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/amazondevco-logo.png" alt="" className="h-7 w-7 object-contain" />
+            <span className="font-semibold">Check.AI</span>
+          </div>
+          {DEV_EMAILS.includes(email) && <UserSwitcher currentEmail={email} />}
+        </header>
+      )}
 
       <main className="flex flex-1 flex-col">{children}</main>
 

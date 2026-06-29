@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ClipboardList, ChevronRight } from "lucide-react";
+import { Store } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { AppDrawer } from "@/components/app-drawer";
+import { FormsBoard, type FormItem } from "./forms-board";
 
 export const metadata = { title: "Meu app — Check.AI" };
 
@@ -15,7 +16,9 @@ export default async function AppRedePage({
 
   const { data: membro } = await supabase
     .from("rede_membros")
-    .select("rede_id, status, assinatura_svg, unidade_id, departamento_id, redes(nome), unidades(nome, tipo), cargos(nome)")
+    .select(
+      "rede_id, status, assinatura_svg, unidade_id, departamento_id, redes(nome, logo_url, cor_primaria), unidades(nome, tipo), cargos(nome)",
+    )
     .eq("id", id)
     .single();
   if (!membro) notFound();
@@ -25,7 +28,7 @@ export default async function AppRedePage({
     assinatura_svg: string | null;
     unidade_id: string | null;
     departamento_id: string | null;
-    redes: { nome: string } | null;
+    redes: { nome: string; logo_url: string | null; cor_primaria: string | null } | null;
     unidades: { nome: string; tipo: string } | null;
     cargos: { nome: string } | null;
   };
@@ -53,65 +56,57 @@ export default async function AppRedePage({
   };
 
   // Segmentação: formulário aparece se casa com unidade/tipo, departamento e dia.
-  const diaJs = new Date().getDay(); // 0=Dom..6=Sáb
-  const diaIso = diaJs === 0 ? 7 : diaJs; // 1=Seg..7=Dom
+  const diaJs = new Date().getDay();
+  const diaIso = diaJs === 0 ? 7 : diaJs;
   const tipoUni = m.unidades?.tipo ?? null;
 
-  const lista = ((forms ?? []) as Form[]).filter((f) => {
-    if (tipoUni && f.tipo_unidade && f.tipo_unidade !== tipoUni) return false;
+  const lista: FormItem[] = ((forms ?? []) as Form[])
+    .filter((f) => {
+      if (tipoUni && f.tipo_unidade && f.tipo_unidade !== tipoUni) return false;
+      const us = (f.formulario_unidades ?? []).map((x) => x.unidade_id);
+      if (us.length && (!m.unidade_id || !us.includes(m.unidade_id))) return false;
+      const ds = (f.formulario_departamentos ?? []).map((x) => x.departamento_id);
+      if (ds.length && (!m.departamento_id || !ds.includes(m.departamento_id))) return false;
+      const dias = f.dias_semana ?? [];
+      if (dias.length && !dias.includes(diaIso)) return false;
+      return true;
+    })
+    .map((f) => ({ id: f.id, nome: f.nome, descricao: f.descricao }));
 
-    const us = (f.formulario_unidades ?? []).map((x) => x.unidade_id);
-    if (us.length && (!m.unidade_id || !us.includes(m.unidade_id))) return false;
-
-    const ds = (f.formulario_departamentos ?? []).map((x) => x.departamento_id);
-    if (ds.length && (!m.departamento_id || !ds.includes(m.departamento_id))) return false;
-
-    const dias = f.dias_semana ?? [];
-    if (dias.length && !dias.includes(diaIso)) return false;
-
-    return true;
-  });
-
-  const unidade = m.unidades?.nome ?? m.redes?.nome ?? "Minha unidade";
-  const subtitulo = [m.redes?.nome, m.cargos?.nome].filter(Boolean).join(" · ");
+  const cor = m.redes?.cor_primaria || "var(--primary)";
+  const redeNome = m.redes?.nome ?? "Minha rede";
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Banner de contexto da unidade */}
-      <div className="bg-primary px-5 py-6 text-primary-foreground">
-        <p className="text-lg font-bold leading-tight">{unidade}</p>
-        {subtitulo && <p className="text-sm opacity-90">{subtitulo}</p>}
+      {/* Banner da REDE: hambúrguer + logo + nome centralizados */}
+      <div className="relative px-5 pb-7 pt-3 text-white" style={{ background: cor }}>
+        <div className="absolute left-2 top-3">
+          <AppDrawer nome={redeNome} />
+        </div>
+        <div className="flex flex-col items-center gap-2.5 pt-2">
+          {m.redes?.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={m.redes.logo_url}
+              alt={redeNome}
+              className="h-20 w-20 rounded-2xl bg-white object-contain p-1.5 shadow-md"
+            />
+          ) : (
+            <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/15">
+              <Store className="h-9 w-9" />
+            </span>
+          )}
+          <p className="text-2xl font-bold tracking-tight">{redeNome}</p>
+          {(m.unidades?.nome || m.cargos?.nome) && (
+            <p className="text-sm text-white/85">
+              {[m.unidades?.nome, m.cargos?.nome].filter(Boolean).join(" · ")}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="flex-1 space-y-3 p-4">
-        {lista.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-            <ClipboardList className="h-8 w-8 text-muted-foreground" />
-            <p className="font-medium">Nenhum formulário disponível</p>
-            <p className="max-w-xs text-sm text-muted-foreground">
-              Quando o gestor liberar checklists para o seu acesso, eles aparecem aqui.
-            </p>
-          </div>
-        ) : (
-          lista.map((f) => (
-            <Link
-              key={f.id}
-              href={`/app/rede/${id}/form/${f.id}`}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <ClipboardList className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{f.nome}</p>
-                {f.descricao && (
-                  <p className="truncate text-xs text-muted-foreground">{f.descricao}</p>
-                )}
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </Link>
-          ))
-        )}
+      <div className="flex-1 p-4">
+        <FormsBoard membroId={id} forms={lista} />
       </div>
     </div>
   );
