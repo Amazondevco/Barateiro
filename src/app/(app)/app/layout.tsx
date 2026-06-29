@@ -45,7 +45,7 @@ export default async function AppLoggedLayout({
     : undefined;
 
   return (
-    <div style={style} className="flex min-h-screen flex-col">
+    <div style={style} className="app-shell flex min-h-screen flex-col">
       <OfflineSyncProvider />
       <AppChrome nome={nome} email={c?.email ?? ""}>
         {children}

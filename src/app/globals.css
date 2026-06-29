@@ -125,6 +125,16 @@
   border-color: var(--border);
 }
 
+/* App (mobile): bordas um pouco mais visíveis para separar os blocos. */
+.app-shell {
+  --border: #cbd5e1;
+  --input: #cbd5e1;
+}
+.dark .app-shell {
+  --border: #334155;
+  --input: #334155;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

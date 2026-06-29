@@ -114,23 +114,26 @@ export default async function AppRedePage({
   return (
     <div className="flex flex-1 flex-col">
       {/* Banner da REDE: cor sólida do Admin + logo + nome centralizados */}
-      <div className="relative px-5 pb-7 pt-4" style={bannerStyle}>
-        <div className="flex flex-col items-center gap-2.5 pt-2">
+      <div
+        className="relative px-5 pb-4 pt-3 shadow-sm ring-1 ring-black/5"
+        style={bannerStyle}
+      >
+        <div className="flex flex-col items-center gap-1.5">
           {marca?.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={marca.logo_url}
               alt={redeNome}
-              className="h-20 w-20 rounded-2xl bg-white object-contain p-1.5 shadow-md"
+              className="h-14 w-14 rounded-2xl bg-white object-contain p-1 shadow-md"
             />
           ) : (
-            <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/15">
-              <Store className="h-9 w-9" />
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
+              <Store className="h-7 w-7" />
             </span>
           )}
-          <p className="text-2xl font-bold tracking-tight">{redeNome}</p>
+          <p className="text-xl font-bold tracking-tight">{redeNome}</p>
           {(m.unidades?.nome || m.cargos?.nome) && (
-            <p className="text-sm opacity-80">
+            <p className="text-xs opacity-80">
               {[m.unidades?.nome, m.cargos?.nome].filter(Boolean).join(" · ")}
             </p>
           )}
