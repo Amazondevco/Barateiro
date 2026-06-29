@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   "/cadastro",
   "/termo",
   "/api/manifest",
+  "/api/app-icon",
 ];
 
 export async function updateSession(request: NextRequest) {

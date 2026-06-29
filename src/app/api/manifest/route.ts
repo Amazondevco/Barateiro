@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   let name = "Check.AI";
   let icone = "/icon-512.svg";
+  let type = "image/svg+xml";
   let cor = "#F97316";
   let start = "/";
 
@@ -14,7 +15,9 @@ export async function GET() {
     const rede = await getMinhaRedeMarca();
     if (rede) {
       name = rede.nome || name;
-      icone = rede.app_icone_url || rede.logo_url || icone;
+      // Ícone gerado (cor da marca + logo) → bonito e uniforme em todas as redes.
+      icone = `/api/app-icon?rede=${rede.id}`;
+      type = "image/png";
       cor = rede.app_cor || rede.cor_primaria || cor;
       start = "/app";
     }
@@ -22,7 +25,6 @@ export async function GET() {
     /* fallback Check.AI */
   }
 
-  const type = icone.endsWith(".svg") ? "image/svg+xml" : "image/png";
   const manifest = {
     name,
     short_name: name.slice(0, 12),
@@ -31,7 +33,8 @@ export async function GET() {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#ffffff",
+    // Fundo do splash = cor da marca (ícone gerado tem o mesmo fundo → blend).
+    background_color: cor,
     theme_color: cor,
     icons: [
       { src: icone, sizes: "512x512", type, purpose: "any" },

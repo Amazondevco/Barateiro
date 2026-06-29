@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   let apple = "/icon-512.svg";
   try {
     const rede = await getMinhaRedeMarca();
-    if (rede) apple = rede.app_icone_url || rede.logo_url || apple;
+    if (rede) apple = `/api/app-icon?rede=${rede.id}`;
   } catch {
     /* fallback */
   }
