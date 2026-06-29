@@ -3,10 +3,9 @@ import {
   AlertCircle,
   Download,
   ExternalLink,
-  Github,
   Smartphone,
 } from "lucide-react";
-import Badge from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type ApkInstallerCardProps = {
@@ -122,7 +121,7 @@ export function ApkInstallerCard({
               rel="noreferrer"
               className={outlineLinkClass}
             >
-              <Github className="h-4 w-4" />
+              <ExternalLink className="h-4 w-4" />
               Abrir workflow
             </Link>
           </div>
