@@ -111,6 +111,25 @@
 }
 
 /* ===========================================================
+   Workaround do extrator do Tailwind v4.3: quando uma cor é usada
+   com e sem modificador de opacidade (ex.: bg-primary E bg-primary/10),
+   a versão PURA não é gerada. Como bg-primary/background/white têm
+   variantes com opacidade no app, definimos as puras explicitamente.
+   (As variantes /NN continuam sendo geradas pelo Tailwind.)
+   =========================================================== */
+@layer utilities {
+  .bg-primary {
+    background-color: var(--primary);
+  }
+  .bg-background {
+    background-color: var(--background);
+  }
+  .bg-white {
+    background-color: #fff;
+  }
+}
+
+/* ===========================================================
    Resets base
    =========================================================== */
 * {
