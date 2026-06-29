@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Check, Loader2, PenLine } from "lucide-react";
+import { ArrowLeft, Check, Loader2, PenLine, Camera, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { SignaturePad } from "../../../../signature-pad";
@@ -51,6 +51,7 @@ export function FillForm({
   const router = useRouter();
   const [valores, setValores] = useState<Record<string, string>>({});
   const [obs, setObs] = useState<Record<string, string>>({});
+  const [fotos, setFotos] = useState<Record<string, string>>({});
   const [assinada, setAssinada] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -68,7 +69,7 @@ export function FillForm({
         item_id: it.id,
         valor: valores[it.id] ?? "",
         observacao: obs[it.id] ?? "",
-        foto_url: "",
+        foto_url: fotos[it.id] ?? "",
       })),
     );
     const supabase = createClient();
@@ -131,6 +132,15 @@ export function FillForm({
                       className="mt-2 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                   )}
+                {/* foto: item do tipo foto OU foto exigida na não-conformidade */}
+                {(it.tipo === "foto" ||
+                  (it.obriga_foto_quando_nao &&
+                    ["nao", "ruptura"].includes(valores[it.id] ?? ""))) && (
+                  <FotoCampo
+                    value={fotos[it.id] ?? ""}
+                    onChange={(url) => setFotos((p) => ({ ...p, [it.id]: url }))}
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -247,6 +257,9 @@ function ItemInput({
     );
   }
 
+  // foto é renderizada pelo FotoCampo (fora do ItemInput)
+  if (item.tipo === "foto") return null;
+
   const tipoInput =
     item.tipo === "numero" ? "number" : item.tipo === "data" ? "date" : "text";
   return (
@@ -257,5 +270,62 @@ function ItemInput({
       placeholder="Resposta"
       className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     />
+  );
+}
+
+function FotoCampo({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [subindo, setSubindo] = useState(false);
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setSubindo(true);
+    const supabase = createClient();
+    const ext = f.name.split(".").pop() || "jpg";
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const up = await supabase.storage.from("respostas-fotos").upload(path, f);
+    if (!up.error) {
+      onChange(supabase.storage.from("respostas-fotos").getPublicUrl(path).data.publicUrl);
+    }
+    setSubindo(false);
+  }
+
+  return (
+    <div className="mt-2">
+      <input ref={ref} type="file" accept="image/*" capture="environment" onChange={onFile} className="hidden" />
+      {value ? (
+        <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={value} alt="" className="h-16 w-16 rounded-lg border border-border object-cover" />
+          <button type="button" onClick={() => onChange("")} className="flex items-center gap-1 text-xs text-danger">
+            <Trash2 className="h-3.5 w-3.5" /> Remover
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => ref.current?.click()}
+          disabled={subindo}
+          className="flex items-center gap-1.5 rounded-lg border border-input px-3 py-2 text-sm hover:bg-muted disabled:opacity-50"
+        >
+          {subindo ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> Enviando…
+            </>
+          ) : (
+            <>
+              <Camera className="h-4 w-4" /> Tirar foto
+            </>
+          )}
+        </button>
+      )}
+    </div>
   );
 }

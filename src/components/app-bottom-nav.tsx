@@ -20,14 +20,14 @@ export function AppBottomNav() {
 
   return (
     <nav className="sticky bottom-0 z-30 border-t border-border bg-card">
-      <div className="relative mx-auto flex h-14 max-w-md items-center">
-        {/* indicador deslizante (redondinho que passa de um pro outro) */}
+      <div className="relative mx-auto flex h-[68px] max-w-md items-center px-1">
+        {/* indicador deslizante (fundo arredondado que passa de um pro outro) */}
         <div
           className="pointer-events-none absolute h-full transition-transform duration-300 ease-out"
           style={{ width: `${100 / n}%`, transform: `translateX(${active * 100}%)` }}
           aria-hidden
         >
-          <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-sm" />
+          <div className="absolute left-1/2 top-1/2 h-[52px] w-[58px] -translate-x-1/2 -translate-y-1/2 rounded-[20px] bg-primary shadow-sm" />
         </div>
 
         {TABS.map((t, i) => {
@@ -41,7 +41,7 @@ export function AppBottomNav() {
               aria-label={t.href}
             >
               <Icon
-                className={`h-5 w-5 transition-colors duration-300 ${
+                className={`h-7 w-7 transition-colors duration-300 ${
                   on ? "text-primary-foreground" : "text-muted-foreground"
                 }`}
               />
