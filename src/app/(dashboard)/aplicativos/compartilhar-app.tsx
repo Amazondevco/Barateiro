@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 // Link de instalação do PWA — domínio de produção (entrada pelo cadastro).
 function installUrl(_id: string | undefined) {
-  return `https://checkai-sistema.vercel.app/cadastro`;
+  return `https://check-ai-br.vercel.app/cadastro`;
 }
 
 function mensagem(nome: string, nomeCurto: string, id: string | undefined) {
