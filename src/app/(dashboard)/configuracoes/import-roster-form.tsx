@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
-import { Upload, FileUp, Check } from "lucide-react";
+import { Upload, FileUp, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Label } from "@/components/ui/input";
@@ -14,15 +14,12 @@ export function ImportRosterForm({
 }) {
   const [open, setOpen] = useState(false);
   const [texto, setTexto] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [state, formAction, pending] = useActionState(action, {});
 
-  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = () => setTexto(String(reader.result ?? ""));
-    reader.readAsText(f);
+  if (state.ok && open) {
+    // mantém aberto para mostrar o resultado
   }
 
   return (
@@ -32,11 +29,7 @@ export function ImportRosterForm({
       </Button>
 
       {open && (
-        <Modal
-          title="Importar equipe"
-          onClose={() => setOpen(false)}
-          size="lg"
-        >
+        <Modal title="Importar equipe" onClose={() => setOpen(false)} size="lg">
           {state.ok ? (
             <div className="space-y-3">
               <p className="flex items-center gap-2 text-sm font-medium text-success">
@@ -60,42 +53,52 @@ export function ImportRosterForm({
             </div>
           ) : (
             <form action={formAction} className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Cole a lista ou envie um arquivo. Uma pessoa por linha, colunas
-                separadas por <code>;</code> ou vírgula:
-              </p>
-              <pre className="overflow-x-auto rounded-lg bg-muted/40 p-2 text-xs text-muted-foreground">
-nome; cpf; cargo; unidade; departamento
-João Silva; 123.456.789-00; Gerente; Loja Centro; Açougue
-              </pre>
+              <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 text-sm text-primary">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
+                <p>
+                  Envie um <strong>Excel, PDF, Word ou CSV</strong> com a equipe.
+                  A IA lê o arquivo e extrai nome, CPF, cargo, unidade e
+                  departamento.
+                </p>
+              </div>
 
+              {/* Arquivo */}
               <div>
                 <input
                   ref={fileRef}
                   type="file"
-                  accept=".csv,.txt"
-                  onChange={onFile}
+                  name="file"
+                  accept=".csv,.xlsx,.xls,.pdf,.docx"
+                  onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
                   className="hidden"
                 />
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
                   onClick={() => fileRef.current?.click()}
                 >
-                  <FileUp className="h-4 w-4" /> Enviar arquivo CSV
+                  <FileUp className="h-4 w-4" /> Escolher arquivo
                 </Button>
+                {fileName && (
+                  <span className="ml-3 text-sm text-muted-foreground">{fileName}</span>
+                )}
+              </div>
+
+              <div className="relative text-center text-xs text-muted-foreground">
+                <span className="bg-card px-2">ou cole a lista (CSV)</span>
               </div>
 
               <div>
-                <Label htmlFor="lista">Lista</Label>
+                <Label htmlFor="lista">
+                  Lista <span className="font-normal text-muted-foreground">(nome; cpf; cargo; unidade; departamento)</span>
+                </Label>
                 <textarea
                   id="lista"
                   name="lista"
                   value={texto}
                   onChange={(e) => setTexto(e.target.value)}
-                  rows={8}
-                  placeholder="Cole as linhas aqui…"
+                  rows={6}
+                  placeholder={"João Silva; 123.456.789-00; Gerente; Loja Centro; Açougue"}
                   className="w-full rounded-lg border border-input bg-card p-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
@@ -110,7 +113,7 @@ João Silva; 123.456.789-00; Gerente; Loja Centro; Açougue
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={pending || !texto.trim()}>
+                <Button type="submit" disabled={pending || (!fileName && !texto.trim())}>
                   {pending ? "Importando…" : "Importar"}
                 </Button>
               </div>

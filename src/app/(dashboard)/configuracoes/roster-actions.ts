@@ -63,7 +63,70 @@ export type ImportState = {
   error?: string;
 };
 
-// Importa lista colada/CSV: nome; cpf; cargo; unidade; departamento
+// ---- Extração de texto de arquivos (PDF / Word / Excel / CSV) ----
+async function extractText(file: File): Promise<{ texto: string; precisaIA: boolean }> {
+  const name = file.name.toLowerCase();
+  const buf = Buffer.from(await file.arrayBuffer());
+
+  if (name.endsWith(".pdf")) {
+    // @ts-expect-error pdf-parse não tem tipos para este subpath
+    const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
+    const pdf = pdfMod.default as (b: Buffer) => Promise<{ text: string }>;
+    const data = await pdf(buf);
+    return { texto: data.text ?? "", precisaIA: true };
+  }
+  if (name.endsWith(".docx")) {
+    const mammoth = await import("mammoth");
+    const r = await mammoth.extractRawText({ buffer: buf });
+    return { texto: r.value ?? "", precisaIA: true };
+  }
+  if (name.endsWith(".xlsx") || name.endsWith(".xls") || name.endsWith(".csv")) {
+    const XLSX = await import("xlsx");
+    const wb = XLSX.read(buf, { type: "buffer" });
+    const texto = wb.SheetNames.map((n) => XLSX.utils.sheet_to_csv(wb.Sheets[n])).join("\n");
+    return { texto, precisaIA: false }; // planilha já é tabular
+  }
+  return { texto: buf.toString("utf8"), precisaIA: false };
+}
+
+// ---- IA: extrai pessoas de texto não-estruturado (PDF/Word) → linhas CSV ----
+async function estruturarComIA(textoBruto: string): Promise<string[]> {
+  const key = process.env.GROQ_API_KEY;
+  if (!key) return [];
+  const SYSTEM = `Você extrai uma lista de funcionários de um documento.
+Responda APENAS JSON válido: {"pessoas":[{"nome":string,"cpf":string,"cargo":string,"unidade":string,"departamento":string}]}.
+- cpf: apenas os 11 dígitos (sem pontos/traços); se não houver, "".
+- Não invente pessoas nem dados. Mantenha os nomes de cargo/unidade/departamento exatamente como aparecem.
+- Ignore cabeçalhos, totais e linhas que não sejam pessoas.`;
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        temperature: 0,
+        max_tokens: 6000,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: SYSTEM },
+          { role: "user", content: textoBruto.slice(0, 30000) },
+        ],
+      }),
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const content: string = json?.choices?.[0]?.message?.content ?? "{}";
+    const parsed = JSON.parse(content) as { pessoas?: Record<string, string>[] };
+    return (parsed.pessoas ?? []).map(
+      (p) =>
+        `${p.nome ?? ""};${p.cpf ?? ""};${p.cargo ?? ""};${p.unidade ?? ""};${p.departamento ?? ""}`,
+    );
+  } catch {
+    return [];
+  }
+}
+
+// Importa equipe: arquivo (Excel/PDF/Word) OU lista colada (CSV).
 // Casa cargo/unidade/departamento por NOME (case-insensitive).
 export async function importarRoster(
   _prev: ImportState,
@@ -73,27 +136,49 @@ export async function importarRoster(
   if (caller?.papel !== "admin_supermercado" || !caller.rede_id) {
     return { error: "Sem permissão." };
   }
+
+  // 1) obter as linhas (de arquivo ou texto colado)
+  let linhas: string[] = [];
+  const file = formData.get("file");
   const texto = String(formData.get("lista") ?? "").trim();
-  if (!texto) return { error: "Cole ou envie a lista." };
 
+  if (file instanceof File && file.size > 0) {
+    if (file.size > 12 * 1024 * 1024) return { error: "Arquivo muito grande (máx. 12MB)." };
+    let extra;
+    try {
+      extra = await extractText(file);
+    } catch {
+      return { error: "Não consegui ler o arquivo. Use Excel, PDF, Word ou CSV." };
+    }
+    if (extra.precisaIA) {
+      linhas = await estruturarComIA(extra.texto);
+      if (linhas.length === 0)
+        return { error: "A IA não encontrou pessoas no documento (pode ser imagem escaneada)." };
+    } else {
+      linhas = extra.texto.split(/\r?\n/);
+    }
+  } else if (texto) {
+    linhas = texto.split(/\r?\n/);
+  } else {
+    return { error: "Envie um arquivo ou cole a lista." };
+  }
+
+  // 2) carregar mapas de nome → id da rede
   const supabase = await createClient();
-  const [{ data: cargos }, { data: unidades }, { data: deptos }] =
-    await Promise.all([
-      supabase.from("cargos").select("id,nome").eq("rede_id", caller.rede_id),
-      supabase.from("unidades").select("id,nome").eq("rede_id", caller.rede_id),
-      supabase.from("departamentos").select("id,nome").eq("rede_id", caller.rede_id),
-    ]);
-
+  const [{ data: cargos }, { data: unidades }, { data: deptos }] = await Promise.all([
+    supabase.from("cargos").select("id,nome").eq("rede_id", caller.rede_id),
+    supabase.from("unidades").select("id,nome").eq("rede_id", caller.rede_id),
+    supabase.from("departamentos").select("id,nome").eq("rede_id", caller.rede_id),
+  ]);
   const norm = (s: string | undefined) => (s ?? "").trim().toLowerCase();
   const cargoMap = new Map((cargos ?? []).map((c) => [norm(c.nome), c.id]));
   const uniMap = new Map((unidades ?? []).map((u) => [norm(u.nome), u.id]));
   const depMap = new Map((deptos ?? []).map((d) => [norm(d.nome), d.id]));
 
-  const linhas = texto.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  // 3) montar linhas válidas
   const rows: Record<string, unknown>[] = [];
   const erros: string[] = [];
-
-  for (const linha of linhas) {
+  for (const linha of linhas.map((l) => l.trim()).filter(Boolean)) {
     const cols = linha.split(/[;,\t]/).map((c) => c.trim());
     const [nome, cpfRaw, cargoNome, uniNome, depNome] = cols;
     if (norm(nome) === "nome" && norm(cpfRaw) === "cpf") continue; // cabeçalho
@@ -113,7 +198,7 @@ export async function importarRoster(
     });
   }
 
-  if (rows.length === 0) return { error: "Nenhuma linha válida.", erros };
+  if (rows.length === 0) return { error: "Nenhuma pessoa válida encontrada.", erros };
 
   const { error } = await supabase
     .from("rede_roster")
