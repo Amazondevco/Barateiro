@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, ChevronRight, ClipboardList, Store } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Store } from "lucide-react";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../context/auth-context";
-import { applyPrimaryColor, fetchNetworkHome, type NetworkHomeData } from "../lib/operator-api";
+import {
+  applyPrimaryColor,
+  fetchNetworkHome,
+  type NetworkHomeData,
+} from "../lib/operator-api";
+import { isLightHex } from "../lib/utils";
 import { LoadingScreen } from "../ui/loading-screen";
+import { FormsBoard } from "../ui/forms-board";
 
 export function NetworkHomePage() {
   const { memberId = "" } = useParams();
@@ -21,7 +27,11 @@ export function NetworkHomePage() {
         setData(nextData);
         applyPrimaryColor(nextData.brand.primaryColor);
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Falha ao carregar a rede.");
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Falha ao carregar a rede.",
+        );
       } finally {
         setLoading(false);
       }
@@ -36,72 +46,53 @@ export function NetworkHomePage() {
 
   if (!data) {
     return (
-      <div className="page">
-        <p className="banner danger inline-banner">{error ?? "Não foi possível carregar a rede."}</p>
+      <div className="mx-auto w-full max-w-md p-4">
+        <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
+          {error ?? "Não foi possível carregar a rede."}
+        </p>
       </div>
     );
   }
 
+  const cor = data.brand.primaryColor || "#0f172a";
+  const textoCor = isLightHex(cor) ? "#0f172a" : "#ffffff";
+  const subtitulo =
+    [data.membership.unidadeNome, data.membership.cargoNome]
+      .filter(Boolean)
+      .join(" · ") || "Operador";
+
   return (
-    <div className="page">
-      <header className="network-hero">
-        <div className="network-brand">
+    <div className="flex flex-1 flex-col">
+      {/* Banner da REDE: cor sólida do Admin + logo + nome centralizados */}
+      <div
+        className="relative px-5 pb-4 pt-3 shadow-sm ring-1 ring-black/5"
+        style={{ background: cor, color: textoCor }}
+      >
+        <div className="flex flex-col items-center gap-1.5">
           {data.brand.logoUrl ? (
-            <img src={data.brand.logoUrl} alt={data.brand.nome} className="brand-logo" />
+            <img
+              src={data.brand.logoUrl}
+              alt={data.brand.nome}
+              className="h-14 w-14 rounded-2xl bg-white object-contain p-1 shadow-md"
+            />
           ) : (
-            <div className="brand-logo fallback">
-              <Store size={24} />
-            </div>
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
+              <Store className="h-7 w-7" />
+            </span>
           )}
-          <div>
-            <p className="eyebrow">Minha rede</p>
-            <h1>{data.brand.nome}</h1>
-            <p className="network-meta">
-              {[data.membership.unidadeNome, data.membership.cargoNome].filter(Boolean).join(" • ") || "Operador"}
-            </p>
-          </div>
+          <p className="text-xl font-bold tracking-tight">{data.brand.nome}</p>
+          <p className="text-xs opacity-80">{subtitulo}</p>
         </div>
-      </header>
+      </div>
 
-      {error ? <p className="banner danger inline-banner">{error}</p> : null}
-
-      <section className="card stack-md">
-        <div className="queue-row">
-          <div>
-            <h2>Formulários do dia</h2>
-            <p className="section-copy">Primeiro fluxo da Fase 1 portado para acesso cliente direto.</p>
-          </div>
-          <Link to="/app/formularios/teste-offline" className="secondary-button inline-link">
-            Teste offline
-          </Link>
-        </div>
-
-        {data.forms.length === 0 ? (
-          <div className="empty-state">Nenhum formulário disponível para o contexto atual.</div>
-        ) : (
-          data.forms.map((form) => (
-            <article key={form.id} className="form-card">
-              <div className="form-card-icon">
-                <ClipboardList size={18} />
-              </div>
-              <div className="membership-copy">
-                <strong>{form.nome}</strong>
-                <span>{form.descricao ?? "Checklist configurado para esta unidade."}</span>
-              </div>
-              {form.enviadoHoje ? (
-                <span className="success-tag">
-                  <CheckCircle2 size={14} />
-                  Enviado hoje
-                </span>
-              ) : (
-                <Link to={`/app/rede/${memberId}/form/${form.id}`} className="icon-button compact-icon">
-                  <ChevronRight size={18} className="muted-icon" />
-                </Link>
-              )}
-            </article>
-          ))
-        )}
-      </section>
+      <div className="mx-auto w-full max-w-md flex-1 space-y-3 p-4">
+        {error ? (
+          <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
+            {error}
+          </p>
+        ) : null}
+        <FormsBoard membroId={memberId} forms={data.forms} />
+      </div>
     </div>
   );
 }

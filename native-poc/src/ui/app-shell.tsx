@@ -9,10 +9,10 @@ export function AppShell() {
     /\/rede\/[^/]+\/form\/[^/]+$/.test(location.pathname);
 
   return (
-    <div className="app-shell">
-      <main className="app-main">
+    <div className="app-shell flex min-h-screen flex-col bg-background">
       <NativeStatusBanner />
-      <Outlet />
+      <main className="flex-1">
+        <Outlet />
       </main>
       {!compact ? <BottomNav /> : null}
     </div>

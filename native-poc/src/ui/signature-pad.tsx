@@ -81,10 +81,10 @@ export function SignaturePad({
   }
 
   return (
-    <div className="signature-wrap">
+    <div className="flex flex-col gap-3">
       <canvas
         ref={canvasRef}
-        className="signature-canvas"
+        className="min-h-[148px] w-full touch-none rounded-lg border border-dashed border-border bg-white"
         onMouseDown={(event) => start(event.clientX, event.clientY)}
         onMouseMove={(event) => draw(event.clientX, event.clientY)}
         onMouseUp={stop}
@@ -99,7 +99,11 @@ export function SignaturePad({
         }}
         onTouchEnd={stop}
       />
-      <button className="ghost-button" type="button" onClick={() => onChange(null)}>
+      <button
+        type="button"
+        onClick={() => onChange(null)}
+        className="self-start text-xs text-muted-foreground hover:text-foreground"
+      >
         Limpar assinatura
       </button>
     </div>

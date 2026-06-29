@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
-import { Building2, Mail, MapPin, Phone, User } from "lucide-react";
 import { useAuth } from "../context/auth-context";
 import { fetchProfile } from "../lib/operator-api";
 import type { ProfileData } from "../lib/operator-types";
 import { LoadingScreen } from "../ui/loading-screen";
+
+function fmtCpf(cpf: string | null | undefined) {
+  const d = (cpf ?? "").replace(/\D/g, "");
+  return d.length === 11
+    ? `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
+    : "—";
+}
 
 export function ProfilePage() {
   const { user } = useAuth();
@@ -18,7 +24,11 @@ export function ProfilePage() {
       try {
         setProfile(await fetchProfile(user.id));
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Falha ao carregar o perfil.");
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Falha ao carregar o perfil.",
+        );
       } finally {
         setLoading(false);
       }
@@ -31,43 +41,75 @@ export function ProfilePage() {
     return <LoadingScreen label="Carregando perfil…" />;
   }
 
+  const iniciais =
+    (profile?.nome ?? "")
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase() || "?";
+
+  const linhas: [string, string][] = [
+    ["E-mail", profile?.email || "—"],
+    ["CPF", fmtCpf(profile?.cpf)],
+    ["Celular", profile?.telefone || "—"],
+    ["Cidade", profile?.cidade || "—"],
+  ];
+
+  const vinculo: [string, string][] = [
+    ["Rede", profile?.rede || "—"],
+    ["Unidade", profile?.unidade || "—"],
+    ["Cargo", profile?.cargo || "—"],
+  ];
+
   return (
-    <div className="page">
-      <header className="page-header">
-        <p className="eyebrow">Perfil</p>
-        <h1>{profile?.nome ?? "Operador"}</h1>
-        <p className="hero-copy">Consulta de identidade e vínculo feita 100% no cliente.</p>
-      </header>
+    <div className="flex flex-1 flex-col items-center p-5">
+      {error ? (
+        <p className="mb-4 w-full max-w-sm rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
 
-      {error ? <p className="banner danger inline-banner">{error}</p> : null}
+      <div className="flex flex-col items-center gap-3 py-4">
+        {profile?.fotoUrl ? (
+          <img
+            src={profile.fotoUrl}
+            alt=""
+            className="h-24 w-24 rounded-full object-cover"
+          />
+        ) : (
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-2xl font-semibold text-primary">
+            {iniciais}
+          </div>
+        )}
+        <p className="text-lg font-semibold">{profile?.nome ?? "Operador"}</p>
+      </div>
 
-      <section className="card stack-sm">
-        <ProfileRow icon={<Mail size={16} />} label="E-mail" value={profile?.email} />
-        <ProfileRow icon={<Phone size={16} />} label="Telefone" value={profile?.telefone} />
-        <ProfileRow icon={<MapPin size={16} />} label="Cidade" value={profile?.cidade} />
-        <ProfileRow icon={<Building2 size={16} />} label="Rede" value={profile?.rede} />
-        <ProfileRow icon={<User size={16} />} label="Cargo" value={profile?.cargo} />
-        <ProfileRow icon={<Building2 size={16} />} label="Unidade" value={profile?.unidade} />
-      </section>
-    </div>
-  );
-}
+      <div className="w-full max-w-sm divide-y divide-border rounded-xl border border-border bg-card">
+        {linhas.map(([k, v]) => (
+          <div
+            key={k}
+            className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+          >
+            <span className="shrink-0 text-muted-foreground">{k}</span>
+            <span className="truncate text-right font-medium">{v}</span>
+          </div>
+        ))}
+      </div>
 
-function ProfileRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | null | undefined;
-}) {
-  return (
-    <div className="profile-row">
-      <span className="profile-icon">{icon}</span>
-      <div>
-        <p className="summary-label">{label}</p>
-        <strong>{value || "Não informado"}</strong>
+      <p className="mt-6 mb-2 w-full max-w-sm px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Vínculo
+      </p>
+      <div className="w-full max-w-sm divide-y divide-border rounded-xl border border-border bg-card">
+        {vinculo.map(([k, v]) => (
+          <div
+            key={k}
+            className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+          >
+            <span className="shrink-0 text-muted-foreground">{k}</span>
+            <span className="truncate text-right font-medium">{v}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

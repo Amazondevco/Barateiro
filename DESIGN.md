@@ -195,3 +195,17 @@ Botões de resposta selecionados: `border-primary bg-primary/10 text-primary`.
 - Deep links usam o scheme `checkai://` enquanto o app estiver em POC/debug.
 - Links devem abrir rotas internas sem criar tela intermediaria; se nao houver sessao, o fluxo normal de login assume.
 - Rotas documentadas ficam em `docs/TESTE-DEEP-LINK-NATIVO.md` para testes com ADB/Xcode.
+
+## App nativo - paridade visual com o PWA
+
+- O `native-poc/` usa o **mesmo design system** do PWA: Tailwind v4, os tokens de
+  `:root`/`.dark` portados de `globals.css`, fonte **Geist** e os componentes
+  `Button`/`Input` espelhados (`native-poc/src/ui/`). Nada de CSS custom fora dos tokens.
+- Telas reusam o markup/classes das telas web equivalentes (Início = banner sólido +
+  `forms-board`; barra inferior só com ícones + indicador deslizante; fila offline em
+  pílula sticky). Ao mexer numa tela do PWA, reflita no nativo (e vice-versa).
+- Cor da rede: `applyPrimaryColor` injeta `--primary` e `--primary-hover`
+  (`color-mix … 85%, black`), igual ao `(app)/app/layout.tsx`. Texto do banner adapta
+  via `isLightHex` (`native-poc/src/lib/utils.ts`).
+- Tema (claro/escuro/sistema) fica em `localStorage["checkai-theme"]`, aplicado no boot
+  (`main.tsx`) e alternável na tela de Config.

@@ -199,7 +199,11 @@ export async function fetchProfile(userId: string) {
 
 export function applyPrimaryColor(color: string | null) {
   if (!color || typeof document === "undefined") return;
-  document.documentElement.style.setProperty("--primary", color);
+  // Cor da rede vale para barra, botões e banner (igual ao app PWA):
+  // injeta --primary e o hover (escurece 15%).
+  const root = document.documentElement.style;
+  root.setProperty("--primary", color);
+  root.setProperty("--primary-hover", `color-mix(in srgb, ${color} 85%, black)`);
 }
 
 export async function fetchFormDefinition(memberId: string, formId: string) {

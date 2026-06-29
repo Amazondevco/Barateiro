@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
-import { LogOut, MoonStar, RefreshCcw, ShieldCheck, Wifi, WifiOff } from "lucide-react";
+import {
+  LogOut,
+  Monitor,
+  Moon,
+  RefreshCcw,
+  Sun,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 import { useAuth } from "../context/auth-context";
 import { getQueueItems } from "../lib/queue-store";
 import { syncQueue } from "../lib/sync";
 import { useNetworkStatus } from "../lib/use-network-status";
+import { Button } from "../ui/button";
 
 type QueueSummary = {
   pending: number;
@@ -11,11 +20,30 @@ type QueueSummary = {
   errors: number;
 };
 
-const emptyQueue: QueueSummary = {
-  pending: 0,
-  synced: 0,
-  errors: 0,
-};
+const emptyQueue: QueueSummary = { pending: 0, synced: 0, errors: 0 };
+
+type Theme = "system" | "light" | "dark";
+
+function readTheme(): Theme {
+  return (localStorage.getItem("checkai-theme") as Theme | null) ?? "system";
+}
+
+function applyTheme(t: Theme) {
+  if (t === "system") {
+    localStorage.removeItem("checkai-theme");
+    const sys = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
+    document.documentElement.classList.toggle("dark", Boolean(sys));
+  } else {
+    localStorage.setItem("checkai-theme", t);
+    document.documentElement.classList.toggle("dark", t === "dark");
+  }
+}
+
+const THEME_OPTS: { v: Theme; label: string; icon: typeof Sun }[] = [
+  { v: "system", label: "Sistema", icon: Monitor },
+  { v: "light", label: "Claro", icon: Sun },
+  { v: "dark", label: "Escuro", icon: Moon },
+];
 
 export function ConfigPage() {
   const { signOutUser } = useAuth();
@@ -24,10 +52,10 @@ export function ConfigPage() {
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [theme, setTheme] = useState<Theme>(() => readTheme());
 
   async function refreshQueue() {
     const items = await getQueueItems();
-
     setQueue({
       pending: items.filter((item) => item.status === "pending").length,
       synced: items.filter((item) => item.status === "synced").length,
@@ -37,22 +65,23 @@ export function ConfigPage() {
 
   useEffect(() => {
     void refreshQueue();
-
-    const intervalId = window.setInterval(() => {
-      void refreshQueue();
-    }, 4000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
+    const intervalId = window.setInterval(() => void refreshQueue(), 4000);
+    return () => window.clearInterval(intervalId);
   }, []);
+
+  function escolherTema(t: Theme) {
+    setTheme(t);
+    applyTheme(t);
+  }
 
   async function handleSyncNow() {
     setMessage(null);
     setError(null);
 
     if (!network.connected) {
-      setError("Sem internet no momento. O app mantém os envios na fila e sincroniza quando voltar.");
+      setError(
+        "Sem internet no momento. O app mantém os envios na fila e sincroniza quando voltar.",
+      );
       return;
     }
 
@@ -60,89 +89,137 @@ export function ConfigPage() {
       setSyncing(true);
       await syncQueue();
       await refreshQueue();
-      setMessage("Fila verificada. Envios pendentes foram sincronizados quando possível.");
+      setMessage(
+        "Fila verificada. Envios pendentes foram sincronizados quando possível.",
+      );
     } catch (syncError) {
-      setError(syncError instanceof Error ? syncError.message : "Não foi possível sincronizar agora.");
+      setError(
+        syncError instanceof Error
+          ? syncError.message
+          : "Não foi possível sincronizar agora.",
+      );
     } finally {
       setSyncing(false);
     }
   }
 
   return (
-    <div className="app-main stack-lg">
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Configurações</p>
-          <h1>Preferências do app</h1>
-        </div>
+    <div className="mx-auto w-full max-w-md space-y-6 p-4">
+      <header className="mt-2">
+        <h1 className="text-xl font-semibold">Configurações</h1>
       </header>
 
-      <section className="card stack-md">
-        <div className="profile-row">
-          <div className="profile-icon">
-            {network.connected ? <Wifi size={16} /> : <WifiOff size={16} />}
+      {/* Aparência */}
+      <section>
+        <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Aparência
+        </p>
+        <div className="rounded-xl border border-border bg-card p-2">
+          <div className="grid grid-cols-3 gap-2">
+            {THEME_OPTS.map((opt) => {
+              const Icon = opt.icon;
+              const on = theme === opt.v;
+              return (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => escolherTema(opt.v)}
+                  className={`flex flex-col items-center gap-1.5 rounded-lg border px-2 py-3 text-xs font-medium transition-colors ${
+                    on
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
-          <div>
-            <p className="summary-label">Conexão</p>
-            <strong>{network.connected ? "Online" : "Offline"}</strong>
-            <p className="muted-text">
-              Tipo: {network.loading ? "verificando..." : network.connectionType || "desconhecido"}
+        </div>
+      </section>
+
+      {/* Conexão & sincronização */}
+      <section>
+        <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Conexão & sincronização
+        </p>
+        <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              {network.connected ? (
+                <Wifi className="h-5 w-5" />
+              ) : (
+                <WifiOff className="h-5 w-5" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium">
+                {network.connected ? "Online" : "Offline"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Tipo:{" "}
+                {network.loading
+                  ? "verificando…"
+                  : network.connectionType || "desconhecido"}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              ["Pendentes", queue.pending],
+              ["Sincronizados", queue.synced],
+              ["Com erro", queue.errors],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="rounded-lg bg-muted p-3 text-center"
+              >
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-xl font-semibold">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          {message ? (
+            <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success">
+              {message}
             </p>
-          </div>
-        </div>
+          ) : null}
+          {error ? (
+            <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
+              {error}
+            </p>
+          ) : null}
 
-        <div className="queue-grid">
-          <div>
-            <span className="summary-label">Pendentes</span>
-            <strong>{queue.pending}</strong>
-          </div>
-          <div>
-            <span className="summary-label">Sincronizados</span>
-            <strong>{queue.synced}</strong>
-          </div>
-          <div>
-            <span className="summary-label">Com erro</span>
-            <strong>{queue.errors}</strong>
-          </div>
-        </div>
-
-        {message ? <p className="banner success inline-banner">{message}</p> : null}
-        {error ? <p className="banner danger inline-banner">{error}</p> : null}
-
-        <button className="primary-button" type="button" onClick={handleSyncNow} disabled={syncing}>
-          <RefreshCcw className={syncing ? "spin" : ""} size={16} />
-          {syncing ? "Sincronizando..." : "Sincronizar agora"}
-        </button>
-      </section>
-
-      <section className="card stack-md">
-        <div className="profile-row">
-          <div className="profile-icon">
-            <MoonStar size={16} />
-          </div>
-          <div>
-            <p className="summary-label">Tema</p>
-            <strong>Sistema</strong>
-            <p className="muted-text">O app acompanha o padrão visual do Check.AI e a cor da rede.</p>
-          </div>
-        </div>
-
-        <div className="profile-row">
-          <div className="profile-icon">
-            <ShieldCheck size={16} />
-          </div>
-          <div>
-            <p className="summary-label">Privacidade</p>
-            <strong>Sessão protegida</strong>
-            <p className="muted-text">Login salvo localmente para reduzir atrito no uso em campo.</p>
-          </div>
+          <Button
+            type="button"
+            className="w-full"
+            onClick={handleSyncNow}
+            disabled={syncing}
+          >
+            <RefreshCcw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Sincronizando…" : "Sincronizar agora"}
+          </Button>
         </div>
       </section>
 
-      <button className="secondary-button" type="button" onClick={() => signOutUser()}>
-        <LogOut size={16} />
-        Sair da conta
-      </button>
+      {/* Conta */}
+      <section>
+        <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Conta
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => signOutUser()}
+        >
+          <LogOut className="h-4 w-4" />
+          Sair da conta
+        </Button>
+      </section>
     </div>
   );
 }

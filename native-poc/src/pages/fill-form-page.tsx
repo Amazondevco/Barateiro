@@ -9,7 +9,7 @@ import {
   PenLine,
   Trash2,
 } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { fetchFormDefinition } from "../lib/operator-api";
 import type {
   FormDefinition,
@@ -19,6 +19,7 @@ import type {
 } from "../lib/operator-types";
 import { enqueueFormResponse } from "../lib/queue-store";
 import { compressPhoto, syncQueue } from "../lib/sync";
+import { Button } from "../ui/button";
 import { LoadingScreen } from "../ui/loading-screen";
 import { SignaturePad } from "../ui/signature-pad";
 
@@ -60,7 +61,11 @@ export function FillFormPage() {
         setSavedSignature(result.signature);
         setSignature(result.signature);
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Falha ao carregar formulário.");
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Falha ao carregar formulário.",
+        );
       } finally {
         setLoading(false);
       }
@@ -91,8 +96,10 @@ export function FillFormPage() {
 
   if (!form) {
     return (
-      <div className="page">
-        <p className="banner danger inline-banner">{error ?? "Formulário indisponível."}</p>
+      <div className="mx-auto w-full max-w-md p-4">
+        <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
+          {error ?? "Formulário indisponível."}
+        </p>
       </div>
     );
   }
@@ -108,11 +115,20 @@ export function FillFormPage() {
         const value = values[item.id] ?? "";
         const nonConforming = ["nao", "ruptura"].includes(value);
 
-        if (!value && item.tipo !== "texto" && item.tipo !== "numero" && item.tipo !== "foto") {
+        if (
+          !value &&
+          item.tipo !== "texto" &&
+          item.tipo !== "numero" &&
+          item.tipo !== "foto"
+        ) {
           return `Preencha "${item.texto}".`;
         }
 
-        if (item.obrigaObsQuandoNao && nonConforming && !(notes[item.id] ?? "").trim()) {
+        if (
+          item.obrigaObsQuandoNao &&
+          nonConforming &&
+          !(notes[item.id] ?? "").trim()
+        ) {
           return `Adicione observação em "${item.texto}".`;
         }
 
@@ -137,13 +153,14 @@ export function FillFormPage() {
     setError(null);
 
     try {
-      const payload: FormResponseItemPayload[] = form.sections.flatMap((section) =>
-        section.items.map((item) => ({
-          itemId: item.id,
-          valor: values[item.id] ?? "",
-          observacao: (notes[item.id] ?? "").trim() || null,
-          fotoDataUrl: photos[item.id] || undefined,
-        })),
+      const payload: FormResponseItemPayload[] = form.sections.flatMap(
+        (section) =>
+          section.items.map((item) => ({
+            itemId: item.id,
+            valor: values[item.id] ?? "",
+            observacao: (notes[item.id] ?? "").trim() || null,
+            fotoDataUrl: photos[item.id] || undefined,
+          })),
       );
 
       await enqueueFormResponse({
@@ -161,146 +178,231 @@ export function FillFormPage() {
 
       navigate("/app/formularios");
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Falha ao enviar o formulário.");
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Falha ao enviar o formulário.",
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
   const currentStep = steps[stepIndex] ?? [];
+  const isLastStep = stepIndex === steps.length - 1;
 
   return (
-    <div className="page compact-page">
-      <header className="compact-header">
-        <Link to={`/app/rede/${memberId}`} className="icon-button">
-          <ArrowLeft size={18} />
-        </Link>
-        <div>
-          <h1>{reviewing ? "Revisão final" : form.nome}</h1>
-          <p className="section-copy">{form.descricao ?? "Checklist do operador"}</p>
+    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
+      {/* Cabeçalho */}
+      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
+        <button
+          type="button"
+          onClick={() =>
+            reviewing ? setReviewing(false) : navigate(`/app/rede/${memberId}`)
+          }
+          className="text-muted-foreground hover:text-foreground"
+          aria-label="Voltar"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold leading-tight">
+            {form.nome}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {reviewing
+              ? "Revisão final"
+              : steps.length > 1
+                ? `Etapa ${stepIndex + 1} de ${steps.length}`
+                : form.descricao || "Checklist"}
+          </p>
         </div>
       </header>
 
-      {error ? <p className="banner danger inline-banner">{error}</p> : null}
+      {/* Progresso das etapas */}
+      {!reviewing && steps.length > 1 ? (
+        <div className="flex gap-1 px-4 pt-3">
+          {steps.map((_, index) => (
+            <div
+              key={index}
+              className={`h-1 flex-1 rounded-full ${index <= stepIndex ? "bg-primary" : "bg-muted"}`}
+            />
+          ))}
+        </div>
+      ) : null}
 
-      {!reviewing ? (
-        <>
-          <div className="progress-row">
-            {steps.map((_, index) => (
-              <div key={index} className={`progress-step ${index <= stepIndex ? "active" : ""}`} />
-            ))}
-          </div>
-
-          <section className="card stack-md">
-            {currentStep.map((section) => (
-              <div key={section.id} className="stack-sm">
-                {section.titulo ? <h2>{section.titulo}</h2> : null}
-                {section.items.map((item) => (
-                  <FormItemCard
-                    key={item.id}
-                    item={item}
-                    permiteNa={section.permiteNa}
-                    value={values[item.id] ?? ""}
-                    note={notes[item.id] ?? ""}
-                    photo={photos[item.id] ?? ""}
-                    onValue={(next) => setValues((prev) => ({ ...prev, [item.id]: next }))}
-                    onNote={(next) => setNotes((prev) => ({ ...prev, [item.id]: next }))}
-                    onPhoto={(next) => setPhotos((prev) => ({ ...prev, [item.id]: next }))}
-                  />
-                ))}
-              </div>
-            ))}
-          </section>
-        </>
-      ) : (
-        <section className="stack-md">
-          <div className="card stack-sm">
-            <div className="queue-row">
-              <div>
-                <h2>Revisão</h2>
-                <p className="section-copy">Confira respostas, observações e fotos antes do envio.</p>
-              </div>
-              <ClipboardCheck size={20} />
+      <div className="flex-1 space-y-5 p-4">
+        {reviewing ? (
+          <>
+            <div className="flex items-center gap-2 rounded-lg bg-primary/5 p-3 text-sm text-primary">
+              <ClipboardCheck className="h-4 w-4 shrink-0" /> Confira tudo antes
+              de confirmar o envio.
             </div>
 
             {form.sections.map((section) => (
-              <div key={section.id} className="review-block">
-                {section.titulo ? <h3>{section.titulo}</h3> : null}
-                {section.items.map((item) => {
-                  const photo = photos[item.id];
-                  const note = notes[item.id];
-                  return (
-                    <div key={item.id} className="review-item">
-                      <strong>{item.texto}</strong>
-                      <p>{labelFor(item, values[item.id] ?? "")}</p>
-                      {note ? <p className="muted">Obs.: {note}</p> : null}
-                      {photo ? <img src={photo} alt="" className="review-photo" /> : null}
-                    </div>
-                  );
-                })}
+              <div key={section.id} className="space-y-2">
+                {section.titulo ? (
+                  <h2 className="text-sm font-semibold">{section.titulo}</h2>
+                ) : null}
+                <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+                  {section.items.map((item) => {
+                    const value = values[item.id] ?? "";
+                    const note = (notes[item.id] ?? "").trim();
+                    const photo = photos[item.id] ?? "";
+                    const nonConforming = ["nao", "ruptura"].includes(value);
+                    return (
+                      <div key={item.id} className="p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-sm">{item.texto}</p>
+                          <span
+                            className={`shrink-0 text-sm font-semibold ${
+                              nonConforming
+                                ? "text-danger"
+                                : value
+                                  ? "text-foreground"
+                                  : "text-muted-foreground"
+                            }`}
+                          >
+                            {item.tipo === "foto"
+                              ? photo
+                                ? "Foto"
+                                : "—"
+                              : labelFor(item, value)}
+                          </span>
+                        </div>
+                        {note ? (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Obs: {note}
+                          </p>
+                        ) : null}
+                        {photo ? (
+                          <img
+                            src={photo}
+                            alt=""
+                            className="mt-2 h-20 w-20 rounded-lg border border-border object-cover"
+                          />
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             ))}
-          </div>
 
-          <div className="card stack-md">
-            <div className="queue-row">
-              <div>
-                <h2>Assinatura</h2>
-                <p className="section-copy">
-                  {savedSignature ? "Você pode reaproveitar a assinatura salva ou desenhar outra." : "Assine para concluir o envio."}
-                </p>
-              </div>
-              <PenLine size={20} />
+            {/* Assinatura */}
+            <div className="rounded-lg border border-border bg-card p-4">
+              <p className="mb-3 flex items-center gap-2 text-sm font-medium">
+                <PenLine className="h-4 w-4" /> Assinatura
+              </p>
+              {savedSignature && !signature ? (
+                <Button
+                  type="button"
+                  className="mb-3 w-full"
+                  onClick={() => setSignature(savedSignature)}
+                >
+                  <PenLine className="h-4 w-4" /> Usar assinatura salva
+                </Button>
+              ) : null}
+              <SignaturePad value={signature} onChange={setSignature} />
             </div>
+          </>
+        ) : (
+          currentStep.map((section) => (
+            <div key={section.id} className="space-y-3">
+              {section.titulo ? (
+                <h2 className="text-sm font-semibold text-foreground">
+                  {section.titulo}
+                </h2>
+              ) : null}
+              {section.items.map((item) => (
+                <FormItemCard
+                  key={item.id}
+                  item={item}
+                  permiteNa={section.permiteNa}
+                  value={values[item.id] ?? ""}
+                  note={notes[item.id] ?? ""}
+                  photo={photos[item.id] ?? ""}
+                  onValue={(next) =>
+                    setValues((prev) => ({ ...prev, [item.id]: next }))
+                  }
+                  onNote={(next) =>
+                    setNotes((prev) => ({ ...prev, [item.id]: next }))
+                  }
+                  onPhoto={(next) =>
+                    setPhotos((prev) => ({ ...prev, [item.id]: next }))
+                  }
+                />
+              ))}
+            </div>
+          ))
+        )}
 
-            {savedSignature && !signature ? (
-              <button className="secondary-button" type="button" onClick={() => setSignature(savedSignature)}>
-                Usar assinatura salva
-              </button>
-            ) : null}
+        {error ? (
+          <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
+            {error}
+          </p>
+        ) : null}
+      </div>
 
-            <SignaturePad value={signature} onChange={setSignature} />
-          </div>
-        </section>
-      )}
-
-      <div className="footer-actions">
+      {/* Barra fixa: navegação / confirmação */}
+      <div className="sticky bottom-0 flex gap-2 border-t border-border bg-background p-4">
         {reviewing ? (
           <>
-            <button className="secondary-button" type="button" onClick={() => setReviewing(false)}>
-              <ArrowLeft size={16} />
-              Voltar
-            </button>
-            <button className="primary-button" type="button" onClick={() => void handleSubmit()} disabled={submitting}>
-              {submitting ? <Loader2 className="spin" size={16} /> : <Check size={16} />}
-              Enviar
-            </button>
+            <Button
+              variant="outline"
+              onClick={() => setReviewing(false)}
+              className="flex-none"
+            >
+              <ArrowLeft className="h-4 w-4" /> Editar
+            </Button>
+            <Button
+              onClick={() => void handleSubmit()}
+              disabled={submitting}
+              size="lg"
+              className="flex-1"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Enviando…
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" /> Confirmar e enviar
+                </>
+              )}
+            </Button>
           </>
         ) : (
           <>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => setStepIndex((prev) => Math.max(0, prev - 1))}
-              disabled={stepIndex === 0}
-            >
-              <ArrowLeft size={16} />
-              Anterior
-            </button>
-            {stepIndex === steps.length - 1 ? (
-              <button className="primary-button" type="button" onClick={() => setReviewing(true)}>
-                <ClipboardCheck size={16} />
-                Revisar
-              </button>
-            ) : (
-              <button
-                className="primary-button"
-                type="button"
-                onClick={() => setStepIndex((prev) => Math.min(steps.length - 1, prev + 1))}
+            {stepIndex > 0 ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setError(null);
+                  setStepIndex((prev) => Math.max(0, prev - 1));
+                  window.scrollTo({ top: 0 });
+                }}
+                className="flex-none"
               >
-                Próxima
-                <ArrowRight size={16} />
-              </button>
+                <ArrowLeft className="h-4 w-4" /> Voltar
+              </Button>
+            ) : null}
+            {isLastStep ? (
+              <Button onClick={() => setReviewing(true)} size="lg" className="flex-1">
+                <ClipboardCheck className="h-4 w-4" /> Revisar e enviar
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  setError(null);
+                  setStepIndex((prev) => Math.min(steps.length - 1, prev + 1));
+                  window.scrollTo({ top: 0 });
+                }}
+                size="lg"
+                className="flex-1"
+              >
+                Próxima <ArrowRight className="h-4 w-4" />
+              </Button>
             )}
           </>
         )}
@@ -331,25 +433,32 @@ function FormItemCard({
   const nonConforming = ["nao", "ruptura"].includes(value);
 
   return (
-    <article className="form-item-card">
-      <div className="stack-sm">
-        <strong>{item.texto}</strong>
-        {item.ajuda ? <p className="muted">{item.ajuda}</p> : null}
-      </div>
+    <div className="rounded-lg border border-border bg-card p-3">
+      <p className="mb-2 text-sm font-medium">{item.texto}</p>
+      {item.ajuda ? (
+        <p className="mb-2 text-xs text-muted-foreground">{item.ajuda}</p>
+      ) : null}
 
-      <ItemInput item={item} value={value} permiteNa={permiteNa} onValue={onValue} />
+      <ItemInput
+        item={item}
+        value={value}
+        permiteNa={permiteNa}
+        onValue={onValue}
+      />
 
       {item.obrigaObsQuandoNao && nonConforming ? (
-        <label className="field">
-          <span>Observação</span>
-          <textarea rows={3} value={note} onChange={(event) => onNote(event.target.value)} />
-        </label>
+        <input
+          value={note}
+          onChange={(event) => onNote(event.target.value)}
+          placeholder="Observação (obrigatória)"
+          className="mt-2 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
       ) : null}
 
       {item.obrigaFotoQuandoNao && nonConforming ? (
         <PhotoField value={photo} onChange={onPhoto} />
       ) : null}
-    </article>
+    </div>
   );
 }
 
@@ -368,16 +477,20 @@ function ItemInput({
 
   if (item.tipo === "multipla_escolha") {
     return (
-      <div className="choice-column">
+      <div className="flex flex-col gap-1.5">
         {(item.opcoes ?? []).map((option) => (
-          <label key={option} className="choice-line">
+          <label
+            key={option}
+            className="flex cursor-pointer items-center gap-2 text-sm"
+          >
             <input
               type="radio"
               name={item.id}
               checked={value === option}
               onChange={() => onValue(option)}
+              className="h-4 w-4 accent-primary"
             />
-            <span>{option}</span>
+            {option}
           </label>
         ))}
       </div>
@@ -386,22 +499,30 @@ function ItemInput({
 
   if (options) {
     return (
-      <div className="choice-grid">
+      <div className="flex flex-wrap gap-2">
         {options.map(([candidate, label]) => (
           <button
             key={candidate}
-            className={`choice-pill ${value === candidate ? "active" : ""}`}
             type="button"
             onClick={() => onValue(candidate)}
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+              value === candidate
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-input hover:bg-muted"
+            }`}
           >
             {label}
           </button>
         ))}
         {permiteNa ? (
           <button
-            className={`choice-pill ${value === "na" ? "active" : ""}`}
             type="button"
             onClick={() => onValue("na")}
+            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+              value === "na"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-input hover:bg-muted"
+            }`}
           >
             N/A
           </button>
@@ -417,27 +538,19 @@ function ItemInput({
         value={value}
         onChange={(event) => onValue(event.target.value)}
         placeholder="Resposta"
+        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
     );
   }
 
-  if (item.tipo === "numero") {
-    return (
-      <input
-        type="number"
-        value={value}
-        onChange={(event) => onValue(event.target.value)}
-        placeholder="Resposta"
-      />
-    );
-  }
-
+  const tipoInput = item.tipo === "numero" ? "number" : "text";
   return (
     <input
-      type="text"
+      type={tipoInput}
       value={value}
       onChange={(event) => onValue(event.target.value)}
       placeholder="Resposta"
+      className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     />
   );
 }
@@ -464,21 +577,42 @@ function PhotoField({
   }
 
   return (
-    <div className="photo-field">
-      <label className="secondary-button upload-label">
-        {uploading ? <Loader2 className="spin" size={16} /> : <Camera size={16} />}
-        {value ? "Trocar foto" : "Adicionar foto"}
-        <input type="file" accept="image/*" capture="environment" onChange={onFile} hidden />
-      </label>
+    <div className="mt-2">
       {value ? (
-        <div className="photo-preview">
-          <img src={value} alt="" className="review-photo" />
-          <button className="ghost-button" type="button" onClick={() => onChange("")}>
-            <Trash2 size={16} />
-            Remover
+        <div className="flex items-center gap-2">
+          <img
+            src={value}
+            alt=""
+            className="h-16 w-16 rounded-lg border border-border object-cover"
+          />
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="flex items-center gap-1 text-xs text-danger"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Remover
           </button>
         </div>
-      ) : null}
+      ) : (
+        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-input px-3 py-2 text-sm hover:bg-muted">
+          {uploading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> Enviando…
+            </>
+          ) : (
+            <>
+              <Camera className="h-4 w-4" /> Tirar foto
+            </>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={onFile}
+            hidden
+          />
+        </label>
+      )}
     </div>
   );
 }

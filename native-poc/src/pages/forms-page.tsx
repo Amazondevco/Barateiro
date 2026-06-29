@@ -4,6 +4,16 @@ import { Link } from "react-router-dom";
 import { getQueueItems } from "../lib/queue-store";
 import type { QueueRecord } from "../lib/operator-types";
 import { syncQueue } from "../lib/sync";
+import { Button } from "../ui/button";
+
+const STATUS_SELO: Record<
+  QueueRecord["status"],
+  { label: string; cls: string }
+> = {
+  pending: { label: "Aguardando envio", cls: "bg-warning-bg text-warning" },
+  synced: { label: "Enviado", cls: "bg-success-bg text-success" },
+  error: { label: "Erro", cls: "bg-danger-bg text-danger" },
+};
 
 export function FormsPage() {
   const [items, setItems] = useState<QueueRecord[]>([]);
@@ -34,67 +44,92 @@ export function FormsPage() {
             : "Sem internet para sincronizar agora.",
       );
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Falha ao sincronizar.");
+      setFeedback(
+        error instanceof Error ? error.message : "Falha ao sincronizar.",
+      );
     }
   }
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <p className="eyebrow">Formulários</p>
-        <h1>Pendentes e enviados</h1>
-        <p className="hero-copy">Aqui a SPA já reaproveita a fila offline criada na Fase 0.</p>
+    <div className="mx-auto w-full max-w-md space-y-4 p-4">
+      <header className="mt-2">
+        <h1 className="text-xl font-semibold">Enviados</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Seus envios e a fila offline.
+        </p>
       </header>
 
-      {feedback ? <p className="banner success inline-banner">{feedback}</p> : null}
+      {feedback ? (
+        <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success">
+          {feedback}
+        </p>
+      ) : null}
 
-      <section className="card stack-md">
-        <div className="stats">
-          <div className="stat">
-            <span className="summary-label">Pendentes</span>
-            <strong>{pendingCount}</strong>
-          </div>
-          <div className="stat">
-            <span className="summary-label">Total local</span>
-            <strong>{items.length}</strong>
-          </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-border bg-card p-4">
+          <p className="text-xs text-muted-foreground">Pendentes</p>
+          <p className="text-2xl font-semibold">{pendingCount}</p>
         </div>
-
-        <div className="inline-actions">
-          <Link to="/app/formularios/teste-offline" className="primary-button inline-link">
-            <Send size={16} />
-            Novo teste offline
-          </Link>
-          <button className="secondary-button" type="button" onClick={() => void handleSync()}>
-            Sincronizar fila
-          </button>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <p className="text-xs text-muted-foreground">Total local</p>
+          <p className="text-2xl font-semibold">{items.length}</p>
         </div>
+      </div>
 
-        <div className="stack-sm">
-          {items.length === 0 ? (
-            <div className="empty-state">Nenhum formulário salvo localmente.</div>
-          ) : (
-            items.map((item) => (
-              <article className="queue-item" key={item.id}>
-                <div className="queue-row">
-                  <strong>{item.title}</strong>
-                  <span className={`pill ${item.status}`}>{item.status}</span>
+      <div className="flex gap-2">
+        <Link
+          to="/app/formularios/teste-offline"
+          className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover"
+        >
+          <Send className="h-4 w-4" /> Novo teste offline
+        </Link>
+        <Button
+          variant="outline"
+          type="button"
+          onClick={() => void handleSync()}
+        >
+          Sincronizar
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        {items.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+            Nenhum formulário salvo localmente.
+          </div>
+        ) : (
+          items.map((item) => {
+            const selo = STATUS_SELO[item.status];
+            return (
+              <article
+                key={item.id}
+                className="rounded-xl border border-border bg-card p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <strong className="text-sm font-medium">{item.title}</strong>
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${selo.cls}`}
+                  >
+                    {selo.label}
+                  </span>
                 </div>
-                <p>{item.subtitle ?? "Sem subtítulo"}</p>
-                <p className="muted">
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {item.subtitle ?? "Sem subtítulo"}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {item.kind === "form_response"
                     ? `${item.payload.items.length} resposta(s) coletada(s)`
                     : item.payload.notes}
                 </p>
-                <p className="muted tiny">
-                  <Clock size={14} />
+                <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock className="h-3.5 w-3.5" />
                   {new Date(item.createdAt).toLocaleString("pt-BR")}
                 </p>
               </article>
-            ))
-          )}
-        </div>
-      </section>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
