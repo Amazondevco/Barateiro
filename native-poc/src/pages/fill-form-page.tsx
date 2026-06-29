@@ -200,16 +200,16 @@ export function FillFormPage() {
           onClick={() =>
             reviewing ? setReviewing(false) : navigate(`/app/rede/${memberId}`)
           }
-          className="text-muted-foreground hover:text-foreground"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground transition-colors hover:text-foreground"
           aria-label="Voltar"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold leading-tight">
+          <p className="truncate text-base font-bold leading-tight">
             {form.nome}
           </p>
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="truncate text-xs font-medium text-muted-foreground">
             {reviewing
               ? "Revisão final"
               : steps.length > 1
@@ -221,47 +221,74 @@ export function FillFormPage() {
 
       {/* Progresso das etapas */}
       {!reviewing && steps.length > 1 ? (
-        <div className="flex gap-1 px-4 pt-3">
+        <div className="flex gap-1 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
           {steps.map((_, index) => (
             <div
               key={index}
-              className={`h-1 flex-1 rounded-full ${index <= stepIndex ? "bg-primary" : "bg-muted"}`}
+              className={`h-1 flex-1 rounded-full ${
+                index < stepIndex
+                  ? "bg-primary/50"
+                  : index === stepIndex
+                    ? "bg-primary"
+                    : "bg-border"
+              }`}
             />
           ))}
         </div>
       ) : null}
 
-      <div className="flex-1 space-y-5 p-4">
+      <div className="flex-1 space-y-5 p-4 pb-28">
         {reviewing ? (
           <>
-            <div className="flex items-center gap-2 rounded-lg bg-primary/5 p-3 text-sm text-primary">
-              <ClipboardCheck className="h-4 w-4 shrink-0" /> Confira tudo antes
-              de confirmar o envio.
+            <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/10 p-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
+                <ClipboardCheck className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-primary">Quase lá!</p>
+                <p className="text-xs leading-snug text-primary/80">
+                  Confira suas respostas abaixo antes de confirmar o envio
+                  definitivo.
+                </p>
+              </div>
             </div>
 
             {form.sections.map((section) => (
               <div key={section.id} className="space-y-2">
                 {section.titulo ? (
-                  <h2 className="text-sm font-semibold">{section.titulo}</h2>
+                  <h2 className="px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    {section.titulo}
+                  </h2>
                 ) : null}
-                <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+                <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
                   {section.items.map((item) => {
                     const value = values[item.id] ?? "";
                     const note = (notes[item.id] ?? "").trim();
                     const photo = photos[item.id] ?? "";
                     const nonConforming = ["nao", "ruptura"].includes(value);
+                    const isNa = value === "na";
+                    const badgeClass = nonConforming
+                      ? "bg-danger-bg text-danger"
+                      : isNa
+                        ? "bg-muted text-muted-foreground"
+                        : value
+                          ? "bg-success-bg text-success"
+                          : "bg-muted text-muted-foreground";
                     return (
-                      <div key={item.id} className="p-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <p className="text-sm">{item.texto}</p>
+                      <div key={item.id} className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground">
+                              {item.texto}
+                            </p>
+                            {photo ? (
+                              <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
+                                <Camera className="h-3 w-3" /> 1 foto
+                              </span>
+                            ) : null}
+                          </div>
                           <span
-                            className={`shrink-0 text-sm font-semibold ${
-                              nonConforming
-                                ? "text-danger"
-                                : value
-                                  ? "text-foreground"
-                                  : "text-muted-foreground"
-                            }`}
+                            className={`inline-flex min-w-[3rem] shrink-0 items-center justify-center rounded-lg px-2.5 py-1 text-xs font-semibold ${badgeClass}`}
                           >
                             {item.tipo === "foto"
                               ? photo
@@ -271,7 +298,7 @@ export function FillFormPage() {
                           </span>
                         </div>
                         {note ? (
-                          <p className="mt-1 text-xs text-muted-foreground">
+                          <p className="mt-1.5 text-xs text-muted-foreground">
                             Obs: {note}
                           </p>
                         ) : null}
@@ -279,7 +306,7 @@ export function FillFormPage() {
                           <img
                             src={photo}
                             alt=""
-                            className="mt-2 h-20 w-20 rounded-lg border border-border object-cover"
+                            className="mt-2 h-20 w-20 rounded-xl border border-border object-cover"
                           />
                         ) : null}
                       </div>
@@ -290,9 +317,9 @@ export function FillFormPage() {
             ))}
 
             {/* Assinatura */}
-            <div className="rounded-lg border border-border bg-card p-4">
-              <p className="mb-3 flex items-center gap-2 text-sm font-medium">
-                <PenLine className="h-4 w-4" /> Assinatura
+            <div className="rounded-2xl border border-border bg-card p-5">
+              <p className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                <PenLine className="h-4 w-4 text-primary" /> Assinatura
               </p>
               {savedSignature && !signature ? (
                 <Button
@@ -310,7 +337,7 @@ export function FillFormPage() {
           currentStep.map((section) => (
             <div key={section.id} className="space-y-3">
               {section.titulo ? (
-                <h2 className="text-sm font-semibold text-foreground">
+                <h2 className="px-1 text-base font-bold text-foreground">
                   {section.titulo}
                 </h2>
               ) : null}
@@ -338,71 +365,75 @@ export function FillFormPage() {
         )}
 
         {error ? (
-          <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
+          <p className="rounded-xl bg-danger-bg px-3 py-2 text-sm text-danger">
             {error}
           </p>
         ) : null}
       </div>
 
       {/* Barra fixa: navegação / confirmação */}
-      <div className="sticky bottom-0 flex gap-2 border-t border-border bg-background p-4">
+      <div className="sticky bottom-0 z-10 flex gap-3 border-t border-border bg-background/95 p-4 backdrop-blur">
         {reviewing ? (
           <>
-            <Button
-              variant="outline"
+            <button
+              type="button"
               onClick={() => setReviewing(false)}
-              className="flex-none"
+              className="flex h-14 flex-none items-center justify-center gap-2 rounded-2xl bg-muted px-5 text-base font-semibold text-foreground transition-colors hover:bg-border"
             >
               <ArrowLeft className="h-4 w-4" /> Editar
-            </Button>
-            <Button
+            </button>
+            <button
+              type="button"
               onClick={() => void handleSubmit()}
               disabled={submitting}
-              size="lg"
-              className="flex-1"
+              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
             >
               {submitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Enviando…
+                  <Loader2 className="h-5 w-5 animate-spin" /> Enviando…
                 </>
               ) : (
                 <>
-                  <Check className="h-4 w-4" /> Confirmar e enviar
+                  <Check className="h-5 w-5" /> Confirmar e enviar
                 </>
               )}
-            </Button>
+            </button>
           </>
         ) : (
           <>
             {stepIndex > 0 ? (
-              <Button
-                variant="outline"
+              <button
+                type="button"
                 onClick={() => {
                   setError(null);
                   setStepIndex((prev) => Math.max(0, prev - 1));
                   window.scrollTo({ top: 0 });
                 }}
-                className="flex-none"
+                className="flex h-14 flex-none items-center justify-center gap-2 rounded-2xl bg-muted px-5 text-base font-semibold text-foreground transition-colors hover:bg-border"
               >
                 <ArrowLeft className="h-4 w-4" /> Voltar
-              </Button>
+              </button>
             ) : null}
             {isLastStep ? (
-              <Button onClick={() => setReviewing(true)} size="lg" className="flex-1">
-                <ClipboardCheck className="h-4 w-4" /> Revisar e enviar
-              </Button>
+              <button
+                type="button"
+                onClick={() => setReviewing(true)}
+                className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                <ClipboardCheck className="h-5 w-5" /> Revisar e enviar
+              </button>
             ) : (
-              <Button
+              <button
+                type="button"
                 onClick={() => {
                   setError(null);
                   setStepIndex((prev) => Math.min(steps.length - 1, prev + 1));
                   window.scrollTo({ top: 0 });
                 }}
-                size="lg"
-                className="flex-1"
+                className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
               >
-                Próxima <ArrowRight className="h-4 w-4" />
-              </Button>
+                Próxima <ArrowRight className="h-5 w-5" />
+              </button>
             )}
           </>
         )}
@@ -431,32 +462,41 @@ function FormItemCard({
   onPhoto: (next: string) => void;
 }) {
   const nonConforming = ["nao", "ruptura"].includes(value);
+  const showContextual =
+    nonConforming && (item.obrigaObsQuandoNao || item.obrigaFotoQuandoNao);
 
   return (
-    <div className="rounded-lg border border-border bg-card p-3">
-      <p className="mb-2 text-sm font-medium">{item.texto}</p>
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <p className="text-[15px] font-semibold leading-snug text-foreground">
+        {item.texto}
+      </p>
       {item.ajuda ? (
-        <p className="mb-2 text-xs text-muted-foreground">{item.ajuda}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{item.ajuda}</p>
       ) : null}
 
-      <ItemInput
-        item={item}
-        value={value}
-        permiteNa={permiteNa}
-        onValue={onValue}
-      />
-
-      {item.obrigaObsQuandoNao && nonConforming ? (
-        <input
-          value={note}
-          onChange={(event) => onNote(event.target.value)}
-          placeholder="Observação (obrigatória)"
-          className="mt-2 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      <div className="mt-4">
+        <ItemInput
+          item={item}
+          value={value}
+          permiteNa={permiteNa}
+          onValue={onValue}
         />
-      ) : null}
+      </div>
 
-      {item.obrigaFotoQuandoNao && nonConforming ? (
-        <PhotoField value={photo} onChange={onPhoto} />
+      {showContextual ? (
+        <div className="mt-4 flex gap-3 rounded-xl bg-danger-bg/40 p-3">
+          {item.obrigaFotoQuandoNao ? (
+            <PhotoField value={photo} onChange={onPhoto} />
+          ) : null}
+          {item.obrigaObsQuandoNao ? (
+            <input
+              value={note}
+              onChange={(event) => onNote(event.target.value)}
+              placeholder="Adicionar observação..."
+              className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          ) : null}
+        </div>
       ) : null}
     </div>
   );
@@ -498,30 +538,36 @@ function ItemInput({
   }
 
   if (options) {
+    const segmentBase =
+      "flex h-11 flex-1 items-center justify-center rounded-xl border text-sm font-medium transition-colors";
+    const idle = "border-border bg-card text-muted-foreground hover:bg-muted";
     return (
-      <div className="flex flex-wrap gap-2">
-        {options.map(([candidate, label]) => (
-          <button
-            key={candidate}
-            type="button"
-            onClick={() => onValue(candidate)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-              value === candidate
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-input hover:bg-muted"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="flex gap-2">
+        {options.map(([candidate, label]) => {
+          const selected = value === candidate;
+          const negative = ["nao", "ruptura"].includes(candidate);
+          const selectedClass = negative
+            ? "border-danger bg-danger-bg text-danger font-semibold"
+            : "border-success bg-success-bg text-success font-semibold";
+          return (
+            <button
+              key={candidate}
+              type="button"
+              onClick={() => onValue(candidate)}
+              className={`${segmentBase} ${selected ? selectedClass : idle}`}
+            >
+              {label}
+            </button>
+          );
+        })}
         {permiteNa ? (
           <button
             type="button"
             onClick={() => onValue("na")}
-            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+            className={`${segmentBase} ${
               value === "na"
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-input hover:bg-muted"
+                ? "border-primary bg-primary/10 text-primary font-semibold"
+                : idle
             }`}
           >
             N/A
@@ -538,7 +584,7 @@ function ItemInput({
         value={value}
         onChange={(event) => onValue(event.target.value)}
         placeholder="Resposta"
-        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
     );
   }
@@ -550,7 +596,7 @@ function ItemInput({
       value={value}
       onChange={(event) => onValue(event.target.value)}
       placeholder="Resposta"
-      className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     />
   );
 }
@@ -577,32 +623,29 @@ function PhotoField({
   }
 
   return (
-    <div className="mt-2">
+    <div className="shrink-0">
       {value ? (
-        <div className="flex items-center gap-2">
+        <div className="relative h-10 w-10">
           <img
             src={value}
             alt=""
-            className="h-16 w-16 rounded-lg border border-border object-cover"
+            className="h-10 w-10 rounded-lg border border-border object-cover"
           />
           <button
             type="button"
             onClick={() => onChange("")}
-            className="flex items-center gap-1 text-xs text-danger"
+            aria-label="Remover foto"
+            className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-white shadow-sm"
           >
-            <Trash2 className="h-3.5 w-3.5" /> Remover
+            <Trash2 className="h-3 w-3" />
           </button>
         </div>
       ) : (
-        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-input px-3 py-2 text-sm hover:bg-muted">
+        <label className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-danger/30 bg-card text-danger shadow-sm transition-colors hover:bg-danger-bg">
           {uploading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" /> Enviando…
-            </>
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <>
-              <Camera className="h-4 w-4" /> Tirar foto
-            </>
+            <Camera className="h-4 w-4" />
           )}
           <input
             type="file"

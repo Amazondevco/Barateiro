@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  X,
   Loader2,
   PenLine,
   Camera,
@@ -155,21 +156,23 @@ export function FillForm({
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex items-center gap-3 border-b border-border p-4">
+      <header className="flex items-center gap-3 border-b border-border bg-card/95 p-4 backdrop-blur">
         <button
           onClick={() =>
             revisando
               ? setRevisando(false)
               : router.push(`/app/rede/${redeMembroId}`)
           }
-          className="text-muted-foreground hover:text-foreground"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground transition-colors hover:bg-border hover:text-foreground"
           aria-label="Voltar"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold leading-tight">{form.nome}</p>
-          <p className="truncate text-xs text-muted-foreground">
+          <h1 className="truncate text-[17px] font-bold leading-tight text-foreground">
+            {form.nome}
+          </h1>
+          <p className="truncate text-[13px] font-medium text-muted-foreground">
             {revisando
               ? "Revisão final"
               : total > 1
@@ -179,32 +182,39 @@ export function FillForm({
         </div>
       </header>
 
-      {/* progresso das etapas */}
+      {/* progresso das etapas — segmentos */}
       {!revisando && total > 1 && (
-        <div className="flex gap-1 px-4 pt-3">
+        <div className="flex gap-1 border-b border-border bg-card/95 px-5 pb-4 pt-3 backdrop-blur">
           {etapas.map((_, i) => (
             <div
               key={i}
-              className={`h-1 flex-1 rounded-full ${i <= idx ? "bg-primary" : "bg-muted"}`}
+              className={`h-1 flex-1 rounded-full ${
+                i < idx ? "bg-primary/50" : i === idx ? "bg-primary" : "bg-border"
+              }`}
             />
           ))}
         </div>
       )}
 
-      <div className="flex-1 space-y-5 p-4">
+      <div className="flex-1 space-y-4 p-5 pb-[120px]">
         {revisando ? (
           <RevisaoBody form={form} valores={valores} obs={obs} fotos={fotos} />
         ) : (
           etapas[idx]?.map((s) => (
-            <div key={s.id} className="space-y-3">
+            <div key={s.id} className="space-y-4">
               {s.titulo && (
-                <h2 className="text-sm font-semibold text-foreground">{s.titulo}</h2>
+                <h2 className="mt-2 text-lg font-bold text-foreground">{s.titulo}</h2>
               )}
               {s.formulario_itens.map((it) => (
-                <div key={it.id} className="rounded-lg border border-border bg-card p-3">
-                  <p className="mb-2 text-sm font-medium">{it.texto}</p>
+                <div
+                  key={it.id}
+                  className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+                >
+                  <p className="text-[15px] font-semibold leading-snug text-foreground">
+                    {it.texto}
+                  </p>
                   {it.ajuda && (
-                    <p className="mb-2 text-xs text-muted-foreground">{it.ajuda}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{it.ajuda}</p>
                   )}
                   <ItemInput
                     item={it}
@@ -212,23 +222,47 @@ export function FillForm({
                     onValor={(v) => setVal(it.id, v)}
                     permiteNa={s.permite_na}
                   />
-                  {it.obriga_obs_quando_nao &&
-                    ["nao", "ruptura"].includes(valores[it.id] ?? "") && (
-                      <input
-                        value={obs[it.id] ?? ""}
-                        onChange={(e) => setObs((p) => ({ ...p, [it.id]: e.target.value }))}
-                        placeholder="Observação (obrigatória)"
-                        className="mt-2 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      />
-                    )}
-                  {(it.tipo === "foto" ||
-                    (it.obriga_foto_quando_nao &&
-                      ["nao", "ruptura"].includes(valores[it.id] ?? ""))) && (
-                    <FotoCampo
-                      value={fotos[it.id] ?? ""}
-                      onChange={(url) => setFotos((p) => ({ ...p, [it.id]: url }))}
-                    />
-                  )}
+                  {(() => {
+                    const naoConforme = ["nao", "ruptura"].includes(
+                      valores[it.id] ?? "",
+                    );
+                    const mostraObs = it.obriga_obs_quando_nao && naoConforme;
+                    const mostraFoto =
+                      it.tipo === "foto" ||
+                      (it.obriga_foto_quando_nao && naoConforme);
+                    if (!mostraObs && !mostraFoto) return null;
+                    // Expansão contextual: foto + observação quando "Não".
+                    const contextual = naoConforme && (mostraObs || mostraFoto);
+                    return (
+                      <div
+                        className={`mt-4 flex flex-col gap-3 ${
+                          contextual
+                            ? "rounded-xl border border-danger/20 bg-danger-bg/40 p-3"
+                            : ""
+                        }`}
+                      >
+                        {mostraFoto && (
+                          <FotoCampo
+                            value={fotos[it.id] ?? ""}
+                            onChange={(url) =>
+                              setFotos((p) => ({ ...p, [it.id]: url }))
+                            }
+                            danger={contextual}
+                          />
+                        )}
+                        {mostraObs && (
+                          <input
+                            value={obs[it.id] ?? ""}
+                            onChange={(e) =>
+                              setObs((p) => ({ ...p, [it.id]: e.target.value }))
+                            }
+                            placeholder="Adicionar observação…"
+                            className="h-9 w-full rounded-lg border border-danger/20 bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                          />
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
             </div>
@@ -237,14 +271,14 @@ export function FillForm({
 
         {/* Assinatura — só na revisão final */}
         {revisando && (
-          <div className="rounded-lg border border-border bg-card p-4">
-            <p className="mb-3 flex items-center gap-2 text-sm font-medium">
-              <PenLine className="h-4 w-4" /> Assinatura
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <p className="mb-3 flex items-center gap-2 text-[15px] font-semibold text-foreground">
+              <PenLine className="h-4 w-4 text-primary" /> Assinatura
             </p>
             {assinada ? (
               <div className="flex flex-col items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={assinada} alt="Assinatura" className="h-20 rounded-lg border border-border bg-white object-contain" />
+                <img src={assinada} alt="Assinatura" className="h-20 rounded-xl border border-border bg-white object-contain" />
                 <button
                   type="button"
                   onClick={() => setAssinada(null)}
@@ -264,25 +298,33 @@ export function FillForm({
         )}
 
         {erro && (
-          <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">{erro}</p>
+          <p className="rounded-xl bg-danger-bg px-3 py-2 text-sm text-danger">{erro}</p>
         )}
       </div>
 
-      {/* barra fixa: navegação por etapas / confirmação final */}
-      <div className="sticky bottom-0 flex gap-2 border-t border-border bg-background p-4">
+      {/* rodapé fixo: navegação por etapas / confirmação final */}
+      <div className="sticky bottom-0 flex gap-3 border-t border-border bg-card/95 p-5 pb-8 backdrop-blur">
         {revisando ? (
           <>
-            <Button variant="outline" onClick={() => setRevisando(false)} className="flex-none">
+            <Button
+              variant="secondary"
+              onClick={() => setRevisando(false)}
+              className="h-14 flex-none rounded-2xl px-5"
+            >
               <ArrowLeft className="h-4 w-4" /> Editar
             </Button>
-            <Button onClick={enviar} disabled={enviando} size="lg" className="flex-1">
+            <Button
+              onClick={enviar}
+              disabled={enviando}
+              className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
+            >
               {enviando ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Enviando…
+                  <Loader2 className="h-5 w-5 animate-spin" /> Enviando…
                 </>
               ) : (
                 <>
-                  <Check className="h-4 w-4" /> Confirmar e enviar
+                  <Check className="h-5 w-5" /> Confirmar e enviar
                 </>
               )}
             </Button>
@@ -291,20 +333,23 @@ export function FillForm({
           <>
             {idx > 0 && (
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => {
                   setErro(null);
                   setEtapa(idx - 1);
                   window.scrollTo({ top: 0 });
                 }}
-                className="flex-none"
+                className="h-14 flex-none rounded-2xl px-5"
               >
                 <ArrowLeft className="h-4 w-4" /> Voltar
               </Button>
             )}
             {ultima ? (
-              <Button onClick={irRevisar} size="lg" className="flex-1">
-                <ClipboardCheck className="h-4 w-4" /> Revisar e enviar
+              <Button
+                onClick={irRevisar}
+                className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
+              >
+                <ClipboardCheck className="h-5 w-5" /> Revisar e enviar
               </Button>
             ) : (
               <Button
@@ -313,10 +358,9 @@ export function FillForm({
                   setEtapa(idx + 1);
                   window.scrollTo({ top: 0 });
                 }}
-                size="lg"
-                className="flex-1"
+                className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
               >
-                Próxima <ArrowRight className="h-4 w-4" />
+                Próxima <ArrowRight className="h-5 w-5" />
               </Button>
             )}
           </>
@@ -339,47 +383,60 @@ function RevisaoBody({
   fotos: Record<string, string>;
 }) {
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-2 rounded-lg bg-primary/5 p-3 text-sm text-primary">
-        <ClipboardCheck className="h-4 w-4 shrink-0" /> Confira tudo antes de
-        confirmar o envio.
+    <div className="space-y-6">
+      {/* banner "Quase lá!" */}
+      <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/10 p-4">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+          <ClipboardCheck className="h-4 w-4" />
+        </span>
+        <div>
+          <h3 className="mb-0.5 text-sm font-bold text-foreground">Quase lá!</h3>
+          <p className="text-[13px] leading-snug text-muted-foreground">
+            Confira suas respostas abaixo antes de confirmar o envio definitivo.
+          </p>
+        </div>
       </div>
+
       {form.formulario_secoes.map((s) => (
-        <div key={s.id} className="space-y-2">
-          {s.titulo && <h2 className="text-sm font-semibold">{s.titulo}</h2>}
-          <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+        <div key={s.id} className="space-y-3">
+          {s.titulo && (
+            <h2 className="px-1 text-[15px] font-bold uppercase tracking-wide text-foreground">
+              {s.titulo}
+            </h2>
+          )}
+          <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             {s.formulario_itens.map((it) => {
               const v = valores[it.id] ?? "";
               const ob = (obs[it.id] ?? "").trim();
               const fo = fotos[it.id] ?? "";
               const naoConforme = ["nao", "ruptura"].includes(v);
+              const conforme = ["sim", "ok", "abastecido"].includes(v);
+              const ehFoto = it.tipo === "foto";
+              const badgeClasse = naoConforme
+                ? "bg-danger-bg text-danger"
+                : conforme
+                  ? "bg-success-bg text-success"
+                  : "bg-muted text-muted-foreground";
               return (
-                <div key={it.id} className="p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm">{it.texto}</p>
-                    <span
-                      className={`shrink-0 text-sm font-semibold ${
-                        naoConforme
-                          ? "text-danger"
-                          : v
-                            ? "text-foreground"
-                            : "text-muted-foreground"
-                      }`}
-                    >
-                      {it.tipo === "foto" ? (fo ? "Foto" : "—") : rotuloValor(it, v)}
-                    </span>
+                <div key={it.id} className="flex items-start justify-between gap-4 p-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium leading-snug text-foreground">
+                      {it.texto}
+                    </p>
+                    {fo && (
+                      <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
+                        <Camera className="h-3 w-3" /> 1 foto anexada
+                      </span>
+                    )}
+                    {ob && (
+                      <p className="mt-1 text-xs text-muted-foreground">Obs: {ob}</p>
+                    )}
                   </div>
-                  {ob && (
-                    <p className="mt-1 text-xs text-muted-foreground">Obs: {ob}</p>
-                  )}
-                  {fo && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={fo}
-                      alt=""
-                      className="mt-2 h-20 w-20 rounded-lg border border-border object-cover"
-                    />
-                  )}
+                  <span
+                    className={`inline-flex shrink-0 items-center justify-center rounded-lg px-2.5 py-1 text-xs font-semibold ${badgeClasse}`}
+                  >
+                    {ehFoto ? (fo ? "Foto" : "—") : rotuloValor(it, v)}
+                  </span>
                 </div>
               );
             })}
@@ -404,27 +461,43 @@ function ItemInput({
   const pares = PARES[item.tipo];
   if (pares) {
     return (
-      <div className="flex flex-wrap gap-2">
-        {pares.map(([v, label]) => (
-          <button
-            key={v}
-            type="button"
-            onClick={() => onValor(v)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-              valor === v
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-input hover:bg-muted"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="mt-4 flex gap-2">
+        {pares.map(([v, label]) => {
+          const selecionado = valor === v;
+          // Conforme → verde; não-conforme → vermelho.
+          const conforme = ["sim", "ok", "abastecido"].includes(v);
+          const selClasse = conforme
+            ? "border-success bg-success-bg text-success"
+            : "border-danger bg-danger-bg text-danger";
+          return (
+            <button
+              key={v}
+              type="button"
+              onClick={() => onValor(v)}
+              className={`flex h-11 flex-1 items-center justify-center rounded-xl border text-sm font-medium transition-colors ${
+                selecionado
+                  ? `${selClasse} font-semibold`
+                  : "border-border bg-card text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {selecionado &&
+                (conforme ? (
+                  <Check className="mr-1.5 h-4 w-4 opacity-70" />
+                ) : (
+                  <X className="mr-1.5 h-4 w-4 opacity-70" />
+                ))}
+              {label}
+            </button>
+          );
+        })}
         {permiteNa && (
           <button
             type="button"
             onClick={() => onValor("na")}
-            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-              valor === "na" ? "border-primary bg-primary/10 text-primary" : "border-input hover:bg-muted"
+            className={`flex h-11 flex-1 items-center justify-center rounded-xl border text-sm font-medium transition-colors ${
+              valor === "na"
+                ? "border-primary bg-primary/10 font-semibold text-primary"
+                : "border-border bg-card text-muted-foreground hover:bg-muted"
             }`}
           >
             N/A
@@ -436,7 +509,7 @@ function ItemInput({
 
   if (item.tipo === "multipla_escolha") {
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="mt-4 flex flex-col gap-1.5">
         {(item.opcoes ?? []).map((op) => (
           <label key={op} className="flex cursor-pointer items-center gap-2 text-sm">
             <input
@@ -464,7 +537,7 @@ function ItemInput({
       value={valor}
       onChange={(e) => onValor(e.target.value)}
       placeholder="Resposta"
-      className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="mt-4 h-11 w-full rounded-xl border border-input bg-card px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     />
   );
 }
@@ -472,9 +545,11 @@ function ItemInput({
 function FotoCampo({
   value,
   onChange,
+  danger = false,
 }: {
   value: string;
   onChange: (url: string) => void;
+  danger?: boolean;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const [subindo, setSubindo] = useState(false);
@@ -495,12 +570,12 @@ function FotoCampo({
   }
 
   return (
-    <div className="mt-2">
+    <div>
       <input ref={ref} type="file" accept="image/*" capture="environment" onChange={onFile} className="hidden" />
       {value ? (
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="" className="h-16 w-16 rounded-lg border border-border object-cover" />
+          <img src={value} alt="" className="h-16 w-16 rounded-xl border border-border object-cover" />
           <button type="button" onClick={() => onChange("")} className="flex items-center gap-1 text-xs text-danger">
             <Trash2 className="h-3.5 w-3.5" /> Remover
           </button>
@@ -510,7 +585,11 @@ function FotoCampo({
           type="button"
           onClick={() => ref.current?.click()}
           disabled={subindo}
-          className="flex items-center gap-1.5 rounded-lg border border-input px-3 py-2 text-sm hover:bg-muted disabled:opacity-50"
+          className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm transition-colors disabled:opacity-50 ${
+            danger
+              ? "border-danger/20 bg-card text-danger hover:bg-danger-bg/60"
+              : "border-input text-foreground hover:bg-muted"
+          }`}
         >
           {subindo ? (
             <>

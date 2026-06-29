@@ -84,7 +84,7 @@ export function SignaturePad({
     <div className="flex flex-col gap-3">
       <canvas
         ref={canvasRef}
-        className="min-h-[148px] w-full touch-none rounded-lg border border-dashed border-border bg-white"
+        className="min-h-[148px] w-full touch-none rounded-xl border border-dashed border-border bg-white"
         onMouseDown={(event) => start(event.clientX, event.clientY)}
         onMouseMove={(event) => draw(event.clientX, event.clientY)}
         onMouseUp={stop}

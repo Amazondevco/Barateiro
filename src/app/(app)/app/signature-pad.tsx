@@ -105,7 +105,7 @@ export function SignaturePad({
           e.preventDefault();
           end();
         }}
-        className="h-32 w-full cursor-crosshair rounded-lg border border-input"
+        className="h-32 w-full cursor-crosshair rounded-xl border border-dashed border-border"
         style={{ touchAction: "none", backgroundColor: "#ffffff" }}
       />
     </div>
