@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/auth-context";
 import { Button } from "../ui/button";
 import { Input, Label } from "../ui/input";
+import logoUrl from "../assets/checkai-logo.svg";
 
 export function LoginPage() {
   const { user, signInWithPassword } = useAuth();
@@ -34,13 +35,15 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col justify-center bg-background p-6">
       <div className="mx-auto w-full max-w-sm">
-        {/* Marca */}
+        {/* Marca Check.AI (verde fixo da marca do produto) */}
         <div className="mb-8 flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-            <span className="text-lg font-bold">C</span>
-          </div>
+          <img
+            src={logoUrl}
+            alt="Check.AI"
+            className="h-10 w-10 rounded-2xl shadow-sm"
+          />
           <span className="text-xl font-bold tracking-tight">
-            Check<span className="text-primary">.AI</span>
+            Check<span className="text-[#15803d]">.AI</span>
           </span>
         </div>
 

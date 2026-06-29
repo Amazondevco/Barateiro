@@ -209,3 +209,16 @@ Botões de resposta selecionados: `border-primary bg-primary/10 text-primary`.
   via `isLightHex` (`native-poc/src/lib/utils.ts`).
 - Tema (claro/escuro/sistema) fica em `localStorage["checkai-theme"]`, aplicado no boot
   (`main.tsx`) e alternável na tela de Config.
+
+## Marca Check.AI (logo do produto)
+
+- A **marca do produto** Check.AI é **verde `#15803d`** — um **check geométrico**
+  branco + um **brilho ✦** (acento de IA) sobre badge verde de cantos arredondados.
+  Não confundir com a **cor da rede** (`--primary`, runtime): a logo do produto é fixa.
+- Fonte única em `native-poc/src/assets/checkai-logo.svg` (badge 1024). Reusada no
+  **login** (lockup `Check.AI` com `.AI` em verde), no **favicon**
+  (`native-poc/public/favicon.svg`) e como base do **ícone do launcher + splash**.
+- Ícone/splash nativos gerados por `@capacitor/assets` a partir de `native-poc/assets/`
+  (`icon-only`, `icon-foreground`/`icon-background` adaptativo, `splash`/`splash-dark`).
+  Splash = fundo verde uniforme + check branco centralizado. Para regenerar:
+  `npx capacitor-assets generate --android` (fontes em `native-poc/assets/`).

@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "ai.check.poc",
-  appName: "Check.AI Native POC",
+  appName: "Check.AI",
   webDir: "dist",
 };
 
