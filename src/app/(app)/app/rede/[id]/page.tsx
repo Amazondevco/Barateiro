@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { Store } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { AppDrawer } from "@/components/app-drawer";
 import { FormsBoard, type FormItem } from "./forms-board";
 
 export const metadata = { title: "Meu app — Check.AI" };
@@ -13,6 +12,8 @@ export default async function AppRedePage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const sub = (claims?.claims as { sub?: string } | undefined)?.sub;
 
   const { data: membro } = await supabase
     .from("rede_membros")
@@ -60,6 +61,17 @@ export default async function AppRedePage({
   const diaIso = diaJs === 0 ? 7 : diaJs;
   const tipoUni = m.unidades?.tipo ?? null;
 
+  // Quais formulários este usuário já enviou hoje (para o filtro pendente/enviado).
+  const hoje = new Date().toISOString().slice(0, 10);
+  const { data: enviadasHoje } = await supabase
+    .from("respostas")
+    .select("formulario_id")
+    .eq("usuario_id", sub ?? "")
+    .eq("data_referencia", hoje);
+  const enviados = new Set(
+    (enviadasHoje ?? []).map((r) => (r as { formulario_id: string }).formulario_id),
+  );
+
   const lista: FormItem[] = ((forms ?? []) as Form[])
     .filter((f) => {
       if (tipoUni && f.tipo_unidade && f.tipo_unidade !== tipoUni) return false;
@@ -71,7 +83,12 @@ export default async function AppRedePage({
       if (dias.length && !dias.includes(diaIso)) return false;
       return true;
     })
-    .map((f) => ({ id: f.id, nome: f.nome, descricao: f.descricao }));
+    .map((f) => ({
+      id: f.id,
+      nome: f.nome,
+      descricao: f.descricao,
+      enviadoHoje: enviados.has(f.id),
+    }));
 
   const cor = m.redes?.cor_primaria || "var(--primary)";
   const redeNome = m.redes?.nome ?? "Minha rede";
@@ -86,11 +103,8 @@ export default async function AppRedePage({
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Banner da REDE: hambúrguer + logo + nome centralizados */}
-      <div className="relative px-5 pb-7 pt-3 text-white" style={bannerStyle}>
-        <div className="absolute left-2 top-3">
-          <AppDrawer nome={redeNome} />
-        </div>
+      {/* Banner da REDE: logo + nome centralizados */}
+      <div className="relative px-5 pb-7 pt-4 text-white" style={bannerStyle}>
         <div className="flex flex-col items-center gap-2.5 pt-2">
           {m.redes?.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element

@@ -20,14 +20,14 @@ export function AppBottomNav() {
 
   return (
     <nav className="sticky bottom-0 z-30 border-t border-border bg-card">
-      <div className="relative mx-auto flex h-[60px] max-w-md items-center px-1">
-        {/* indicador deslizante (fundo arredondado que passa de um pro outro) */}
+      <div className="relative mx-auto flex h-[60px] max-w-md items-center">
+        {/* indicador deslizante: largura = 1 célula; pílula centralizada por flex */}
         <div
-          className="pointer-events-none absolute h-full transition-transform duration-300 ease-out"
+          className="pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center transition-transform duration-300 ease-out"
           style={{ width: `${100 / n}%`, transform: `translateX(${active * 100}%)` }}
           aria-hidden
         >
-          <div className="absolute left-1/2 top-1/2 h-[40px] w-[44px] -translate-x-1/2 -translate-y-1/2 rounded-[15px] bg-primary shadow-sm" />
+          <div className="h-[40px] w-[44px] rounded-[15px] bg-primary shadow-sm" />
         </div>
 
         {TABS.map((t, i) => {
