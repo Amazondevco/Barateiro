@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Building2, Clock, ChevronRight, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { signOut } from "@/lib/auth-actions";
 
 export const metadata = { title: "Meu app — Barateiro" };
 
@@ -103,9 +104,16 @@ export default async function AppHomePage() {
             <p className="text-xs text-muted-foreground">Meus apps</p>
           </div>
         </div>
-        <Link href="/login" className="text-muted-foreground hover:text-foreground" aria-label="Sair">
-          <LogOut className="h-5 w-5" />
-        </Link>
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Sair"
+            title="Sair"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
+        </form>
       </header>
 
       <div className="flex-1 p-4">
