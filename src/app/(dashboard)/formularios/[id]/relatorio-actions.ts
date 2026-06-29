@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
 import { transcribeAudio } from "@/lib/transcribe";
-import { KINDS, KIND_LABEL, type Kind } from "@/lib/relatorios";
+import { KINDS, KINDS_COM_ITEM, KIND_LABEL, type Kind, type Spec } from "@/lib/relatorios";
 
 export type RelState = { error?: string; ok?: boolean };
 
@@ -17,7 +17,9 @@ Escolha apenas relatórios da lista de tipos (kind) abaixo — não invente outr
 ${CATALOGO}
 
 Regras:
-- "nao_por_pergunta", "evolucao", "por_unidade" e "volume" só fazem sentido se o formulário tiver perguntas de conformidade (sim/não, ok/não, abastecido/ruptura).
+- "nao_por_pergunta", "evolucao", "por_unidade" e "volume" só fazem sentido com perguntas de conformidade (sim/não, ok/não, abastecido/ruptura).
+- "distribuicao" mostra a distribuição das respostas de UMA pergunta (boa para multipla_escolha ou sim/não). "media_numerica" só para perguntas tipo "numero".
+- Para "distribuicao" e "media_numerica", inclua em spec "itemId" com o id EXATO de uma pergunta da lista fornecida.
 - Dê títulos curtos e claros em português.
 - "spec" pode ter {"topN": N} para limitar barras (padrão 8).
 Responda APENAS JSON válido.`;
@@ -48,18 +50,24 @@ async function callGroq(user: string): Promise<unknown | null> {
   }
 }
 
-type Proposta = { titulo: string; kind: Kind; spec: { topN?: number } };
+type Proposta = { titulo: string; kind: Kind; spec: Spec };
 
-function validar(arr: unknown): Proposta[] {
+function validar(arr: unknown, itensValidos: Set<string>): Proposta[] {
   if (!Array.isArray(arr)) return [];
   const out: Proposta[] = [];
   for (const r of arr) {
-    const o = r as { titulo?: unknown; kind?: unknown; spec?: { topN?: unknown } };
+    const o = r as { titulo?: unknown; kind?: unknown; spec?: { topN?: unknown; itemId?: unknown } };
     const kind = String(o.kind ?? "") as Kind;
     if (!(KINDS as readonly string[]).includes(kind)) continue;
-    const titulo = String(o.titulo ?? "").trim() || KIND_LABEL[kind];
+    const spec: Spec = {};
     const topN = Number(o.spec?.topN);
-    out.push({ titulo, kind, spec: Number.isFinite(topN) ? { topN } : {} });
+    if (Number.isFinite(topN)) spec.topN = topN;
+    if (KINDS_COM_ITEM.includes(kind)) {
+      const itemId = String(o.spec?.itemId ?? "");
+      if (!itensValidos.has(itemId)) continue; // alvo inválido → descarta
+      spec.itemId = itemId;
+    }
+    out.push({ titulo: String(o.titulo ?? "").trim() || KIND_LABEL[kind], kind, spec });
   }
   return out;
 }
@@ -72,7 +80,7 @@ async function contexto(formId: string) {
   const supabase = await createClient();
   const { data: form } = await supabase
     .from("formularios")
-    .select("rede_id, nome, descricao, formulario_secoes(titulo, formulario_itens(texto, tipo))")
+    .select("rede_id, nome, descricao, formulario_secoes(titulo, formulario_itens(id, texto, tipo))")
     .eq("id", formId)
     .single();
   if (!form) return null;
@@ -83,14 +91,23 @@ type FormCtx = {
   rede_id: string;
   nome: string;
   descricao: string | null;
-  formulario_secoes: { titulo: string; formulario_itens: { texto: string; tipo: string }[] }[];
+  formulario_secoes: { titulo: string; formulario_itens: { id: string; texto: string; tipo: string }[] }[];
 };
+
+function itensValidos(f: FormCtx): Set<string> {
+  const s = new Set<string>();
+  for (const sec of f.formulario_secoes)
+    for (const it of sec.formulario_itens) s.add(it.id);
+  return s;
+}
 
 function resumoForm(f: FormCtx): string {
   const linhas = f.formulario_secoes
     .map(
       (s) =>
-        `Seção "${s.titulo}": ${s.formulario_itens.map((i) => `${i.texto} (${i.tipo})`).join("; ")}`,
+        `Seção "${s.titulo}": ${s.formulario_itens
+          .map((i) => `[id=${i.id}] "${i.texto}" (${i.tipo})`)
+          .join("; ")}`,
     )
     .join("\n");
   return `Formulário: ${f.nome}\n${f.descricao ?? ""}\n${linhas}`;
@@ -125,7 +142,7 @@ export async function gerarPainelIA(formId: string): Promise<RelState> {
   const out = await callGroq(
     `${resumoForm(form)}\n\nProponha de 3 a 5 relatórios importantes para este formulário. Responda JSON: {"relatorios":[{"titulo","kind","spec"}]}`,
   );
-  const props = validar((out as { relatorios?: unknown })?.relatorios);
+  const props = validar((out as { relatorios?: unknown })?.relatorios, itensValidos(form));
   if (!props.length) return { error: "A IA não conseguiu propor relatórios. Tente de novo." };
 
   await supabase.from("relatorios").delete().eq("formulario_id", formId).eq("origem", "ia");
@@ -152,7 +169,7 @@ export async function novoRelatorio(
   const out = await callGroq(
     `${resumoForm(form)}\n\nO usuário quer este relatório: "${desc}".\nEscolha 1 relatório que melhor atende. Responda JSON: {"relatorios":[{"titulo","kind","spec"}]}`,
   );
-  const props = validar((out as { relatorios?: unknown })?.relatorios).slice(0, 1);
+  const props = validar((out as { relatorios?: unknown })?.relatorios, itensValidos(form)).slice(0, 1);
   if (!props.length) return { error: "Não entendi. Tente descrever de outro jeito." };
 
   const { count } = await supabase

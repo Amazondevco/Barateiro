@@ -147,11 +147,23 @@ function Grafico({ data }: { data: Computed }) {
       </div>
     );
 
+  if (data.kind === "media_numerica")
+    return (
+      <div className="py-4 text-center">
+        <p className="text-4xl font-bold text-primary">
+          {data.n ? data.media : "—"}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {data.n ? `média de ${data.n} respostas` : "sem dados numéricos"}
+        </p>
+      </div>
+    );
+
   if (data.kind === "evolucao") return <Linha points={data.points} />;
 
-  // barras (nao_por_pergunta | por_unidade)
+  // barras (nao_por_pergunta | distribuicao | por_unidade)
   const bars =
-    data.kind === "nao_por_pergunta"
+    data.kind === "nao_por_pergunta" || data.kind === "distribuicao"
       ? data.bars.map((b) => ({ label: b.label, valor: b.value, sufixo: "" }))
       : data.bars.map((b) => ({ label: b.label, valor: b.pct, sufixo: "%" }));
   const max = Math.max(1, ...bars.map((b) => b.valor));

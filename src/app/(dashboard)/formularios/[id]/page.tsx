@@ -23,7 +23,7 @@ export default async function FormularioDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string; periodo?: string; ref?: string }>;
+  searchParams: Promise<{ tab?: string; periodo?: string; ref?: string; rp?: string }>;
 }) {
   const { id } = await params;
   const sp = await searchParams;
@@ -80,7 +80,7 @@ export default async function FormularioDetailPage({
           refIso={ref}
         />
       ) : tab === "painel" ? (
-        <PainelTab supabase={supabase} redeId={redeId} formId={id} />
+        <PainelTab supabase={supabase} redeId={redeId} formId={id} rp={sp.rp ?? "tudo"} />
       ) : (
         <ModeloTab supabase={supabase} redeId={redeId} form={form} />
       )}
@@ -100,22 +100,38 @@ type Form = {
   dias_semana: number[] | null;
 };
 
+const RP_OPCOES = [
+  { v: "tudo", label: "Tudo", dias: 0 },
+  { v: "30", label: "30 dias", dias: 30 },
+  { v: "7", label: "7 dias", dias: 7 },
+];
+
 async function PainelTab({
   supabase,
   redeId,
   formId,
+  rp,
 }: {
   supabase: SB;
   redeId: string;
   formId: string;
+  rp: string;
 }) {
+  const opc = RP_OPCOES.find((o) => o.v === rp) ?? RP_OPCOES[0];
+  let desdeIso: string | undefined;
+  if (opc.dias > 0) {
+    const d = new Date();
+    d.setDate(d.getDate() - opc.dias);
+    desdeIso = d.toISOString().slice(0, 10);
+  }
+
   const [{ data: rels }, base] = await Promise.all([
     supabase
       .from("relatorios")
       .select("id, titulo, kind, spec, origem, ordem")
       .eq("formulario_id", formId)
       .order("ordem"),
-    carregarBase(supabase, formId, redeId),
+    carregarBase(supabase, formId, redeId, desdeIso),
   ]);
   const relatorios = (
     (rels ?? []) as {
@@ -132,7 +148,26 @@ async function PainelTab({
     origem: r.origem,
     data: computar(r.kind, r.spec ?? {}, base),
   }));
-  return <RelatoriosView formId={formId} relatorios={relatorios} />;
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-1.5">
+        {RP_OPCOES.map((o) => (
+          <Link
+            key={o.v}
+            href={`/formularios/${formId}?tab=painel&rp=${o.v}`}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+              opc.v === o.v
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {o.label}
+          </Link>
+        ))}
+      </div>
+      <RelatoriosView formId={formId} relatorios={relatorios} />
+    </div>
+  );
 }
 
 async function ModeloTab({
