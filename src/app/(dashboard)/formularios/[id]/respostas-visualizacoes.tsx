@@ -151,16 +151,18 @@ export function RespostasVisual({
   visual,
   rows,
   agruparPorDia,
+  onAbrir,
 }: {
   visual: Visualizacao;
   rows: RespostaRow[];
   agruparPorDia: boolean;
+  onAbrir?: (id: string) => void;
 }) {
-  if (visual === "cartoes") return <ViewCartoes rows={rows} />;
+  if (visual === "cartoes") return <ViewCartoes rows={rows} onAbrir={onAbrir} />;
   if (visual === "matriz") return <ViewMatriz rows={rows} />;
   if (visual === "ranking") return <ViewRanking rows={rows} />;
   if (visual === "resumo") return <ViewResumo rows={rows} />;
-  return <ViewTabela rows={rows} agruparPorDia={agruparPorDia} />;
+  return <ViewTabela rows={rows} agruparPorDia={agruparPorDia} onAbrir={onAbrir} />;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -178,9 +180,11 @@ function NaoBadge({ n }: { n: number }) {
 function ViewTabela({
   rows,
   agruparPorDia,
+  onAbrir,
 }: {
   rows: RespostaRow[];
   agruparPorDia: boolean;
+  onAbrir?: (id: string) => void;
 }) {
   const grupos = new Map<string, RespostaRow[]>();
   for (const r of rows) {
@@ -207,6 +211,7 @@ function ViewTabela({
             dia={dia}
             linhas={linhas}
             mostraDia={agruparPorDia}
+            onAbrir={onAbrir}
           />
         ))}
       </tbody>
@@ -217,10 +222,12 @@ ViewTabela.Grupo = function Grupo({
   dia,
   linhas,
   mostraDia,
+  onAbrir,
 }: {
   dia: string;
   linhas: RespostaRow[];
   mostraDia: boolean;
+  onAbrir?: (id: string) => void;
 }) {
   return (
     <>
@@ -235,7 +242,11 @@ ViewTabela.Grupo = function Grupo({
         </tr>
       )}
       {linhas.map((r) => (
-        <TR key={r.id}>
+        <TR
+          key={r.id}
+          onClick={() => onAbrir?.(r.id)}
+          className="cursor-pointer hover:bg-muted/50"
+        >
           <TD>{fmtData(r.data_referencia)}</TD>
           <TD>{r.unidade_nome || "—"}</TD>
           <TD>{r.usuario_nome || "—"}</TD>
@@ -255,7 +266,13 @@ ViewTabela.Grupo = function Grupo({
 };
 
 /* 2. Cartões */
-function ViewCartoes({ rows }: { rows: RespostaRow[] }) {
+function ViewCartoes({
+  rows,
+  onAbrir,
+}: {
+  rows: RespostaRow[];
+  onAbrir?: (id: string) => void;
+}) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {rows.map((r) => {
@@ -263,7 +280,8 @@ function ViewCartoes({ rows }: { rows: RespostaRow[] }) {
         return (
           <div
             key={r.id}
-            className="space-y-3 rounded-xl border border-border bg-card p-4"
+            onClick={() => onAbrir?.(r.id)}
+            className="cursor-pointer space-y-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">

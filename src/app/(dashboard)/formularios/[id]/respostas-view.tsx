@@ -19,6 +19,7 @@ import {
   VISUALIZACOES,
   type Visualizacao,
 } from "./respostas-visualizacoes";
+import { RespostaPanel } from "./resposta-panel";
 import { cn } from "@/lib/utils";
 
 export type RespostaRow = {
@@ -75,6 +76,7 @@ export function RespostasView({
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const [visual, setVisual] = useState<Visualizacao>("tabela");
   const [visualModal, setVisualModal] = useState(false);
+  const [detalheId, setDetalheId] = useState<string | null>(null);
 
   // Aplica a preferência salva após montar (evita mismatch de hidratação)
   useEffect(() => {
@@ -431,7 +433,12 @@ export function RespostasView({
           visual={visual}
           rows={filtered}
           agruparPorDia={agruparPorDia}
+          onAbrir={setDetalheId}
         />
+      )}
+
+      {detalheId && (
+        <RespostaPanel id={detalheId} onClose={() => setDetalheId(null)} />
       )}
 
       {visualModal && (
