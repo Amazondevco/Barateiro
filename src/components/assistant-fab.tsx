@@ -39,7 +39,7 @@ export function AssistantFab({ papel }: { papel: "super_admin" | "admin_supermer
     <>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#6d28d9] text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
         aria-label="Assistente IA"
         title="Assistente IA"
       >
@@ -48,7 +48,7 @@ export function AssistantFab({ papel }: { papel: "super_admin" | "admin_supermer
 
       {open && (
         <div className="fixed bottom-24 right-6 z-50 flex h-[min(560px,80vh)] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
-          <div className="flex items-center justify-between border-b border-border bg-[#6d28d9] p-3 text-white">
+          <div className="flex items-center justify-between border-b border-border bg-primary p-3 text-primary-foreground">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
               <div className="leading-tight">
@@ -105,7 +105,7 @@ export function AssistantFab({ papel }: { papel: "super_admin" | "admin_supermer
               <button
                 onClick={enviar}
                 disabled={carregando || !input.trim()}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#6d28d9] text-white disabled:opacity-50"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50"
                 aria-label="Enviar"
               >
                 <Send className="h-4 w-4" />
