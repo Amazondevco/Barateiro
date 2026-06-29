@@ -1,6 +1,12 @@
 import Link from "next/link";
-import { AlertCircle, Download, ExternalLink, Smartphone } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import {
+  AlertCircle,
+  Download,
+  ExternalLink,
+  Github,
+  Smartphone,
+} from "lucide-react";
+import Badge from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type ApkInstallerCardProps = {
@@ -25,13 +31,13 @@ export function ApkInstallerCard({
           <div>
             <CardTitle>Instalador Android (APK)</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Link central para baixar a build Android de testes direto na aba
+              Distribuição do app nativo de testes para Android a partir da aba
               de aplicativo do Super Admin.
             </p>
           </div>
 
           <Badge tone={apkUrl ? "success" : "warning"}>
-            {apkUrl ? "Disponível" : "Pendente de URL"}
+            {apkUrl ? "URL pronta" : "Aguardando URL"}
           </Badge>
         </div>
       </CardHeader>
@@ -50,13 +56,13 @@ export function ApkInstallerCard({
             <div className="min-w-0 flex-1 space-y-1">
               <p className="font-medium">
                 {apkUrl
-                  ? "Baixe o APK atual para instalar no celular"
-                  : "Configure a URL publica do APK para liberar o instalador"}
+                  ? "APK Android disponível para instalação"
+                  : "Workflow pronto para gerar o APK Android"}
               </p>
               <p className="text-sm text-muted-foreground">
                 {apkUrl
-                  ? "O botao abaixo aponta para /api/android-apk, entao voce pode trocar a origem do binario sem mudar a interface."
-                  : "Defina ANDROID_APK_URL ou NEXT_PUBLIC_ANDROID_APK_URL no ambiente do projeto."}
+                  ? "O botão abaixo usa /api/android-apk e pode continuar igual mesmo se a origem do binário mudar."
+                  : "Se a URL ainda não estiver configurada, rode o workflow do GitHub Actions e publique o binário gerado."}
               </p>
               {apkVersion ? (
                 <p className="text-xs text-muted-foreground">
@@ -65,6 +71,20 @@ export function ApkInstallerCard({
               ) : null}
             </div>
           </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="mb-2 text-sm font-medium">Como testar agora</p>
+          <ol className="space-y-2 text-sm text-muted-foreground">
+            <li>1. Rode o workflow <strong>Build APK Android (POC)</strong> no GitHub Actions.</li>
+            <li>2. Baixe o artefato <strong>check-ai-apk</strong> ou publique a URL em <code>ANDROID_APK_URL</code>.</li>
+            <li>3. Instale o APK em um celular Android com fontes desconhecidas liberadas.</li>
+          </ol>
+        </div>
+
+        <div className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning">
+          iPhone (iOS) não instala APK. Para iPhone, o caminho é TestFlight ou
+          App Store com conta Apple Developer.
         </div>
 
         {apkUrl ? (
@@ -95,17 +115,18 @@ export function ApkInstallerCard({
             </div>
           </>
         ) : (
-          <div className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning">
-            O instalador aparecera aqui assim que a URL do APK for configurada
-            no ambiente.
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="https://github.com/Amazondevco/Barateiro/actions/workflows/android-apk.yml"
+              target="_blank"
+              rel="noreferrer"
+              className={outlineLinkClass}
+            >
+              <Github className="h-4 w-4" />
+              Abrir workflow
+            </Link>
           </div>
         )}
-
-        <p className="text-xs text-muted-foreground">
-          iPhone (iOS) não instala por arquivo .apk — o teste no iPhone é via
-          TestFlight/App Store (requer conta Apple Developer). Por enquanto, teste
-          no Android.
-        </p>
       </CardContent>
     </Card>
   );
