@@ -4,7 +4,7 @@
 // MESMA rota e, se não houver, a página /offline.
 // Assets hashados/ícones = cache-first.
 
-const CACHE = "checkai-v5";
+const CACHE = "checkai-v6";
 const OFFLINE_URL = "/offline";
 const PRECACHE = ["/offline", "/icon-512.svg"];
 
@@ -26,9 +26,15 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
 
-  // Navegação: rede primeiro (cacheia a cópia fresca); offline → cópia da
-  // mesma rota (telas já visitadas abrem offline) → senão página de fallback.
-  if (request.mode === "navigate") {
+  const url = new URL(request.url);
+  const sameOrigin = url.origin === self.location.origin;
+  const accept = request.headers.get("accept") || "";
+  // Documento HTML (navegação OU fetch de página com Accept text/html, usado
+  // para "aquecer" o cache). Rede primeiro (online sempre fresco → sem Server
+  // Action desatualizada); offline → cópia da mesma rota → senão /offline.
+  const ehDocumento =
+    request.mode === "navigate" || (sameOrigin && accept.includes("text/html"));
+  if (ehDocumento) {
     event.respondWith(
       fetch(request)
         .then((res) => {
@@ -46,7 +52,6 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Assets imutáveis (hashados pelo Next) e ícones: cache-first.
-  const url = new URL(request.url);
   if (
     url.pathname.startsWith("/_next/static/") ||
     /\.(?:js|css|svg|png|jpg|jpeg|webp|woff2?)$/.test(url.pathname)

@@ -27,6 +27,37 @@ export function OfflineSyncProvider() {
     // tenta sincronizar ao montar
     sincronizar();
 
+    // Aquecimento do cache (1x por sessão, online): baixa as telas principais
+    // para que abram offline depois — não só os formulários.
+    try {
+      if (navigator.onLine && !sessionStorage.getItem("checkai-warm")) {
+        sessionStorage.setItem("checkai-warm", "1");
+        const rotas = [
+          "/app",
+          "/app/avisos",
+          "/app/formularios",
+          "/app/perfil",
+          "/app/config",
+        ];
+        const aquecer = () =>
+          rotas.forEach((r) =>
+            fetch(r, {
+              headers: { Accept: "text/html" },
+              credentials: "include",
+            }).catch(() => {}),
+          );
+        const ric = (
+          window as unknown as {
+            requestIdleCallback?: (cb: () => void) => void;
+          }
+        ).requestIdleCallback;
+        if (ric) ric(aquecer);
+        else setTimeout(aquecer, 1500);
+      }
+    } catch {
+      /* ignore */
+    }
+
     return () => {
       vivo = false;
       off();

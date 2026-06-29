@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ClipboardCheck, ChevronRight, AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { PendingEnviados } from "./pending-enviados";
 
 export const metadata = { title: "Formulários enviados — Check.AI" };
 
@@ -31,6 +32,8 @@ export default async function EnviadosPage() {
   return (
     <div className="flex flex-1 flex-col p-4">
       <h1 className="mb-3 text-lg font-semibold">Formulários enviados</h1>
+
+      <PendingEnviados />
 
       {lista.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">

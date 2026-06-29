@@ -80,6 +80,8 @@ export async function sincronizar(): Promise<void> {
           p_formulario: sub.formId,
           p_itens: itens,
           p_assinatura: sub.assinatura,
+          // preserva a data em que o formulário foi preenchido (offline)
+          p_data: (sub.criadoEm || "").slice(0, 10) || undefined,
         });
         if (error) throw error;
 
