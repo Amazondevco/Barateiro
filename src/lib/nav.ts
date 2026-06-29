@@ -8,6 +8,7 @@ import {
   LifeBuoy,
   Settings,
   Lightbulb,
+  Megaphone,
   type LucideIcon,
 } from "lucide-react";
 import type { Papel } from "@/lib/types";
@@ -52,6 +53,12 @@ export const NAV: NavItem[] = [
     label: "Faturamento",
     icon: Receipt,
     roles: ["super_admin"], // admin não vê faturamento
+  },
+  {
+    href: "/comunicados",
+    label: "Comunicados",
+    icon: Megaphone,
+    roles: ["super_admin", "admin_supermercado"],
   },
   {
     href: "/sugestoes",

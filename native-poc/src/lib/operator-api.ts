@@ -197,6 +197,32 @@ export async function fetchProfile(userId: string) {
   } satisfies ProfileData;
 }
 
+export type Comunicado = {
+  id: string;
+  titulo: string;
+  corpo: string;
+  createdAt: string;
+};
+
+// Avisos do operador: a RLS já entrega só os comunicados direcionados a ele
+// (todos da rede / sua unidade / departamento / cargo / ele mesmo).
+export async function fetchComunicados(): Promise<Comunicado[]> {
+  const { data, error } = await supabase
+    .from("comunicados")
+    .select("id, titulo, corpo, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) throw error;
+
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    titulo: String(row.titulo),
+    corpo: String(row.corpo),
+    createdAt: String(row.created_at),
+  }));
+}
+
 export function applyPrimaryColor(color: string | null) {
   if (!color || typeof document === "undefined") return;
   // Cor da rede vale para barra, botões e banner (igual ao app PWA):
