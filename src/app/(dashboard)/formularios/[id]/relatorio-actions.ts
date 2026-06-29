@@ -181,6 +181,23 @@ export async function novoRelatorio(
   return { ok: true };
 }
 
+export async function reordenarRelatorios(
+  formId: string,
+  ids: string[],
+): Promise<RelState> {
+  const profile = await getSessionProfile();
+  if (profile?.papel !== "admin_supermercado" && profile?.papel !== "super_admin") {
+    return { error: "Sem permissão." };
+  }
+  const supabase = await createClient();
+  await Promise.all(
+    ids.map((id, i) =>
+      supabase.from("relatorios").update({ ordem: i }).eq("id", id).eq("formulario_id", formId),
+    ),
+  );
+  return { ok: true };
+}
+
 export async function excluirRelatorio(formId: string, id: string): Promise<RelState> {
   const profile = await getSessionProfile();
   if (profile?.papel !== "admin_supermercado" && profile?.papel !== "super_admin") {

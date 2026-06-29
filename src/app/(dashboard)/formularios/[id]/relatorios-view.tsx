@@ -11,13 +11,31 @@ import {
   Mic,
   Square,
   BarChart3,
+  GripVertical,
+  Download,
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import type { Computed } from "@/lib/relatorios";
 import {
   gerarPainelIA,
   novoRelatorio,
   excluirRelatorio,
+  reordenarRelatorios,
   type RelState,
 } from "./relatorio-actions";
 
@@ -53,6 +71,42 @@ export function RelatoriosView({
     });
   }
 
+  // ordem local (otimista) — persiste ao arrastar
+  const [ordemIds, setOrdemIds] = useState<string[]>(relatorios.map((r) => r.id));
+  useEffect(() => {
+    setOrdemIds(relatorios.map((r) => r.id));
+  }, [relatorios]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  );
+  const ordenados = ordemIds
+    .map((id) => relatorios.find((r) => r.id === id))
+    .filter((r): r is RelItem => !!r);
+
+  function onDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const novos = arrayMove(
+      ordemIds,
+      ordemIds.indexOf(String(active.id)),
+      ordemIds.indexOf(String(over.id)),
+    );
+    setOrdemIds(novos);
+    start(async () => {
+      await reordenarRelatorios(formId, novos);
+    });
+  }
+
+  function exportar() {
+    document.body.classList.add("imprimindo");
+    const limpar = () => {
+      document.body.classList.remove("imprimindo");
+      window.removeEventListener("afterprint", limpar);
+    };
+    window.addEventListener("afterprint", limpar);
+    window.print();
+  }
+
   if (!relatorios.length) {
     return (
       <>
@@ -79,11 +133,14 @@ export function RelatoriosView({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 no-print">
         <p className="text-sm text-muted-foreground">
-          Relatórios calculados com as respostas reais deste formulário.
+          Arraste pelos pontos para reordenar.
         </p>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportar}>
+            <Download className="h-4 w-4" /> Exportar
+          </Button>
           <Button variant="outline" size="sm" onClick={gerar} disabled={pend}>
             {pend ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             Regerar com IA
@@ -94,27 +151,65 @@ export function RelatoriosView({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {relatorios.map((r) => (
-          <div key={r.id} className="rounded-xl border border-border bg-card p-4">
-            <div className="mb-3 flex items-start justify-between gap-2">
-              <h3 className="text-sm font-semibold">{r.titulo}</h3>
-              <button
-                onClick={() => excluir(r.id)}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={ordenados.map((r) => r.id)} strategy={rectSortingStrategy}>
+          <div id="painel-export" className="grid gap-4 sm:grid-cols-2">
+            {ordenados.map((r) => (
+              <CartaoRelatorio
+                key={r.id}
+                item={r}
+                onExcluir={() => excluir(r.id)}
                 disabled={pend}
-                className="shrink-0 text-muted-foreground hover:text-danger"
-                aria-label="Remover"
-                title="Remover"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-            <Grafico data={r.data} />
+              />
+            ))}
           </div>
-        ))}
-      </div>
+        </SortableContext>
+      </DndContext>
 
       {novoOpen && <NovoDialog formId={formId} onClose={() => setNovoOpen(false)} />}
+    </div>
+  );
+}
+
+function CartaoRelatorio({
+  item,
+  onExcluir,
+  disabled,
+}: {
+  item: RelItem;
+  onExcluir: () => void;
+  disabled: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="rounded-xl border border-border bg-card p-4">
+      <div className="mb-3 flex items-start gap-2">
+        <button
+          {...attributes}
+          {...listeners}
+          className="no-print mt-0.5 shrink-0 cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+          aria-label="Arrastar"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+        <h3 className="flex-1 text-sm font-semibold">{item.titulo}</h3>
+        <button
+          onClick={onExcluir}
+          disabled={disabled}
+          className="no-print shrink-0 text-muted-foreground hover:text-danger"
+          aria-label="Remover"
+          title="Remover"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+      <Grafico data={item.data} />
     </div>
   );
 }
