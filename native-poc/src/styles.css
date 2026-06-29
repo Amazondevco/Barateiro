@@ -32,6 +32,68 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.native-status-banner {
+  position: sticky;
+  top: 10px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: min(calc(100% - 32px), 520px);
+  margin: 10px auto -2px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 700;
+  backdrop-filter: blur(12px);
+}
+
+.native-status-banner span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
+.muted-text {
+  margin: 4px 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.86rem;
+}
+
+.queue-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.queue-grid div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--muted);
+}
+
+.queue-grid strong {
+  color: var(--foreground);
+  font-size: 1.35rem;
+}
+
+@media (max-width: 420px) {
+  .queue-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

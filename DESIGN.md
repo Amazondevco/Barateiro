@@ -183,3 +183,9 @@ Botões de resposta selecionados: `border-primary bg-primary/10 text-primary`.
 5. Cor da rede só via `--primary`/`app_cor` (runtime), nunca fixa.
 6. Ícones **lucide**; sem emoji em UI.
 7. Mexeu em padrão visual? **Atualize este `DESIGN.md`.**
+## App nativo - status offline/sync
+
+- O app operador deve mostrar um banner compacto apenas quando houver algo acionavel: aparelho offline, envios pendentes ou erros de sincronizacao.
+- O banner usa `position: sticky`, formato pill, fundo branco translúcido, `--border`, sombra suave e icones lucide pequenos.
+- Estados de erro usam `--danger`; contadores e cartoes de fila usam `--muted`, `--foreground` e `--muted-foreground`.
+- A tela de Configuracoes e o lugar canonico para diagnostico operacional: conexao atual, contagem de pendentes/sincronizados/erros e botao "Sincronizar agora".

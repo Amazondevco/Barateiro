@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { BottomNav } from "./bottom-nav";
+import { NativeStatusBanner } from "./native-status-banner";
 
 export function AppShell() {
   const location = useLocation();
@@ -10,7 +11,8 @@ export function AppShell() {
   return (
     <div className="app-shell">
       <main className="app-main">
-        <Outlet />
+      <NativeStatusBanner />
+      <Outlet />
       </main>
       {!compact ? <BottomNav /> : null}
     </div>
