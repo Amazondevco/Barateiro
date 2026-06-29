@@ -9,10 +9,9 @@ import { signOut } from "@/lib/auth-actions";
 import { PAPEL_LABEL, type Profile } from "@/lib/types";
 import type { RedeBrand } from "@/lib/auth";
 import { UserSwitcher } from "@/components/user-switcher";
+import { DEV_EMAILS } from "@/lib/dev-accounts";
 import { PageTitleProvider, TopbarTitle } from "@/components/page-title";
 import { TopbarSearch } from "@/components/topbar-search";
-
-const isDev = process.env.NODE_ENV !== "production";
 
 // true se a cor (hex) for clara → texto escuro fica legível
 function isLightHex(hex: string): boolean {
@@ -190,7 +189,9 @@ export function DashboardShell({
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                 {initials}
               </span>
-              {isDev && <UserSwitcher currentEmail={profile.email} />}
+              {DEV_EMAILS.includes(profile.email) && (
+                <UserSwitcher currentEmail={profile.email} />
+              )}
               <form action={signOut}>
                 <Button
                   variant="ghost"

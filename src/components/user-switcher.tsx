@@ -16,8 +16,8 @@ export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
         variant="ghost"
         size="icon"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Trocar de usuário (dev)"
-        title="Trocar de usuário (dev)"
+        aria-label="Trocar visualização"
+        title="Trocar visualização"
       >
         <ArrowRightLeft className="h-[18px] w-[18px]" />
       </Button>
@@ -27,7 +27,7 @@ export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
             <p className="border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Trocar de usuário (dev)
+              Trocar visualização
             </p>
             {DEV_ACCOUNTS.map((a) => {
               const current = a.email === currentEmail;

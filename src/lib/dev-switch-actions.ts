@@ -2,21 +2,29 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DEV_ACCOUNTS } from "@/lib/dev-accounts";
+import { DEV_ACCOUNTS, DEV_EMAILS } from "@/lib/dev-accounts";
 
 /**
- * ⚠️ Ferramenta de DESENVOLVIMENTO apenas.
- * Troca rápida entre contas de teste. Desativada em produção (NODE_ENV).
- * Antes de ir a produção: remover este arquivo, dev-accounts.ts e o UserSwitcher.
+ * Troca de visualização (Super Admin / Admin / Celular).
+ * ⚠️ Só funciona dentro do "círculo demo" (DEV_ACCOUNTS) — o usuário ATUAL
+ * precisa já ser uma dessas contas. Senha compartilhada fixa (trocar antes
+ * de uso real do cliente).
  */
-const DEV_PASSWORD = "Admin@123";
+const SWITCH_PASSWORD = "Admin@123";
 
 export async function quickSwitch(email: string) {
-  if (process.env.NODE_ENV === "production") return;
-  if (!DEV_ACCOUNTS.some((a) => a.email === email)) return;
+  const target = DEV_ACCOUNTS.find((a) => a.email === email);
+  if (!target) return;
 
   const supabase = await createClient();
+
+  // só permite trocar se o usuário ATUAL já pertence ao círculo demo
+  const { data: claims } = await supabase.auth.getClaims();
+  const atual = (claims?.claims as { email?: string } | undefined)?.email;
+  if (!atual || !DEV_EMAILS.includes(atual)) return;
+
   await supabase.auth.signOut();
-  await supabase.auth.signInWithPassword({ email, password: DEV_PASSWORD });
-  redirect("/");
+  await supabase.auth.signInWithPassword({ email, password: SWITCH_PASSWORD });
+
+  redirect(target.view === "app" ? "/app" : "/");
 }

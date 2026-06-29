@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { Building2, Clock, ChevronRight, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/auth-actions";
+import { UserSwitcher } from "@/components/user-switcher";
+import { DEV_EMAILS } from "@/lib/dev-accounts";
 
 export const metadata = { title: "Meu app — Barateiro" };
 
@@ -41,8 +43,10 @@ function casa(m: Membro, ic: Icone) {
 export default async function AppHomePage() {
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
-  const sub = (claims?.claims as { sub?: string } | undefined)?.sub;
+  const c = claims?.claims as { sub?: string; email?: string } | undefined;
+  const sub = c?.sub;
   if (!sub) redirect("/login");
+  const email = c?.email ?? "";
 
   const { data: ident } = await supabase
     .from("identidades")
@@ -104,16 +108,19 @@ export default async function AppHomePage() {
             <p className="text-xs text-muted-foreground">Meus apps</p>
           </div>
         </div>
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="text-muted-foreground hover:text-foreground"
-            aria-label="Sair"
-            title="Sair"
-          >
-            <LogOut className="h-5 w-5" />
-          </button>
-        </form>
+        <div className="flex items-center gap-1">
+          {DEV_EMAILS.includes(email) && <UserSwitcher currentEmail={email} />}
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="Sair"
+              title="Sair"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="flex-1 p-4">
