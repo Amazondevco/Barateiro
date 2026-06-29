@@ -100,7 +100,10 @@ export async function sendPush(
               token,
               notification: { title: notification.title, body: notification.body },
               data: notification.data,
-              android: { priority: "HIGH" },
+              android: {
+                priority: "HIGH",
+                notification: { channel_id: "comunicados" },
+              },
             },
           }),
         });

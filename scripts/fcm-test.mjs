@@ -70,7 +70,7 @@ const sendRes = await fetch(
         token: targetToken,
         notification: { title: "Teste Check.AI", body: "Push funcionando 🎉" },
         data: { tipo: "comunicado" },
-        android: { priority: "HIGH" },
+        android: { priority: "HIGH", notification: { channel_id: "comunicados" } },
       },
     }),
   },
