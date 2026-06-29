@@ -1,9 +1,10 @@
-// Service worker de PRODUÇÃO (v4) — habilita instalação (Android) + offline básico.
-// Estratégia segura: navegação = rede primeiro (offline → página /offline);
-// assets estáticos (hashados) = cache-first. NÃO cacheia HTML autenticado
-// (evita "Failed to find Server Action" entre deploys).
+// Service worker de PRODUÇÃO (v5) — instalação (Android) + offline.
+// Navegação = REDE PRIMEIRO (online sempre fresco → sem "Server Action"
+// desatualizada). Em sucesso, guarda a página; offline serve essa cópia da
+// MESMA rota e, se não houver, a página /offline.
+// Assets hashados/ícones = cache-first.
 
-const CACHE = "checkai-v4";
+const CACHE = "checkai-v5";
 const OFFLINE_URL = "/offline";
 const PRECACHE = ["/offline", "/icon-512.svg"];
 
@@ -25,9 +26,22 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
 
-  // Navegação: rede primeiro; offline → página de fallback.
+  // Navegação: rede primeiro (cacheia a cópia fresca); offline → cópia da
+  // mesma rota (telas já visitadas abrem offline) → senão página de fallback.
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL)));
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(request, copy));
+          return res;
+        })
+        .catch(() =>
+          caches
+            .match(request)
+            .then((cached) => cached || caches.match(OFFLINE_URL)),
+        ),
+    );
     return;
   }
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AppChrome } from "@/components/app-chrome";
+import { OfflineSyncProvider } from "@/components/offline-sync-provider";
 import { getMinhaRedeMarca } from "@/lib/rede-branding";
 
 // iOS usa apple-touch-icon (não o manifest) → ícone da rede por sessão.
@@ -45,6 +46,7 @@ export default async function AppLoggedLayout({
 
   return (
     <div style={style} className="flex min-h-screen flex-col">
+      <OfflineSyncProvider />
       <AppChrome nome={nome} email={c?.email ?? ""}>
         {children}
       </AppChrome>

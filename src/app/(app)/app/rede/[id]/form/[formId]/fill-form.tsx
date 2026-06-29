@@ -13,7 +13,8 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+import { enqueueSubmission } from "@/lib/offline-db";
+import { sincronizar, pendingCount, comprimirFoto } from "@/lib/offline-sync";
 import { SignaturePad } from "../../../../signature-pad";
 
 type Item = {
@@ -126,21 +127,30 @@ export function FillForm({
         item_id: it.id,
         valor: valores[it.id] ?? "",
         observacao: obs[it.id] ?? "",
-        foto_url: fotos[it.id] ?? "",
+        fotoDataUrl: fotos[it.id] || undefined,
       })),
     );
-    const supabase = createClient();
-    const { error } = await supabase.rpc("enviar_resposta", {
-      p_formulario: form.id,
-      p_itens: itens,
-      p_assinatura: assinada,
-    });
-    if (error) {
-      setErro(error.message);
+    try {
+      // Entra na fila local → funciona offline. A sincronização envia agora
+      // (se online) ou quando a conexão voltar.
+      await enqueueSubmission({
+        membroId: redeMembroId,
+        formId: form.id,
+        formNome: form.nome,
+        itens,
+        assinatura: assinada,
+        criadoEm: new Date().toISOString(),
+        tentativas: 0,
+      });
+      await sincronizar();
+      const restante = await pendingCount();
+      router.push(
+        `/app/rede/${redeMembroId}?${restante > 0 ? "pendente" : "enviado"}=1`,
+      );
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao salvar o envio.");
       setEnviando(false);
-      return;
     }
-    router.push(`/app/rede/${redeMembroId}?enviado=1`);
   }
 
   return (
@@ -473,14 +483,15 @@ function FotoCampo({
     const f = e.target.files?.[0];
     if (!f) return;
     setSubindo(true);
-    const supabase = createClient();
-    const ext = f.name.split(".").pop() || "jpg";
-    const path = `${crypto.randomUUID()}.${ext}`;
-    const up = await supabase.storage.from("respostas-fotos").upload(path, f);
-    if (!up.error) {
-      onChange(supabase.storage.from("respostas-fotos").getPublicUrl(path).data.publicUrl);
+    try {
+      // Guarda a foto localmente (comprimida). O upload acontece na
+      // sincronização → tirar foto funciona mesmo offline.
+      onChange(await comprimirFoto(f));
+    } catch {
+      /* ignore */
+    } finally {
+      setSubindo(false);
     }
-    setSubindo(false);
   }
 
   return (
