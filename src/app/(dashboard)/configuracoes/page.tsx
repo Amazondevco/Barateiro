@@ -36,6 +36,9 @@ import {
   PermissoesPadraoForm,
 } from "./padroes-avancados";
 import { PermissoesTab } from "./permissoes-tab";
+import { AddRosterForm } from "./add-roster-form";
+import { ImportRosterForm } from "./import-roster-form";
+import { addRosterPessoa, importarRoster } from "./roster-actions";
 
 export const metadata = { title: "Configurações — Amazon Dev & Co." };
 
@@ -43,6 +46,7 @@ const TABS = [
   { key: "unidades", label: "Unidades", adminOnly: false },
   { key: "departamentos", label: "Departamentos", adminOnly: false },
   { key: "usuarios", label: "Usuários", adminOnly: false },
+  { key: "equipe", label: "Equipe do app", adminOnly: true },
   { key: "permissoes", label: "Permissões", adminOnly: false },
   { key: "auditoria", label: "Auditoria", adminOnly: true },
   { key: "aparencia", label: "Aparência", adminOnly: true },
@@ -212,6 +216,9 @@ export default async function ConfiguracoesPage({
           {activeTab === "usuarios" && (
             <UsuariosTab supabase={supabase} redeId={redeId} />
           )}
+          {activeTab === "equipe" && isAdminRede && (
+            <EquipeAppTab supabase={supabase} redeId={redeId} />
+          )}
           {activeTab === "permissoes" && (
             <CargosTab supabase={supabase} redeId={redeId} />
           )}
@@ -239,6 +246,93 @@ export default async function ConfiguracoesPage({
 /* ---------- Tabs ---------- */
 
 type SB = Awaited<ReturnType<typeof createClient>>;
+
+function fmtCpf(cpf: string) {
+  const d = (cpf ?? "").replace(/\D/g, "");
+  return d.length === 11
+    ? `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
+    : cpf;
+}
+
+async function EquipeAppTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
+  const [{ data: roster }, { data: unidades }, { data: cargos }, { data: deptos }] =
+    await Promise.all([
+      supabase
+        .from("rede_roster")
+        .select(
+          "id, nome, cpf, status, cargos(nome), unidades(nome), departamentos(nome)",
+        )
+        .eq("rede_id", redeId)
+        .order("nome"),
+      supabase.from("unidades").select("id,nome").eq("rede_id", redeId).eq("status", "ativo").order("nome"),
+      supabase.from("cargos").select("id,nome").eq("rede_id", redeId).order("nome"),
+      supabase.from("departamentos").select("id,nome").eq("rede_id", redeId).eq("status", "ativo").order("nome"),
+    ]);
+
+  type Row = {
+    id: string;
+    nome: string;
+    cpf: string;
+    status: string;
+    cargos: { nome: string } | null;
+    unidades: { nome: string } | null;
+    departamentos: { nome: string } | null;
+  };
+  const lista = (roster ?? []) as unknown as Row[];
+
+  return (
+    <div className="space-y-4">
+      <p className="max-w-2xl text-sm text-muted-foreground">
+        Lista de quem pode usar o app. A pessoa entra automaticamente ao se
+        cadastrar com o CPF cadastrado aqui, já com unidade, cargo e departamento.
+      </p>
+      <div className="flex justify-end gap-2">
+        <ImportRosterForm action={importarRoster} />
+        <AddRosterForm
+          action={addRosterPessoa}
+          unidades={unidades ?? []}
+          cargos={cargos ?? []}
+          departamentos={deptos ?? []}
+        />
+      </div>
+      {lista.length === 0 ? (
+        <EmptyState
+          title="Equipe vazia"
+          description="Adicione as pessoas (por CPF) que vão usar o app."
+        />
+      ) : (
+        <Table>
+          <THead>
+            <TR>
+              <TH>Nome</TH>
+              <TH>CPF</TH>
+              <TH>Cargo</TH>
+              <TH>Unidade</TH>
+              <TH>Departamento</TH>
+              <TH>Status</TH>
+            </TR>
+          </THead>
+          <tbody>
+            {lista.map((p) => (
+              <TR key={p.id}>
+                <TD><span className="font-medium">{p.nome}</span></TD>
+                <TD>{fmtCpf(p.cpf)}</TD>
+                <TD>{p.cargos?.nome ?? "—"}</TD>
+                <TD>{p.unidades?.nome ?? "—"}</TD>
+                <TD>{p.departamentos?.nome ?? "—"}</TD>
+                <TD>
+                  <Badge tone={p.status === "vinculado" ? "success" : "warning"}>
+                    {p.status === "vinculado" ? "Cadastrado" : "Aguardando"}
+                  </Badge>
+                </TD>
+              </TR>
+            ))}
+          </tbody>
+        </Table>
+      )}
+    </div>
+  );
+}
 
 async function UnidadesTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
   const { data: unidades } = await supabase

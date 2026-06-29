@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { PwaRegister } from "./pwa-register";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +16,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Amazon Dev & Co. — Gestão",
   description: "Plataforma de gestão para redes de supermercado",
-  icons: { icon: "/icon.svg" },
+  icons: { icon: "/icon.svg", apple: "/icon-512.svg" },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Barateiro" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#F97316",
 };
 
 export default function RootLayout({
@@ -36,7 +42,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <PwaRegister />
+        {children}
+      </body>
     </html>
   );
 }

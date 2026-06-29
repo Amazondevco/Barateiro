@@ -17,11 +17,16 @@ export async function login(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
     return { error: "E-mail ou senha inválidos." };
   }
 
-  redirect("/");
+  // Usuário do app (identidade) vai pro app; usuário do dashboard, pra raiz.
+  const tipo = data.user?.user_metadata?.tipo;
+  redirect(tipo === "app" ? "/app" : "/");
 }

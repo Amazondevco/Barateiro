@@ -31,6 +31,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -819,6 +820,7 @@ function SectionCard({
   onRemoveItem: (sid: string, iid: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: sec._id });
   const style = {
@@ -906,12 +908,20 @@ function SectionCard({
             </label>
             <button
               type="button"
-              onClick={() => onRemove(sec._id)}
+              onClick={() => setConfirmRemove(true)}
               aria-label="Remover seção"
               className="shrink-0 text-muted-foreground hover:text-danger"
             >
               <Trash2 className="h-4 w-4" />
             </button>
+            <ConfirmDialog
+              open={confirmRemove}
+              title="Remover seção"
+              description={`A seção "${sec.titulo || "sem título"}" e todos os seus itens serão removidos.`}
+              confirmLabel="Remover seção"
+              onConfirm={() => { setConfirmRemove(false); onRemove(sec._id); }}
+              onCancel={() => setConfirmRemove(false)}
+            />
           </div>
 
           {!collapsed && (
@@ -959,6 +969,7 @@ function ItemRow({
   onRemove: (sid: string, iid: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item._id });
   const style = {
@@ -1048,12 +1059,20 @@ function ItemRow({
         </button>
         <button
           type="button"
-          onClick={() => onRemove(sid, item._id)}
+          onClick={() => setConfirmRemove(true)}
           className="shrink-0 text-muted-foreground hover:text-danger"
           aria-label="Remover item"
         >
           <X className="h-4 w-4" />
         </button>
+        <ConfirmDialog
+          open={confirmRemove}
+          title="Remover item"
+          description={`"${item.texto || "item sem título"}" será removido da seção.`}
+          confirmLabel="Remover"
+          onConfirm={() => { setConfirmRemove(false); onRemove(sid, item._id); }}
+          onCancel={() => setConfirmRemove(false)}
+        />
       </div>
 
       {open && (

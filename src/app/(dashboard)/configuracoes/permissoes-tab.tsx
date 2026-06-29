@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input, Label } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PERMISSOES, PERMISSAO_LABEL } from "@/lib/permissoes";
 import { createCargo, updateCargo, deleteCargo } from "./cargo-actions";
 
@@ -30,6 +31,7 @@ export function PermissoesTab({
   const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -58,13 +60,13 @@ export function PermissoesTab({
     });
   }
   function handleDelete(id: string) {
-    if (!confirm("Excluir este cargo?")) return;
     setError(null);
     startTransition(async () => {
       const r = await deleteCargo(id);
       if (r.error) setError(r.error);
       else router.refresh();
     });
+    setConfirmDeleteId(null);
   }
 
   return (
@@ -119,7 +121,7 @@ export function PermissoesTab({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(c.id)}
+                    onClick={() => setConfirmDeleteId(c.id)}
                     aria-label="Excluir"
                   >
                     <Trash2 className="h-4 w-4 text-danger" />
@@ -170,6 +172,15 @@ export function PermissoesTab({
           />
         </Modal>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="Excluir cargo"
+        description={`"${cargos.find((c) => c.id === confirmDeleteId)?.nome}" será removido permanentemente.`}
+        confirmLabel="Excluir cargo"
+        onConfirm={() => handleDelete(confirmDeleteId!)}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   );
 }
