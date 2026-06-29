@@ -11,7 +11,7 @@ export function AppShell() {
   return (
     <div className="app-shell flex min-h-screen flex-col bg-background">
       <NativeStatusBanner />
-      <main className="flex-1">
+      <main className={`flex-1 ${compact ? "" : "pb-[110px]"}`}>
         <Outlet />
       </main>
       {!compact ? <BottomNav /> : null}

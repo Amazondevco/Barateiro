@@ -138,9 +138,13 @@ Assistente IA (sparkle). Empilham no canto inferior direito.
 - **Início:** banner com **cor sólida da rede** + logo (cartão branco) + nome
   centralizados; abaixo, busca + **Filtros** + **Ordenar por** (inclui "Minha
   ordem" com arrastar). Banner compacto.
-- **Barra inferior:** só ícones, indicador deslizante (pílula `bg-primary`,
-  `rounded-[15px]`) centralizado; 5 abas (Início, Avisos, Formulários, Perfil,
-  Config). Sem texto.
+- **Barra inferior (flutuante):** pílula branca (`bg-card`, `rounded-[32px]`,
+  sombra) que **não encosta nas bordas** (`fixed inset-x-0 bottom-6 px-5`,
+  `max-w-md` centralizado). Só ícones, 5 abas (Início, Avisos, Formulários,
+  Perfil, Config). O item **ativo sobressai** (`-translate-y-[22px]`) dentro de
+  um **círculo na cor da rede** (`bg-primary`) com anel `border-background` que
+  "recorta" a barra; ícone ativo em `text-primary-foreground`. O conteúdo das
+  telas reserva `pb-[110px]` para não ficar atrás da barra.
 - **Formulários:** etapas por **quebra de página** (igual à prévia do builder),
   barra de progresso, **revisão final** antes de confirmar o envio (assinatura +
   botão fixo "Confirmar e enviar").

@@ -22,7 +22,7 @@ export function AppChrome({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <main className="flex flex-1 flex-col">{children}</main>
+      <main className="flex flex-1 flex-col pb-[110px]">{children}</main>
 
       {/* Troca de usuário: só para contas de DEV (teste). Discreto. */}
       {DEV_EMAILS.includes(email) && (
