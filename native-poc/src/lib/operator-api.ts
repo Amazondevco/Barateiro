@@ -161,7 +161,7 @@ export async function fetchNetworkHome(memberId: string, userId: string) {
 export async function fetchProfile(userId: string) {
   const { data, error } = await supabase
     .from("identidades")
-    .select("nome, email, foto_url, cpf, telefone, cidade")
+    .select("nome, email, foto_url, cpf, celular, cidade")
     .eq("id", userId)
     .single();
 
@@ -170,7 +170,7 @@ export async function fetchProfile(userId: string) {
   const { data: member } = await supabase
     .from("rede_membros")
     .select("redes(nome), unidades(nome), cargos(nome)")
-    .eq("user_id", userId)
+    .eq("identidade_id", userId)
     .eq("status", "ativo")
     .limit(1)
     .maybeSingle();
@@ -180,7 +180,7 @@ export async function fetchProfile(userId: string) {
     email: (data.email as string | null) ?? null,
     fotoUrl: (data.foto_url as string | null) ?? null,
     cpf: (data.cpf as string | null) ?? null,
-    telefone: (data.telefone as string | null) ?? null,
+    telefone: (data.celular as string | null) ?? null,
     cidade: (data.cidade as string | null) ?? null,
     unidade:
       typeof member?.unidades === "object" && member.unidades && "nome" in member.unidades
