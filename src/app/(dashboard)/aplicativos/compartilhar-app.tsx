@@ -5,9 +5,9 @@ import { Download, Share2, Copy, Check, MessageCircle } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 
-// Link de instalação do PWA (mock — futuramente: domínio real + slug do ícone)
-function installUrl(id: string | undefined) {
-  return `https://app.barateiro.com.br/i/${id ?? "preview"}`;
+// Link de instalação do PWA — domínio de produção (entrada pelo cadastro).
+function installUrl(_id: string | undefined) {
+  return `https://checkai-sistema.vercel.app/cadastro`;
 }
 
 function mensagem(nome: string, nomeCurto: string, id: string | undefined) {

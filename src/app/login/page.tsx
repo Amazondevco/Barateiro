@@ -2,7 +2,7 @@ import { Brand } from "@/components/brand";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoginForm } from "./login-form";
 
-export const metadata = { title: "Entrar — Amazon Dev & Co." };
+export const metadata = { title: "Entrar — Check.AI" };
 
 export default function LoginPage() {
   return (
@@ -20,7 +20,7 @@ export default function LoginPage() {
           </p>
         </div>
         <p className="text-xs text-sidebar-muted">
-          © {new Date().getFullYear()} Amazon Dev & Co. · Gestão para redes de
+          © {new Date().getFullYear()} Check.AI · Gestão para redes de
           supermercado
         </p>
       </div>

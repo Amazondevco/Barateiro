@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { FormulariosList } from "./formularios-list";
 
-export const metadata = { title: "Formulários — Amazon Dev & Co." };
+export const metadata = { title: "Formulários — Check.AI" };
 
 export default async function FormulariosPage() {
   const { profile } = await getSessionContext();

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Marca exibida no shell/login.
- * Padrão = plataforma (Amazon Dev & Co., com logo). Passe `name`/`logoUrl`
+ * Padrão = plataforma (Check.AI, com logo). Passe `name`/`logoUrl`
  * para white-label do tenant (rede-cliente).
  */
 export function Brand({

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { FormBuilder } from "../form-builder";
 
-export const metadata = { title: "Novo formulário — Amazon Dev & Co." };
+export const metadata = { title: "Novo formulário — Check.AI" };
 
 export default async function NovoFormularioPage() {
   const { profile } = await getSessionContext();

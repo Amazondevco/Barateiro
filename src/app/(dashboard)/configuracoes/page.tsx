@@ -40,7 +40,7 @@ import { AddRosterForm } from "./add-roster-form";
 import { ImportRosterForm } from "./import-roster-form";
 import { addRosterPessoa, importarRoster } from "./roster-actions";
 
-export const metadata = { title: "Configurações — Amazon Dev & Co." };
+export const metadata = { title: "Configurações — Check.AI" };
 
 const TABS = [
   { key: "unidades", label: "Unidades", adminOnly: false },
@@ -92,7 +92,7 @@ export default async function ConfiguracoesPage({
       <>
         <PageHeader
           title="Configurações"
-          subtitle="Plataforma — Amazon Dev & Co."
+          subtitle="Plataforma — Check.AI"
         />
         <div className="mb-6 flex gap-1 overflow-x-auto border-b border-border">
           {PLAT_TABS.map((t) => (

@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Amazon Dev & Co. — Gestão",
+  title: "Check.AI — Gestão",
   description: "Plataforma de gestão para redes de supermercado",
   icons: { icon: "/icon.svg", apple: "/icon-512.svg" },
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "Barateiro" },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Check.AI" },
 };
 
 export const viewport: Viewport = {

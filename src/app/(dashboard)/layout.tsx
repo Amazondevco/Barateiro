@@ -7,7 +7,7 @@ import { getSessionContext } from "@/lib/auth";
 export async function generateMetadata(): Promise<Metadata> {
   const { rede } = await getSessionContext();
   return {
-    title: rede?.nome ?? "Amazon Dev & Co.",
+    title: rede?.nome ?? "Check.AI",
     icons: { icon: rede?.favicon_url ?? rede?.logo_url ?? "/icon.svg" },
   };
 }

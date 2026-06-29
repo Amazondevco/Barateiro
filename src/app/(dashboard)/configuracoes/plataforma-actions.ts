@@ -11,7 +11,7 @@ async function ensureSuper() {
   return caller?.papel === "super_admin";
 }
 
-/** Aparência da plataforma (logo/tema do Amazon Dev & Co.). Só super admin. */
+/** Aparência da plataforma (logo/tema do Check.AI). Só super admin. */
 export async function updateAparenciaPlataforma(
   _prev: FormState,
   formData: FormData,

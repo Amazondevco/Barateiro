@@ -13,7 +13,7 @@ Este termo explica como seus dados são tratados ao usar o aplicativo, em confor
 
 ## 1. Quem trata seus dados
 
-- **Plataforma (Amazon Dev & Co.)** — responsável pela sua conta de identidade (cadastro global) e pela infraestrutura do aplicativo.
+- **Plataforma (Check.AI)** — responsável pela sua conta de identidade (cadastro global) e pela infraestrutura do aplicativo.
 - **Rede (supermercado)** à qual você se vincula — responsável pelos dados da sua atuação (cargo, unidade, departamento) e pelo conteúdo dos formulários que você preenche.
 
 ## 2. Dados que coletamos
