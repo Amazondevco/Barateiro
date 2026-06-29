@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   const id = new URL(req.url).searchParams.get("rede");
-  let cor = "#F97316";
+  // Sem rede → marca Check.AI (verde). Também é o fallback do push.
+  let cor = "#15803d";
   let logo: string | null = null;
 
   if (id) {

@@ -1,9 +1,41 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
+import { getRedeMarcaById } from "@/lib/rede-branding";
 import { sendPush } from "@/lib/fcm";
+
+const CHECKAI_GREEN = "#15803d";
+
+// Imagem (logo) e cor de acento do push, conforme quem envia:
+// - super admin            → logo Check.AI (imagem padrão de /api/app-icon) + verde.
+// - admin/gerente com logo  → logo da rede (/api/app-icon?rede=…) + cor da rede.
+// - rede sem logo           → logo Check.AI + verde.
+async function brandingDoPush(
+  rede: string,
+): Promise<{ imageUrl?: string; color: string }> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const base = host ? `${proto}://${host}` : null;
+  const checkai = base ? `${base}/api/app-icon` : undefined;
+
+  const { profile } = await getSessionContext();
+  if (profile?.papel === "super_admin") {
+    return { imageUrl: checkai, color: CHECKAI_GREEN };
+  }
+
+  const marca = await getRedeMarcaById(rede);
+  if (marca?.logo_url && base) {
+    return {
+      imageUrl: `${base}/api/app-icon?rede=${rede}`,
+      color: marca.app_cor || marca.cor_primaria || CHECKAI_GREEN,
+    };
+  }
+  return { imageUrl: checkai, color: marca?.app_cor || CHECKAI_GREEN };
+}
 
 export type AlvoTipo = "todos" | "usuario" | "unidade" | "departamento" | "cargo";
 
@@ -138,10 +170,13 @@ export async function enviarComunicado(input: {
   try {
     const tokens = await tokensDoAlvo(rede, input.alvoTipo, alvoIds);
     if (tokens.length > 0) {
+      const { imageUrl, color } = await brandingDoPush(rede);
       const { invalid } = await sendPush(tokens, {
         title: titulo,
         body: corpo,
-        data: { tipo: "comunicado", rede_id: rede },
+        imageUrl,
+        color,
+        data: { tipo: "comunicado", rede_id: rede, color },
       });
       if (invalid.length > 0) {
         await createAdminClient().from("device_tokens").delete().in("token", invalid);

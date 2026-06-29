@@ -69,8 +69,16 @@ const sendRes = await fetch(
       message: {
         token: targetToken,
         notification: { title: "Teste Check.AI", body: "Push funcionando 🎉" },
-        data: { tipo: "comunicado" },
-        android: { priority: "HIGH", notification: { channel_id: "comunicados" } },
+        data: { tipo: "comunicado", color: process.env.TEST_COLOR || "#15803d" },
+        android: {
+          priority: "HIGH",
+          notification: {
+            channel_id: "comunicados",
+            icon: "ic_stat_notify",
+            color: process.env.TEST_COLOR || "#15803d",
+            ...(process.env.TEST_IMAGE ? { image: process.env.TEST_IMAGE } : {}),
+          },
+        },
       },
     }),
   },

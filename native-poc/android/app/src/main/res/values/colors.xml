@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cor padrão do acento da notificação (verde Check.AI). O servidor pode
+         sobrescrever por mensagem via android.notification.color. -->
+    <color name="checkai_green">#15803D</color>
+</resources>

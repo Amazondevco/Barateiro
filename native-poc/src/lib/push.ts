@@ -44,6 +44,7 @@ async function saveToken(token: string) {
 // Exibe um heads-up local (usado quando o push chega com o app em primeiro plano).
 async function showForeground(notif: PushNotificationSchema) {
   try {
+    const color = typeof notif.data?.color === "string" ? notif.data.color : undefined;
     await LocalNotifications.schedule({
       notifications: [
         {
@@ -51,6 +52,8 @@ async function showForeground(notif: PushNotificationSchema) {
           title: notif.title ?? "Check.AI",
           body: notif.body ?? "",
           channelId: CHANNEL_ID,
+          smallIcon: "ic_stat_notify",
+          iconColor: color,
           extra: notif.data,
         },
       ],

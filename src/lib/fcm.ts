@@ -72,7 +72,13 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
 // Retorna quantos foram aceitos e os tokens inválidos (a remover do banco).
 export async function sendPush(
   tokens: string[],
-  notification: { title: string; body: string; data?: Record<string, string> },
+  notification: {
+    title: string;
+    body: string;
+    data?: Record<string, string>;
+    imageUrl?: string;
+    color?: string;
+  },
 ): Promise<{ sent: number; invalid: string[] }> {
   const sa = loadServiceAccount();
   if (!sa || tokens.length === 0) return { sent: 0, invalid: [] };
@@ -102,7 +108,12 @@ export async function sendPush(
               data: notification.data,
               android: {
                 priority: "HIGH",
-                notification: { channel_id: "comunicados" },
+                notification: {
+                  channel_id: "comunicados",
+                  icon: "ic_stat_notify",
+                  ...(notification.color ? { color: notification.color } : {}),
+                  ...(notification.imageUrl ? { image: notification.imageUrl } : {}),
+                },
               },
             },
           }),

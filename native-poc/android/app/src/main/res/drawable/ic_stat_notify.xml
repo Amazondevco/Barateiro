@@ -1,0 +1,18 @@
+<!-- Ícone de notificação (barra de status). O Android pinta tudo de branco com
+     base no alfa, então é só a silhueta da marca Check.AI: check + brilho. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="96"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M286,548 L438,700 L726,372" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M792,230 L812,280 L862,300 L812,320 L792,370 L772,320 L722,300 L772,280 Z" />
+</vector>
