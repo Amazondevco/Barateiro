@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Check.AI Native POC</string>
+    <string name="title_activity_main">Check.AI Native POC</string>
+    <string name="package_name">ai.check.poc</string>
+    <string name="custom_url_scheme">ai.check.poc</string>
+</resources>

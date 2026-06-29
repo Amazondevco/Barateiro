@@ -28,6 +28,7 @@ import { updateAparencia } from "./actions";
 import { updateAparenciaPlataforma } from "./plataforma-actions";
 import { AparenciaForm } from "./aparencia-form";
 import { PadroesForm } from "./padroes-form";
+import { ApkInstallerCard } from "./apk-installer-card";
 import {
   DepartamentosPadraoForm,
   UnidadesPadraoForm,
@@ -68,6 +69,14 @@ export default async function ConfiguracoesPage({
 }) {
   const tab = (await searchParams).tab ?? "unidades";
   const { profile, rede } = await getSessionContext();
+  const androidApkUrl =
+    process.env.ANDROID_APK_URL ??
+    process.env.NEXT_PUBLIC_ANDROID_APK_URL ??
+    null;
+  const androidApkVersion =
+    process.env.ANDROID_APK_VERSION ??
+    process.env.NEXT_PUBLIC_ANDROID_APK_VERSION ??
+    null;
   const redeId = profile?.rede_id ?? null;
   const supabase = await createClient();
 
@@ -147,15 +156,21 @@ export default async function ConfiguracoesPage({
           />
         )}
         {ptab === "aplicativo" && plat && (
-          <AplicativoPadraoForm
-            foto={plat.app_foto_obrigatoria ?? true}
-            geo={plat.app_geolocalizacao ?? true}
-            assinatura={plat.app_assinatura ?? false}
-            offline={plat.app_offline ?? true}
-            exigeCadastro={plat.app_exige_cadastro ?? true}
-            aprovacaoAdmin={plat.app_aprovacao_admin ?? false}
-            campos={plat.app_cadastro_campos ?? []}
-          />
+          <div className="space-y-4">
+            <ApkInstallerCard
+              apkUrl={androidApkUrl}
+              apkVersion={androidApkVersion}
+            />
+            <AplicativoPadraoForm
+              foto={plat.app_foto_obrigatoria ?? true}
+              geo={plat.app_geolocalizacao ?? true}
+              assinatura={plat.app_assinatura ?? false}
+              offline={plat.app_offline ?? true}
+              exigeCadastro={plat.app_exige_cadastro ?? true}
+              aprovacaoAdmin={plat.app_aprovacao_admin ?? false}
+              campos={plat.app_cadastro_campos ?? []}
+            />
+          </div>
         )}
         {ptab === "permissoes" && plat && (
           <PermissoesPadraoForm
