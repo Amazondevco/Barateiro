@@ -129,6 +129,56 @@ async function tokensDoAlvo(
   return (tokens ?? []).map((t) => String(t.token));
 }
 
+// IA: a partir da intenção do gestor, redige título + mensagem do comunicado.
+// Mesmo padrão Groq do gerador de formulários (server-only, usa GROQ_API_KEY).
+export async function gerarComunicado(
+  descricao: string,
+): Promise<{ titulo?: string; corpo?: string; error?: string }> {
+  const desc = descricao.trim();
+  if (!desc) return { error: "Descreva a intenção do comunicado." };
+
+  const { profile } = await getSessionContext();
+  if (!profile) return { error: "Sessão expirada." };
+
+  const key = process.env.GROQ_API_KEY;
+  if (!key) return { error: "IA não configurada (defina GROQ_API_KEY)." };
+
+  const SYSTEM =
+    "Você redige comunicados internos para funcionários de uma rede de " +
+    "supermercados, em português do Brasil. A partir da intenção do gestor, " +
+    "gere um TÍTULO objetivo (máx. ~60 caracteres, sem ponto final) e uma " +
+    "MENSAGEM cordial e direta (1 a 3 frases curtas, tom profissional e " +
+    "acessível). Não invente datas, números, nomes ou políticas que não " +
+    'estejam na intenção. Responda APENAS em JSON: {"titulo": "...", "corpo": "..."}.';
+
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+        temperature: 0.4,
+        max_tokens: 500,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: SYSTEM },
+          { role: "user", content: desc },
+        ],
+      }),
+    });
+    if (!res.ok) return { error: `IA respondeu ${res.status}. Tente novamente.` };
+    const json = await res.json();
+    const text: string = json?.choices?.[0]?.message?.content ?? "";
+    const parsed = JSON.parse(text) as { titulo?: string; corpo?: string };
+    const titulo = String(parsed.titulo ?? "").trim().slice(0, 120);
+    const corpo = String(parsed.corpo ?? "").trim();
+    if (!titulo || !corpo) return { error: "A IA não conseguiu gerar. Detalhe mais." };
+    return { titulo, corpo };
+  } catch {
+    return { error: "Não foi possível gerar agora. Tente novamente." };
+  }
+}
+
 export async function enviarComunicado(input: {
   redeId: string | null;
   titulo: string;

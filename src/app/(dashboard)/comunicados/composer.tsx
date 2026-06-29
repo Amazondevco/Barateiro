@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import {
   getRedeAlvos,
   enviarComunicado,
+  gerarComunicado,
   type AlvoTipo,
   type RedeAlvos,
 } from "@/lib/comunicado-actions";
@@ -37,6 +38,27 @@ export function ComunicadoComposer({
   const [loadingAlvos, setLoadingAlvos] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
+
+  // IA: gera título + mensagem a partir de uma descrição livre.
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiErr, setAiErr] = useState<string | null>(null);
+  const [aiPending, startAi] = useTransition();
+
+  function gerarComIa() {
+    setAiErr(null);
+    startAi(async () => {
+      const r = await gerarComunicado(aiPrompt);
+      if (r.error) {
+        setAiErr(r.error);
+        return;
+      }
+      if (r.titulo) setTitulo(r.titulo);
+      if (r.corpo) setCorpo(r.corpo);
+      setAiOpen(false);
+      setAiPrompt("");
+    });
+  }
 
   useEffect(() => {
     setAlvoIds([]);
@@ -104,6 +126,67 @@ export function ComunicadoComposer({
           </select>
         </div>
       )}
+
+      {/* IA: descreve a intenção e a IA escreve título + mensagem. */}
+      <div className="rounded-lg border border-dashed border-border bg-muted/40 p-3">
+        {!aiOpen ? (
+          <button
+            type="button"
+            onClick={() => setAiOpen(true)}
+            className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+          >
+            <Sparkles className="h-4 w-4" />
+            Criar com IA
+          </button>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="ai-prompt" className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Descreva o comunicado
+            </Label>
+            <textarea
+              id="ai-prompt"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              rows={2}
+              autoFocus
+              placeholder="Ex.: avisar que a entrega de hortifruti vai atrasar amanhã de manhã"
+              className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            {aiErr && <p className="text-xs text-danger">{aiErr}</p>}
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={gerarComIa}
+                disabled={aiPending || !aiPrompt.trim()}
+              >
+                {aiPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                Gerar
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setAiOpen(false);
+                  setAiErr(null);
+                }}
+                disabled={aiPending}
+              >
+                Cancelar
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                A IA preenche título e mensagem — você pode editar.
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div>
         <Label htmlFor="titulo">Título</Label>
