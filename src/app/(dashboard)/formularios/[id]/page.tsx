@@ -274,7 +274,6 @@ type RespRaw = {
   unidade_id: string;
   usuario_id: string;
   unidades: unknown;
-  profiles: unknown;
 };
 
 async function RespostasTab({
@@ -300,7 +299,7 @@ async function RespostasTab({
       supabase
         .from("respostas")
         .select(
-          "id,data_referencia,status,total_nao,total_itens,enviado_em,unidade_id,usuario_id,unidades(nome),profiles(nome,departamento_id)",
+          "id,data_referencia,status,total_nao,total_itens,enviado_em,unidade_id,usuario_id,unidades(nome)",
         )
         .eq("formulario_id", formId)
         .gte("data_referencia", startISO)
@@ -325,12 +324,34 @@ async function RespostasTab({
         .order("nome"),
     ]);
 
-  const rows: RespostaRow[] = ((data ?? []) as RespRaw[]).map((r) => {
+  // Nome/departamento de quem respondeu — pode ser usuário do dashboard (profiles)
+  // OU membro do app (identidades + rede_membros). A FK virou auth.users (0024).
+  const respList = (data ?? []) as RespRaw[];
+  const userIds = [...new Set(respList.map((r) => r.usuario_id))];
+  const nomeMap = new Map<string, { nome: string; departamento_id: string | null }>();
+  if (userIds.length) {
+    const [{ data: profs }, { data: idents }, { data: vinc }] = await Promise.all([
+      supabase.from("profiles").select("id,nome,departamento_id").in("id", userIds),
+      supabase.from("identidades").select("id,nome").in("id", userIds),
+      supabase
+        .from("rede_membros")
+        .select("identidade_id,departamento_id")
+        .eq("rede_id", redeId)
+        .in("identidade_id", userIds),
+    ]);
+    const deptoApp = new Map(
+      (vinc ?? []).map((v) => [v.identidade_id, v.departamento_id as string | null]),
+    );
+    for (const p of profs ?? [])
+      nomeMap.set(p.id, { nome: p.nome, departamento_id: p.departamento_id });
+    for (const i of idents ?? [])
+      if (!nomeMap.has(i.id))
+        nomeMap.set(i.id, { nome: i.nome, departamento_id: deptoApp.get(i.id) ?? null });
+  }
+
+  const rows: RespostaRow[] = respList.map((r) => {
     const uni = r.unidades as { nome: string } | null;
-    const ger = r.profiles as {
-      nome: string;
-      departamento_id: string | null;
-    } | null;
+    const ger = nomeMap.get(r.usuario_id) ?? null;
     return {
       id: r.id,
       data_referencia: r.data_referencia,
