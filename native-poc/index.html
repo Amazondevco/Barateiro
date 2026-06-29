@@ -1,10 +1,39 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>native-poc</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Check.AI</title>
+    <script>
+      (function () {
+        function show(msg) {
+          var r = document.getElementById("root");
+          if (r && r.children.length === 0) {
+            r.innerHTML =
+              '<pre style="white-space:pre-wrap;padding:16px;margin:0;font:13px/1.5 monospace;color:#b91c1c">' +
+              "Erro ao iniciar o app:\n\n" +
+              String(msg) +
+              "</pre>";
+          }
+        }
+        window.addEventListener("error", function (e) {
+          show((e.error && e.error.stack) || e.message || "erro");
+        });
+        window.addEventListener("unhandledrejection", function (e) {
+          show(
+            "Promise rejeitada: " +
+              ((e.reason && (e.reason.stack || e.reason.message)) || e.reason),
+          );
+        });
+        setTimeout(function () {
+          var r = document.getElementById("root");
+          if (r && r.children.length === 0) {
+            show("A interface não montou em 7s (provável falha ao carregar os assets).");
+          }
+        }, 7000);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
