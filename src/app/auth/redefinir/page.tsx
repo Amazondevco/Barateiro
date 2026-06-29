@@ -8,13 +8,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 
-// Destino dos links de convite (novo responsável de rede) e de recuperação de
-// senha. O link do e-mail traz a sessão (hash/token); aqui o usuário define a
-// senha e entra. Sem isso, os dois fluxos caíam em 404.
+// Tela de cadastro do responsável (alvo do link de convite) e de redefinição de
+// senha. O link do e-mail traz a sessão; aqui mostramos os dados já cadastrados
+// (rede + e-mail + nome) e a pessoa só define a senha para concluir.
+type Ctx = { email: string; nome: string; redeNome: string | null };
+
 export default function RedefinirSenhaPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
-  const [hasSession, setHasSession] = useState(false);
+  const [ctx, setCtx] = useState<Ctx | null>(null);
   const [senha, setSenha] = useState("");
   const [confirma, setConfirma] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,15 +25,40 @@ export default function RedefinirSenhaPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    // O client (@supabase/ssr) detecta a sessão na URL ao montar.
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setHasSession(!!session);
+
+    async function carregar() {
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
+      if (!user) {
+        setReady(true);
+        return;
+      }
+      const meta = (user.user_metadata ?? {}) as {
+        nome?: string;
+        rede_id?: string;
+      };
+      let redeNome: string | null = null;
+      if (meta.rede_id) {
+        const { data: rede } = await supabase
+          .from("redes")
+          .select("nome")
+          .eq("id", meta.rede_id)
+          .maybeSingle();
+        redeNome = (rede?.nome as string) ?? null;
+      }
+      setCtx({
+        email: user.email ?? "",
+        nome: meta.nome ?? "",
+        redeNome,
+      });
       setReady(true);
+    }
+
+    // o client (@supabase/ssr) estabelece a sessão da URL ao montar
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      void carregar();
     });
-    supabase.auth.getSession().then(({ data }) => {
-      setHasSession(!!data.session);
-      setReady(true);
-    });
+    void carregar();
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -68,36 +95,54 @@ export default function RedefinirSenhaPage() {
           <CardContent>
             {done ? (
               <div className="space-y-3 text-center">
-                <h2 className="text-lg font-semibold">Senha definida!</h2>
+                <h2 className="text-lg font-semibold">Cadastro concluído!</h2>
                 <p className="text-sm text-muted-foreground">
                   Entrando no painel…
                 </p>
               </div>
             ) : !ready ? (
               <p className="text-sm text-muted-foreground">Carregando…</p>
-            ) : !hasSession ? (
+            ) : !ctx ? (
               <div className="space-y-3 text-center">
                 <h2 className="text-lg font-semibold">Link inválido ou expirado</h2>
                 <p className="text-sm text-muted-foreground">
-                  Abra o link mais recente do e-mail ou solicite um novo.
+                  Abra o link mais recente do e-mail ou peça um novo convite.
                 </p>
                 <a
-                  href="/recuperar-senha"
+                  href="/login"
                   className="inline-block text-sm font-medium text-primary hover:underline"
                 >
-                  Solicitar novo link
+                  Ir para o login
                 </a>
               </div>
             ) : (
               <form onSubmit={onSubmit} className="space-y-4">
                 <div>
-                  <h2 className="text-lg font-semibold">Defina sua senha</h2>
+                  <h2 className="text-lg font-semibold">Concluir cadastro</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Crie uma senha para acessar o painel da sua rede.
+                    {ctx.redeNome
+                      ? `Você foi convidado para administrar ${ctx.redeNome}. Confira seus dados e defina uma senha.`
+                      : "Confira seus dados e defina uma senha."}
                   </p>
                 </div>
+
+                {ctx.redeNome && (
+                  <div>
+                    <Label>Rede</Label>
+                    <Input value={ctx.redeNome} readOnly disabled />
+                  </div>
+                )}
                 <div>
-                  <Label htmlFor="senha">Nova senha</Label>
+                  <Label>Nome</Label>
+                  <Input value={ctx.nome} readOnly disabled />
+                </div>
+                <div>
+                  <Label>E-mail</Label>
+                  <Input value={ctx.email} readOnly disabled />
+                </div>
+
+                <div>
+                  <Label htmlFor="senha">Crie uma senha</Label>
                   <Input
                     id="senha"
                     type="password"
@@ -120,7 +165,7 @@ export default function RedefinirSenhaPage() {
                 </div>
                 {error && <p className="text-sm text-danger">{error}</p>}
                 <Button type="submit" size="lg" className="w-full" disabled={loading}>
-                  {loading ? "Salvando…" : "Salvar senha e entrar"}
+                  {loading ? "Salvando…" : "Criar senha e entrar"}
                 </Button>
               </form>
             )}

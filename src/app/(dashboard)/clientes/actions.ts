@@ -47,11 +47,14 @@ export async function convidarResponsavel(
 
   if (error) {
     const msg = error.message.toLowerCase();
+    // Já existe conta (ex.: convite anterior não aceito): reenvia como
+    // recuperação — o link cai na mesma tela de cadastro e ele define a senha.
     if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
-      return {
-        error: `Já existe uma conta para ${email}. Peça para entrar ou recuperar a senha.`,
-        email,
-      };
+      const { error: recErr } = await admin.auth.resetPasswordForEmail(email, {
+        redirectTo,
+      });
+      if (recErr) return { error: recErr.message, email };
+      return { ok: true, email };
     }
     return { error: error.message, email };
   }

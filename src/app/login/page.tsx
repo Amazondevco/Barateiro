@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { LoginForm } from "./login-form";
+import { InviteHashGuard } from "./invite-guard";
 
 export const metadata = { title: "Entrar — Check.AI" };
 
 export default function LoginPage() {
   return (
     <main className="grid min-h-dvh lg:grid-cols-2">
+      <InviteHashGuard />
       {/* Formulário (esquerda) */}
       <div className="flex flex-col justify-between bg-background p-8 sm:p-12">
         {/* Logo */}
