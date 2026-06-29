@@ -17,6 +17,7 @@ const Ctx = createContext<{
 const EXTRA: Record<string, { title: string; crumb?: string }> = {
   "/": { title: "Visão geral" },
   "/clientes/nova": { title: "Nova rede" },
+  "/busca": { title: "Busca" },
 };
 
 export function routeTitle(pathname: string): { title: string; crumb?: string } {
