@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { User, FileText, ShieldCheck, Info, ChevronRight, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AddToHome } from "@/components/add-to-home";
 import { signOut } from "@/lib/auth-actions";
 
 export const metadata = { title: "Configurações — Check.AI" };
@@ -9,6 +10,9 @@ export default function ConfigPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-5">
       <h1 className="text-lg font-semibold">Configurações</h1>
+
+      {/* Instalar (some quando já instalado) */}
+      <AddToHome compact />
 
       {/* Aparência */}
       <section>

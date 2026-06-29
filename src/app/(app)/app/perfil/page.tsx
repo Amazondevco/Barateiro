@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getMeuVinculo } from "@/lib/rede-branding";
 
 export const metadata = { title: "Perfil — Check.AI" };
 
@@ -16,30 +17,14 @@ export default async function PerfilPage() {
   const sub = (claims?.claims as { sub?: string } | undefined)?.sub;
   if (!sub) redirect("/login");
 
-  const [{ data: id }, { data: membro }] = await Promise.all([
+  const [{ data: id }, m] = await Promise.all([
     supabase
       .from("identidades")
       .select("nome, email, cpf, celular, foto_url, cidade, uf")
       .eq("id", sub)
       .single(),
-    supabase
-      .from("rede_membros")
-      .select(
-        "papel, redes(nome), unidades(nome), departamentos(nome), cargos(nome)",
-      )
-      .eq("identidade_id", sub)
-      .eq("status", "ativo")
-      .limit(1)
-      .maybeSingle(),
+    getMeuVinculo(),
   ]);
-
-  const m = membro as {
-    papel: string | null;
-    redes: { nome: string } | null;
-    unidades: { nome: string } | null;
-    departamentos: { nome: string } | null;
-    cargos: { nome: string } | null;
-  } | null;
 
   const PAPEL: Record<string, string> = {
     operador: "Operador",
@@ -59,10 +44,10 @@ export default async function PerfilPage() {
 
   // Vínculo com a rede: unidade, departamento, cargo, acesso.
   const vinculo: [string, string][] = [
-    ["Rede", m?.redes?.nome ?? "—"],
-    ["Unidade", m?.unidades?.nome ?? "—"],
-    ["Departamento", m?.departamentos?.nome ?? "—"],
-    ["Cargo", m?.cargos?.nome ?? "—"],
+    ["Rede", m?.rede ?? "—"],
+    ["Unidade", m?.unidade ?? "—"],
+    ["Departamento", m?.departamento ?? "—"],
+    ["Cargo", m?.cargo ?? "—"],
     ["Acesso", m?.papel ? PAPEL[m.papel] ?? m.papel : "—"],
   ];
 

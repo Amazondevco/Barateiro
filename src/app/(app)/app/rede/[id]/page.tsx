@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { Store } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getRedeMarcaById } from "@/lib/rede-branding";
+import { AddToHome } from "@/components/add-to-home";
 import { FormsBoard, type FormItem } from "./forms-board";
 
 export const metadata = { title: "Meu app — Check.AI" };
@@ -18,7 +20,7 @@ export default async function AppRedePage({
   const { data: membro } = await supabase
     .from("rede_membros")
     .select(
-      "rede_id, status, assinatura_svg, unidade_id, departamento_id, redes(nome, logo_url, cor_primaria, banner_url), unidades(nome, tipo), cargos(nome)",
+      "rede_id, status, assinatura_svg, unidade_id, departamento_id, unidades(nome, tipo), cargos(nome)",
     )
     .eq("id", id)
     .single();
@@ -29,10 +31,13 @@ export default async function AppRedePage({
     assinatura_svg: string | null;
     unidade_id: string | null;
     departamento_id: string | null;
-    redes: { nome: string; logo_url: string | null; cor_primaria: string | null; banner_url: string | null } | null;
     unidades: { nome: string; tipo: string } | null;
     cargos: { nome: string } | null;
   };
+
+  // Marca da rede (logo/banner/cor) via service role — RLS de redes não
+  // enxerga membros do app. Escopada à rede do próprio membro.
+  const marca = await getRedeMarcaById(m.rede_id);
 
   // 1º acesso: ainda não adotou a assinatura → adota antes dos formulários.
   if (!m.assinatura_svg) redirect(`/app/rede/${id}/assinar`);
@@ -90,9 +95,9 @@ export default async function AppRedePage({
       enviadoHoje: enviados.has(f.id),
     }));
 
-  const cor = m.redes?.cor_primaria || "var(--primary)";
-  const redeNome = m.redes?.nome ?? "Minha rede";
-  const banner = m.redes?.banner_url;
+  const cor = marca?.app_cor || marca?.cor_primaria || "var(--primary)";
+  const redeNome = marca?.nome ?? "Minha rede";
+  const banner = marca?.banner_url;
   const bannerStyle: React.CSSProperties = banner
     ? {
         backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.5)), url(${banner})`,
@@ -106,10 +111,10 @@ export default async function AppRedePage({
       {/* Banner da REDE: logo + nome centralizados */}
       <div className="relative px-5 pb-7 pt-4 text-white" style={bannerStyle}>
         <div className="flex flex-col items-center gap-2.5 pt-2">
-          {m.redes?.logo_url ? (
+          {marca?.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={m.redes.logo_url}
+              src={marca.logo_url}
               alt={redeNome}
               className="h-20 w-20 rounded-2xl bg-white object-contain p-1.5 shadow-md"
             />
@@ -127,7 +132,8 @@ export default async function AppRedePage({
         </div>
       </div>
 
-      <div className="flex-1 p-4">
+      <div className="flex-1 space-y-3 p-4">
+        <AddToHome compact />
         <FormsBoard membroId={id} forms={lista} />
       </div>
     </div>
