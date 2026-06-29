@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AlertCircle, Download, ExternalLink, Smartphone } from "lucide-react";
-import Badge from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type ApkInstallerCardProps = {
