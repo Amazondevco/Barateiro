@@ -22,7 +22,7 @@ export default async function FillPage({
   const { data: form } = await supabase
     .from("formularios")
     .select(
-      "id, nome, descricao, formulario_secoes(id, titulo, ordem, permite_na, formulario_itens(id, texto, ordem, tipo, opcoes, ajuda, obriga_obs_quando_nao, obriga_foto_quando_nao))",
+      "id, nome, descricao, formulario_secoes(id, titulo, ordem, permite_na, quebra_pagina, formulario_itens(id, texto, ordem, tipo, opcoes, ajuda, obriga_obs_quando_nao, obriga_foto_quando_nao))",
     )
     .eq("id", formId)
     .single();
