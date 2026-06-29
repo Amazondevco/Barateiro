@@ -22,6 +22,13 @@ allprojects {
         google()
         mavenCentral()
     }
+    // bcprov-jdk18on 1.78+ é jar multi-release com classes Java 21; o Gradle 8.2
+    // no JDK 17 do CI falha ao instrumentá-lo. Fixa numa versão compatível.
+    configurations.all {
+        resolutionStrategy {
+            force 'org.bouncycastle:bcprov-jdk18on:1.77'
+        }
+    }
 }
 
 task clean(type: Delete) {
