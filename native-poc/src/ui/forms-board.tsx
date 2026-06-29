@@ -122,19 +122,19 @@ export function FormsBoard({
 
   return (
     <div className="space-y-3">
-      {/* busca */}
+      {/* busca — sobrepõe o banner */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Buscar formulário…"
-          className="h-10 w-full rounded-lg border border-input bg-card pl-9 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-12 w-full rounded-xl border border-border bg-card pl-11 pr-4 text-sm shadow-sm outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring"
         />
       </div>
 
       {/* filtros + ordenar */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <Popover
           label="Filtros"
           icon={SlidersHorizontal}
@@ -251,8 +251,10 @@ function Popover({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`flex h-10 items-center gap-1.5 rounded-lg border px-3 text-sm ${
-          active ? "border-primary bg-primary/10 text-primary" : "border-input"
+        className={`flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-medium ${
+          active
+            ? "border-primary bg-primary/10 text-primary"
+            : "border-border bg-card text-muted-foreground"
         }`}
       >
         <Icon className="h-4 w-4" /> {label}
@@ -303,25 +305,27 @@ function FormCard({ form, membroId }: { form: FormItem; membroId: string }) {
   return (
     <Link
       to={`/app/rede/${membroId}/form/${form.id}`}
-      className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary"
+      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary hover:shadow-md"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <ClipboardList className="h-5 w-5" />
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <ClipboardList className="h-6 w-6" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{form.nome}</p>
+        <p className="truncate text-[15px] font-semibold">{form.nome}</p>
         {form.descricao && (
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="truncate text-[13px] text-muted-foreground">
             {form.descricao}
           </p>
         )}
       </div>
-      {form.enviadoHoje && (
-        <span className="flex items-center gap-1 text-xs font-medium text-success">
-          <CircleCheck className="h-4 w-4" /> Hoje
-        </span>
-      )}
-      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        {form.enviadoHoje && (
+          <span className="flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
+            <CircleCheck className="h-3.5 w-3.5" /> Hoje
+          </span>
+        )}
+        <ChevronRight className="h-5 w-5 text-muted-foreground/60" />
+      </div>
     </Link>
   );
 }
@@ -344,7 +348,7 @@ function SortableCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 rounded-xl border border-border bg-card p-4"
+      className="flex items-center gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm"
     >
       <button
         {...attributes}
@@ -358,17 +362,22 @@ function SortableCard({
         to={`/app/rede/${membroId}/form/${form.id}`}
         className="flex min-w-0 flex-1 items-center gap-3"
       >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <ClipboardList className="h-5 w-5" />
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <ClipboardList className="h-6 w-6" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium">{form.nome}</p>
+          <p className="truncate text-[15px] font-semibold">{form.nome}</p>
           {form.descricao && (
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-[13px] text-muted-foreground">
               {form.descricao}
             </p>
           )}
         </div>
+        {form.enviadoHoje && (
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
+            <CircleCheck className="h-3.5 w-3.5" /> Hoje
+          </span>
+        )}
       </Link>
     </div>
   );

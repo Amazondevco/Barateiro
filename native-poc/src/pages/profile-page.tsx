@@ -1,4 +1,14 @@
 import { useEffect, useState } from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  CreditCard,
+  Mail,
+  MapPin,
+  Phone,
+  Store,
+} from "lucide-react";
 import { useAuth } from "../context/auth-context";
 import { fetchProfile, peekProfile } from "../lib/operator-api";
 import type { ProfileData } from "../lib/operator-types";
@@ -59,65 +69,79 @@ export function ProfilePage() {
       .join("")
       .toUpperCase() || "?";
 
-  const linhas: [string, string][] = [
-    ["E-mail", profile?.email || "—"],
-    ["CPF", fmtCpf(profile?.cpf)],
-    ["Celular", profile?.telefone || "—"],
-    ["Cidade", profile?.cidade || "—"],
+  const linhas: [LucideIcon, string, string][] = [
+    [Mail, "E-mail", profile?.email || "—"],
+    [CreditCard, "CPF", fmtCpf(profile?.cpf)],
+    [Phone, "Celular", profile?.telefone || "—"],
+    [MapPin, "Cidade", profile?.cidade || "—"],
   ];
 
-  const vinculo: [string, string][] = [
-    ["Rede", profile?.rede || "—"],
-    ["Unidade", profile?.unidade || "—"],
-    ["Cargo", profile?.cargo || "—"],
+  const vinculo: [LucideIcon, string, string][] = [
+    [Building2, "Rede", profile?.rede || "—"],
+    [Store, "Unidade", profile?.unidade || "—"],
+    [Briefcase, "Cargo", profile?.cargo || "—"],
   ];
 
   return (
-    <div className="flex flex-1 flex-col items-center p-5">
+    <div className="mx-auto w-full max-w-sm p-5">
       {error ? (
-        <p className="mb-4 w-full max-w-sm rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
+        <p className="mb-4 rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
           {error}
         </p>
       ) : null}
 
-      <div className="flex flex-col items-center gap-3 py-4">
+      <div className="mb-8 mt-4 flex flex-col items-center gap-3">
         {profile?.fotoUrl ? (
           <img
             src={profile.fotoUrl}
             alt=""
-            className="h-24 w-24 rounded-full object-cover"
+            className="h-24 w-24 rounded-full border-4 border-card object-cover shadow-md"
           />
         ) : (
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-2xl font-semibold text-primary">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-card bg-primary/10 text-2xl font-semibold text-primary shadow-md">
             {iniciais}
           </div>
         )}
-        <p className="text-lg font-semibold">{profile?.nome ?? "Operador"}</p>
+        <div className="text-center">
+          <p className="text-xl font-bold tracking-tight">
+            {profile?.nome ?? "Operador"}
+          </p>
+          {profile?.email && (
+            <p className="mt-0.5 text-sm font-medium text-muted-foreground">
+              {profile.email}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="w-full max-w-sm divide-y divide-border rounded-xl border border-border bg-card">
-        {linhas.map(([k, v]) => (
-          <div
-            key={k}
-            className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
-          >
-            <span className="shrink-0 text-muted-foreground">{k}</span>
-            <span className="truncate text-right font-medium">{v}</span>
-          </div>
-        ))}
-      </div>
+      <Section title="Dados Pessoais" rows={linhas} />
+      <Section title="Vínculo" rows={vinculo} className="mt-6" />
+    </div>
+  );
+}
 
-      <p className="mt-6 mb-2 w-full max-w-sm px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Vínculo
+function Section({
+  title,
+  rows,
+  className = "",
+}: {
+  title: string;
+  rows: [LucideIcon, string, string][];
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {title}
       </p>
-      <div className="w-full max-w-sm divide-y divide-border rounded-xl border border-border bg-card">
-        {vinculo.map(([k, v]) => (
-          <div
-            key={k}
-            className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
-          >
-            <span className="shrink-0 text-muted-foreground">{k}</span>
-            <span className="truncate text-right font-medium">{v}</span>
+      <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        {rows.map(([Icon, k, v]) => (
+          <div key={k} className="flex items-center gap-3 px-4 py-3.5 text-sm">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <Icon className="h-4 w-4" />
+            </span>
+            <span className="flex-1 font-medium text-muted-foreground">{k}</span>
+            <span className="truncate text-right font-semibold">{v}</span>
           </div>
         ))}
       </div>

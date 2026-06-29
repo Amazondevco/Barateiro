@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Mail } from "lucide-react";
+import { BellRing, Clock, Mail } from "lucide-react";
 import { fetchComunicados, peekComunicados, type Comunicado } from "../lib/operator-api";
 import { LoadingScreen } from "../ui/loading-screen";
 
@@ -54,10 +54,10 @@ export function NoticesPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-md space-y-3 p-4">
-      <header className="mt-2">
-        <h1 className="text-xl font-semibold">Avisos</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+    <div className="mx-auto w-full max-w-md space-y-4 p-5">
+      <header className="mb-2 mt-2">
+        <h1 className="text-2xl font-bold tracking-tight">Avisos</h1>
+        <p className="mt-1 text-sm font-medium text-muted-foreground">
           Comunicados da sua rede.
         </p>
       </header>
@@ -68,20 +68,44 @@ export function NoticesPage() {
         </p>
       ) : null}
 
-      {avisos.map((aviso) => (
-        <article
-          key={aviso.id}
-          className="rounded-xl border border-border bg-card p-4"
-        >
-          <p className="font-medium">{aviso.titulo}</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
-            {aviso.corpo}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {new Date(aviso.createdAt).toLocaleString("pt-BR")}
-          </p>
-        </article>
-      ))}
+      {avisos.map((aviso, i) => {
+        const novo = i === 0;
+        return (
+          <article
+            key={aviso.id}
+            className={`relative flex gap-4 overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm ${
+              novo ? "border-l-4 border-l-primary" : ""
+            }`}
+          >
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                novo
+                  ? "bg-primary/10 text-primary"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              <BellRing className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex items-start justify-between gap-2">
+                <h2 className="font-semibold leading-tight">{aviso.titulo}</h2>
+                {novo && (
+                  <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                    Novo
+                  </span>
+                )}
+              </div>
+              <p className="mb-3 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                {aviso.corpo}
+              </p>
+              <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" />
+                {new Date(aviso.createdAt).toLocaleString("pt-BR")}
+              </p>
+            </div>
+          </article>
+        );
+      })}
     </div>
   );
 }

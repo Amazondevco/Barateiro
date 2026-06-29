@@ -121,20 +121,20 @@ export function FormsBoard({
   const filtroAtivo = status !== "todos";
 
   return (
-    <div className="space-y-3">
-      {/* busca */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div className="space-y-4">
+      {/* busca — sobrepõe o banner */}
+      <div className="relative -mt-5">
+        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Buscar formulário…"
-          className="h-10 w-full rounded-lg border border-input bg-card pl-9 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-12 w-full rounded-xl border border-border bg-card pl-11 pr-4 text-sm shadow-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </div>
 
       {/* filtros + ordenar */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
         <Popover
           label="Filtros"
           icon={SlidersHorizontal}
@@ -198,7 +198,7 @@ export function FormsBoard({
       ) : modo === "custom" ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={ordenados.map((f) => f.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {ordenados.map((f) => (
                 <SortableCard key={f.id} form={f} membroId={membroId} />
               ))}
@@ -206,7 +206,7 @@ export function FormsBoard({
           </SortableContext>
         </DndContext>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {ordenados.map((f) => (
             <FormCard key={f.id} form={f} membroId={membroId} />
           ))}
@@ -241,11 +241,13 @@ function Popover({
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`flex h-10 items-center gap-1.5 rounded-lg border px-3 text-sm ${
-          active ? "border-primary bg-primary/10 text-primary" : "border-input"
+        className={`flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium shadow-sm transition-colors ${
+          active
+            ? "border-primary bg-primary/10 text-primary"
+            : "border-border bg-card text-muted-foreground hover:bg-muted"
         }`}
       >
         <Icon className="h-4 w-4" /> {label}
@@ -296,21 +298,27 @@ function FormCard({ form, membroId }: { form: FormItem; membroId: string }) {
   return (
     <Link
       href={`/app/rede/${membroId}/form/${form.id}`}
-      className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary"
+      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <ClipboardList className="h-5 w-5" />
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <ClipboardList className="h-6 w-6" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{form.nome}</p>
-        {form.descricao && <p className="truncate text-xs text-muted-foreground">{form.descricao}</p>}
+        <p className="truncate text-[15px] font-semibold">{form.nome}</p>
+        {form.descricao && (
+          <p className="truncate text-[13px] text-muted-foreground">{form.descricao}</p>
+        )}
       </div>
-      {form.enviadoHoje && (
-        <span className="flex items-center gap-1 text-xs font-medium text-success">
-          <CircleCheck className="h-4 w-4" /> Hoje
-        </span>
-      )}
-      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        {form.enviadoHoje ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
+            <CircleCheck className="h-3.5 w-3.5" /> Hoje
+          </span>
+        ) : (
+          <span className="h-5" />
+        )}
+        <ChevronRight className="h-5 w-5 text-muted-foreground/60" />
+      </div>
     </Link>
   );
 }
@@ -319,7 +327,7 @@ function SortableCard({ form, membroId }: { form: FormItem; membroId: string }) 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: form.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1 };
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-2 rounded-xl border border-border bg-card p-4">
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
       <button
         {...attributes}
         {...listeners}
@@ -328,14 +336,21 @@ function SortableCard({ form, membroId }: { form: FormItem; membroId: string }) 
       >
         <GripVertical className="h-5 w-5" />
       </button>
-      <Link href={`/app/rede/${membroId}/form/${form.id}`} className="flex min-w-0 flex-1 items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <ClipboardList className="h-5 w-5" />
+      <Link href={`/app/rede/${membroId}/form/${form.id}`} className="flex min-w-0 flex-1 items-center gap-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <ClipboardList className="h-6 w-6" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium">{form.nome}</p>
-          {form.descricao && <p className="truncate text-xs text-muted-foreground">{form.descricao}</p>}
+          <p className="truncate text-[15px] font-semibold">{form.nome}</p>
+          {form.descricao && (
+            <p className="truncate text-[13px] text-muted-foreground">{form.descricao}</p>
+          )}
         </div>
+        {form.enviadoHoje && (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
+            <CircleCheck className="h-3.5 w-3.5" /> Hoje
+          </span>
+        )}
       </Link>
     </div>
   );

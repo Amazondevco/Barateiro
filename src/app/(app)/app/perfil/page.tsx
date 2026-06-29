@@ -1,4 +1,16 @@
 import { redirect } from "next/navigation";
+import {
+  Mail,
+  CreditCard,
+  Phone,
+  MapPin,
+  Building2,
+  Store,
+  Network,
+  Briefcase,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getMeuVinculo } from "@/lib/rede-branding";
 
@@ -35,53 +47,73 @@ export default async function PerfilPage() {
   const iniciais =
     (id?.nome ?? "").split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase() || "?";
 
-  const linhas: [string, string][] = [
-    ["E-mail", id?.email ?? "—"],
-    ["CPF", fmtCpf(id?.cpf ?? null)],
-    ["Celular", id?.celular || "—"],
-    ["Cidade", id?.cidade ? `${id.cidade}${id.uf ? "/" + id.uf : ""}` : "—"],
+  const linhas: [LucideIcon, string, string][] = [
+    [Mail, "E-mail", id?.email ?? "—"],
+    [CreditCard, "CPF", fmtCpf(id?.cpf ?? null)],
+    [Phone, "Celular", id?.celular || "—"],
+    [MapPin, "Cidade", id?.cidade ? `${id.cidade}${id.uf ? "/" + id.uf : ""}` : "—"],
   ];
 
   // Vínculo com a rede: unidade, departamento, cargo, acesso.
-  const vinculo: [string, string][] = [
-    ["Rede", m?.rede ?? "—"],
-    ["Unidade", m?.unidade ?? "—"],
-    ["Departamento", m?.departamento ?? "—"],
-    ["Cargo", m?.cargo ?? "—"],
-    ["Acesso", m?.papel ? PAPEL[m.papel] ?? m.papel : "—"],
+  const vinculo: [LucideIcon, string, string][] = [
+    [Building2, "Rede", m?.rede ?? "—"],
+    [Store, "Unidade", m?.unidade ?? "—"],
+    [Network, "Departamento", m?.departamento ?? "—"],
+    [Briefcase, "Cargo", m?.cargo ?? "—"],
+    [ShieldCheck, "Acesso", m?.papel ? PAPEL[m.papel] ?? m.papel : "—"],
   ];
 
   return (
-    <div className="flex flex-1 flex-col items-center p-5">
-      <div className="flex flex-col items-center gap-3 py-4">
+    <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 py-6">
+      <div className="mb-8 mt-2 flex flex-col items-center gap-3">
         {id?.foto_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={id.foto_url} alt="" className="h-24 w-24 rounded-full object-cover" />
+          <img
+            src={id.foto_url}
+            alt=""
+            className="h-24 w-24 rounded-full border-4 border-card object-cover shadow-md"
+          />
         ) : (
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-2xl font-semibold text-primary">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-card bg-primary/10 text-2xl font-semibold text-primary shadow-md">
             {iniciais}
           </div>
         )}
-        <p className="text-lg font-semibold">{id?.nome ?? "Usuário"}</p>
+        <div className="text-center">
+          <p className="text-2xl font-bold tracking-tight">{id?.nome ?? "Usuário"}</p>
+          {id?.email && (
+            <p className="mt-0.5 text-sm font-medium text-muted-foreground">{id.email}</p>
+          )}
+        </div>
       </div>
 
-      <div className="w-full max-w-sm divide-y divide-border rounded-xl border border-border bg-card">
-        {linhas.map(([k, v]) => (
-          <div key={k} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-            <span className="shrink-0 text-muted-foreground">{k}</span>
-            <span className="truncate text-right font-medium">{v}</span>
-          </div>
-        ))}
-      </div>
+      <Secao titulo="Dados Pessoais" linhas={linhas} />
+      <Secao titulo="Vínculo Corporativo" linhas={vinculo} className="mt-6" />
+    </div>
+  );
+}
 
-      <p className="mt-6 mb-2 w-full max-w-sm px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Vínculo
-      </p>
-      <div className="w-full max-w-sm divide-y divide-border rounded-xl border border-border bg-card">
-        {vinculo.map(([k, v]) => (
-          <div key={k} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-            <span className="shrink-0 text-muted-foreground">{k}</span>
-            <span className="truncate text-right font-medium">{v}</span>
+function Secao({
+  titulo,
+  linhas,
+  className = "",
+}: {
+  titulo: string;
+  linhas: [LucideIcon, string, string][];
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <h2 className="mb-2 ml-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        {titulo}
+      </h2>
+      <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        {linhas.map(([Icon, k, v]) => (
+          <div key={k} className="flex items-center gap-3 px-4 py-3.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <Icon className="h-4 w-4" />
+            </span>
+            <span className="flex-1 text-[13px] font-medium text-muted-foreground">{k}</span>
+            <span className="max-w-[55%] truncate text-right text-sm font-semibold">{v}</span>
           </div>
         ))}
       </div>

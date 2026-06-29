@@ -77,29 +77,34 @@ export function NetworkHomePage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Banner da REDE: cor sólida do Admin + logo + nome centralizados */}
+      {/* Banner da REDE: gradiente da cor da rede + logo em cartão + nome centralizados */}
       <div
-        className="relative px-5 pb-4 pt-3 shadow-sm ring-1 ring-black/5"
-        style={{ background: cor, color: textoCor }}
+        className="relative rounded-b-3xl px-5 pb-10 pt-12 shadow-md ring-1 ring-black/5"
+        style={{
+          background: `linear-gradient(135deg, ${cor} 0%, color-mix(in srgb, ${cor} 78%, black) 100%)`,
+          color: textoCor,
+        }}
       >
-        <div className="flex flex-col items-center gap-1.5">
-          {data.brand.logoUrl ? (
-            <img
-              src={data.brand.logoUrl}
-              alt={data.brand.nome}
-              className="h-14 w-14 rounded-2xl bg-white object-contain p-1 shadow-md"
-            />
-          ) : (
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
-              <Store className="h-7 w-7" />
-            </span>
-          )}
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md">
+            {data.brand.logoUrl ? (
+              <img
+                src={data.brand.logoUrl}
+                alt={data.brand.nome}
+                className="h-full w-full rounded-2xl object-contain p-1.5"
+              />
+            ) : (
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-primary">
+                <Store className="h-6 w-6" />
+              </span>
+            )}
+          </div>
           <p className="text-xl font-bold tracking-tight">{data.brand.nome}</p>
-          <p className="text-xs opacity-80">{subtitulo}</p>
+          <p className="text-[13px] font-medium opacity-90">{subtitulo}</p>
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-md flex-1 space-y-3 p-4">
+      <div className="mx-auto -mt-5 w-full max-w-md flex-1 space-y-3 px-5">
         {error ? (
           <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
             {error}

@@ -151,6 +151,39 @@ Assistente IA (sparkle). Empilham no canto inferior direito.
 - **Offline:** envio entra em fila (IndexedDB) e sincroniza sozinho; tarja no topo
   indica offline/pendências (`OfflineSyncProvider`).
 
+### 8.1 Vocabulário visual (reskin)
+A cor de destaque é **sempre a cor da rede** (`--primary`/`bg-primary`); o laranja
+dos mockups é só placeholder. Fonte permanece **Geist**.
+- **Banner do Início:** gradiente da cor da rede (`bg-gradient-to-br from-primary to-[mais escuro]`),
+  cantos inferiores `rounded-b-3xl`, logo em cartão branco (`rounded-2xl`), nome +
+  subtítulo (unidade • cargo) centralizados em `text-primary-foreground`.
+- **Busca + filtros:** input de busca (sobrepondo o banner, `-mt-5`) + pills de
+  filtro/ordenação (`rounded-full border border-border bg-card`).
+- **Cartão de formulário:** `rounded-2xl border border-border bg-card`, ícone em
+  caixa `rounded-xl bg-primary/10 text-primary`, título + subtítulo truncados,
+  **badge de status** + chevron à direita.
+- **Badges de status:** `rounded-full px-2 py-0.5 text-xs font-semibold` —
+  Hoje/Enviado = `bg-success-bg text-success`; Pendente = `bg-warning-bg text-warning`;
+  Erro = `bg-danger-bg text-danger`.
+- **Respostas segmentadas (Sim/Não/N/A):** botões `flex-1 h-11 rounded-xl border`;
+  selecionado Sim = `border-success bg-success-bg text-success`, Não =
+  `border-danger bg-danger-bg text-danger`, N/A = `border-primary bg-primary/10 text-primary`.
+  Quando "Não", abre bloco contextual (`bg-danger-bg/40`) com botão de **foto** +
+  campo de **observação**.
+- **Progresso (preencher):** segmentos `h-1 flex-1 rounded-full`; concluído =
+  `bg-primary/50`, atual = `bg-primary`, futuro = `bg-border`. Header com voltar +
+  "Etapa X de N". Rodapé fixo com botão primário ("Próxima"/"Revisar").
+- **Revisão:** resumo agrupado por seção (cartão com linhas pergunta → badge),
+  indicador de anexo; **bloco de assinatura** expansível; rodapé Editar/Confirmar
+  (Confirmar habilita após assinar).
+- **Listagem (Formulários):** controle segmentado Enviados/Pendentes
+  (`bg-muted rounded-xl p-1`, ativo `bg-card text-primary shadow-sm` + contador).
+- **Perfil:** avatar circular grande, cartões agrupados (Dados Pessoais / Vínculo)
+  com linhas ícone + rótulo + valor; "Sair" em vermelho (`text-danger`).
+- **Config:** tema em grade de 3 (`border-primary bg-primary/10` ativo);
+  **Diagnóstico Operacional só-leitura** (status conexão, pendentes, última sync —
+  sem botão de sincronizar manual); "Sair da conta".
+
 ### Ícone/Splash do PWA
 Gerado por rede em `/api/app-icon?rede=<id>`: **fundo na cor da marca + logo num
 cartão branco** central (512×512). `manifest` e `apple-touch` apontam para ele;

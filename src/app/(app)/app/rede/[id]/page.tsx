@@ -107,40 +107,45 @@ export default async function AppRedePage({
 
   const cor = marca?.app_cor || marca?.cor_primaria || "#0f172a";
   const redeNome = marca?.nome ?? "Minha rede";
-  // Fundo = cor sólida do Admin. Texto adapta (escuro em cor clara).
+  // Fundo = gradiente da cor do Admin (mais escuro no canto). Texto adapta
+  // (escuro em cor clara).
   const textoCor = isLightHex(cor) ? "#0f172a" : "#ffffff";
-  const bannerStyle: React.CSSProperties = { background: cor, color: textoCor };
+  const bannerStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${cor} 0%, color-mix(in srgb, ${cor} 80%, black) 100%)`,
+    color: textoCor,
+  };
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Banner da REDE: cor sólida do Admin + logo + nome centralizados */}
+      {/* Banner da REDE: gradiente da cor do Admin + logo (cartão branco) +
+          nome/subtítulo centralizados; cantos inferiores arredondados. */}
       <div
-        className="relative px-5 pb-4 pt-3 shadow-sm ring-1 ring-black/5"
+        className="relative rounded-b-3xl px-5 pb-8 pt-10 shadow-md ring-1 ring-black/5"
         style={bannerStyle}
       >
-        <div className="flex flex-col items-center gap-1.5">
-          {marca?.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={marca.logo_url}
-              alt={redeNome}
-              className="h-14 w-14 rounded-2xl bg-white object-contain p-1 shadow-md"
-            />
-          ) : (
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
-              <Store className="h-7 w-7" />
-            </span>
-          )}
-          <p className="text-xl font-bold tracking-tight">{redeNome}</p>
+        <div className="mx-auto flex max-w-md flex-col items-center gap-2">
+          <span className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md">
+            {marca?.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={marca.logo_url}
+                alt={redeNome}
+                className="h-full w-full rounded-2xl object-contain p-1.5"
+              />
+            ) : (
+              <Store className="h-8 w-8 text-primary" />
+            )}
+          </span>
+          <h1 className="text-xl font-bold tracking-tight">{redeNome}</h1>
           {(m.unidades?.nome || m.cargos?.nome) && (
-            <p className="text-xs opacity-80">
-              {[m.unidades?.nome, m.cargos?.nome].filter(Boolean).join(" · ")}
+            <p className="text-[13px] font-medium opacity-90">
+              {[m.unidades?.nome, m.cargos?.nome].filter(Boolean).join(" • ")}
             </p>
           )}
         </div>
       </div>
 
-      <div className="flex-1 space-y-3 p-4">
+      <div className="mx-auto w-full max-w-md flex-1 px-4">
         <AddToHome compact />
         <FormsBoard membroId={id} forms={lista} />
       </div>
