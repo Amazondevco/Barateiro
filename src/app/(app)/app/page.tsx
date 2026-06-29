@@ -1,10 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Building2, Clock, ChevronRight, LogOut, Store } from "lucide-react";
+import { Building2, Clock, ChevronRight, Store } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "@/lib/auth-actions";
-import { UserSwitcher } from "@/components/user-switcher";
-import { DEV_EMAILS } from "@/lib/dev-accounts";
 
 export const metadata = { title: "Meu app — Check.AI" };
 
@@ -18,16 +15,8 @@ type Membro = {
 export default async function AppHomePage() {
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
-  const c = claims?.claims as { sub?: string; email?: string } | undefined;
-  const sub = c?.sub;
+  const sub = (claims?.claims as { sub?: string } | undefined)?.sub;
   if (!sub) redirect("/login");
-  const email = c?.email ?? "";
-
-  const { data: ident } = await supabase
-    .from("identidades")
-    .select("nome, foto_url")
-    .eq("id", sub)
-    .single();
 
   const { data: membrosRaw } = await supabase
     .from("rede_membros")
@@ -40,48 +29,11 @@ export default async function AppHomePage() {
   // Uma unidade ativa → entra DIRETO (sem passos intermediários).
   if (ativos.length === 1) redirect(`/app/rede/${ativos[0].id}`);
 
-  const iniciais =
-    (ident?.nome ?? "")
-      .split(" ")
-      .slice(0, 2)
-      .map((w: string) => w[0])
-      .join("")
-      .toUpperCase() || "?";
-
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between border-b border-border p-4">
-        <div className="flex items-center gap-3">
-          {ident?.foto_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={ident.foto_url} alt="" className="h-10 w-10 rounded-full object-cover" />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-              {iniciais}
-            </div>
-          )}
-          <div>
-            <p className="text-sm font-semibold leading-tight">{ident?.nome ?? "Bem-vindo"}</p>
-            <p className="text-xs text-muted-foreground">
-              {ativos.length > 1 ? "Escolha a unidade" : "Meu app"}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          {DEV_EMAILS.includes(email) && <UserSwitcher currentEmail={email} />}
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="text-muted-foreground hover:text-foreground"
-              aria-label="Sair"
-              title="Sair"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </form>
-        </div>
-      </header>
-
+      {ativos.length > 1 && (
+        <p className="px-4 pt-4 text-sm font-medium text-muted-foreground">Escolha a unidade</p>
+      )}
       <div className="flex-1 space-y-3 p-4">
         {/* >1 unidade ativa → escolha rápida */}
         {ativos.map((m) => (

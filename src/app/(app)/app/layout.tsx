@@ -1,15 +1,27 @@
-import { SuggestionFab } from "@/components/suggestion-fab";
+import { createClient } from "@/lib/supabase/server";
+import { AppChrome } from "@/components/app-chrome";
 
-// Telas logadas do app (não cobre /cadastro e /termo, que ficam no layout pai).
-export default function AppLoggedLayout({
+export default async function AppLoggedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const c = claims?.claims as { sub?: string; email?: string } | undefined;
+  let nome: string | undefined;
+  if (c?.sub) {
+    const { data } = await supabase
+      .from("identidades")
+      .select("nome")
+      .eq("id", c.sub)
+      .maybeSingle();
+    nome = data?.nome ?? undefined;
+  }
+
   return (
-    <>
+    <AppChrome nome={nome} email={c?.email ?? ""}>
       {children}
-      <SuggestionFab />
-    </>
+    </AppChrome>
   );
 }
