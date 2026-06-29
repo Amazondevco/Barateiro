@@ -1,0 +1,55 @@
+name: Build APK Android (POC)
+
+# Compila o app nativo (native-poc) e publica um APK de TESTE (debug).
+# Rode manualmente em Actions → "Build APK Android (POC)" → Run workflow.
+# Saídas: artefato "check-ai-apk" (baixável na run) + release "apk-latest".
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar e buildar a web (Vite)
+        working-directory: native-poc
+        run: |
+          npm ci
+          npm run build
+          npx cap sync android
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Compilar APK de debug
+        working-directory: native-poc/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Publicar artefato (baixável na run)
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-ai-apk
+          path: native-poc/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publicar release apk-latest
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-latest
+          name: APK de teste (mais recente)
+          prerelease: true
+          files: native-poc/android/app/build/outputs/apk/debug/app-debug.apk

@@ -100,6 +100,12 @@ export function ApkInstallerCard({
             no ambiente.
           </div>
         )}
+
+        <p className="text-xs text-muted-foreground">
+          iPhone (iOS) não instala por arquivo .apk — o teste no iPhone é via
+          TestFlight/App Store (requer conta Apple Developer). Por enquanto, teste
+          no Android.
+        </p>
       </CardContent>
     </Card>
   );
