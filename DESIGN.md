@@ -189,3 +189,9 @@ Botões de resposta selecionados: `border-primary bg-primary/10 text-primary`.
 - O banner usa `position: sticky`, formato pill, fundo branco translúcido, `--border`, sombra suave e icones lucide pequenos.
 - Estados de erro usam `--danger`; contadores e cartoes de fila usam `--muted`, `--foreground` e `--muted-foreground`.
 - A tela de Configuracoes e o lugar canonico para diagnostico operacional: conexao atual, contagem de pendentes/sincronizados/erros e botao "Sincronizar agora".
+
+## App nativo - deep links
+
+- Deep links usam o scheme `checkai://` enquanto o app estiver em POC/debug.
+- Links devem abrir rotas internas sem criar tela intermediaria; se nao houver sessao, o fluxo normal de login assume.
+- Rotas documentadas ficam em `docs/TESTE-DEEP-LINK-NATIVO.md` para testes com ADB/Xcode.

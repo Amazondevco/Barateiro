@@ -11,10 +11,12 @@ import { FillFormPage } from "./pages/fill-form-page";
 import { ProfilePage } from "./pages/profile-page";
 import { ConfigPage } from "./pages/config-page";
 import { LoadingScreen } from "./ui/loading-screen";
+import { DeepLinkHandler } from "./ui/deep-link-handler";
 
 export default function App() {
   return (
     <AuthProvider>
+      <DeepLinkHandler />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
