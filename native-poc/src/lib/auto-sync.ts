@@ -1,6 +1,7 @@
 import { Network } from "@capacitor/network";
 import { App as CapacitorApp } from "@capacitor/app";
 import { initializeQueueStore } from "./queue-store";
+import { warmCache } from "./offline-cache";
 import { syncQueue } from "./sync";
 
 // Sincronização automática e contínua, sem ação do usuário:
@@ -25,6 +26,7 @@ export async function runSync() {
 }
 
 export async function startAutoSync() {
+  void warmCache(); // aquece o cache em memória → navegação instantânea
   await initializeQueueStore();
   void runSync(); // ao abrir / login
 

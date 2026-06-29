@@ -176,7 +176,7 @@ export function FillFormPage() {
         await syncQueue();
       }
 
-      navigate(`/app/rede/${memberId}`);
+      navigate("/app/formularios");
     } catch (submitError) {
       setError(
         submitError instanceof Error

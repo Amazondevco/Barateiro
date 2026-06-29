@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
-import { fetchComunicados, type Comunicado } from "../lib/operator-api";
+import { fetchComunicados, peekComunicados, type Comunicado } from "../lib/operator-api";
 import { LoadingScreen } from "../ui/loading-screen";
 
 export function NoticesPage() {
-  const [loading, setLoading] = useState(true);
-  const [avisos, setAvisos] = useState<Comunicado[]>([]);
+  const initial = peekComunicados();
+  const [loading, setLoading] = useState(initial === null);
+  const [avisos, setAvisos] = useState<Comunicado[]>(initial ?? []);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

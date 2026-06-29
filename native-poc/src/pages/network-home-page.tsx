@@ -5,6 +5,7 @@ import { useAuth } from "../context/auth-context";
 import {
   applyPrimaryColor,
   fetchNetworkHome,
+  peekNetworkHome,
   type NetworkHomeData,
 } from "../lib/operator-api";
 import { isLightHex } from "../lib/utils";
@@ -14,8 +15,9 @@ import { FormsBoard } from "../ui/forms-board";
 export function NetworkHomePage() {
   const { memberId = "" } = useParams();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<NetworkHomeData | null>(null);
+  const initial = peekNetworkHome(memberId);
+  const [loading, setLoading] = useState(initial === null);
+  const [data, setData] = useState<NetworkHomeData | null>(initial);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Building2, ChevronRight, Store } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
-import { fetchMemberships, type Membership } from "../lib/operator-api";
+import { fetchMemberships, peekMemberships, type Membership } from "../lib/operator-api";
 import { LoadingScreen } from "../ui/loading-screen";
 
 export function MembershipsPage() {
-  const [loading, setLoading] = useState(true);
-  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const initial = peekMemberships();
+  const [loading, setLoading] = useState(initial === null);
+  const [memberships, setMemberships] = useState<Membership[]>(initial ?? []);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

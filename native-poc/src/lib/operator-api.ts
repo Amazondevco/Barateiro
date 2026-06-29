@@ -1,6 +1,14 @@
 import { supabase } from "./supabase";
-import { withCache } from "./offline-cache";
+import { withCache, peek } from "./offline-cache";
 import type { FormDefinition, ProfileData } from "./operator-types";
+
+// Leituras síncronas do cache em memória — estado inicial instantâneo das telas.
+export const peekMemberships = () => peek<Membership[]>("memberships");
+export const peekNetworkHome = (memberId: string) =>
+  peek<NetworkHomeData>(`home:${memberId}`);
+export const peekProfile = (userId: string) => peek<ProfileData>(`profile:${userId}`);
+export const peekComunicados = () => peek<Comunicado[]>("comunicados");
+export const peekEnviados = () => peek<Enviado[]>("enviados");
 
 export type Membership = {
   id: string;
@@ -250,6 +258,41 @@ async function _fetchComunicados(): Promise<Comunicado[]> {
     titulo: String(row.titulo),
     corpo: String(row.corpo),
     createdAt: String(row.created_at),
+  }));
+}
+
+export type Enviado = {
+  id: string;
+  formNome: string;
+  dataReferencia: string;
+  enviadoEm: string;
+  totalItens: number;
+};
+
+// Respostas já enviadas (no servidor) do próprio operador. RLS resp_membro_read
+// garante que só vêm as dele. Cacheado para aparecer também offline.
+export function fetchEnviados(onFresh?: (v: Enviado[]) => void) {
+  return withCache("enviados", _fetchEnviados, onFresh);
+}
+
+async function _fetchEnviados(): Promise<Enviado[]> {
+  const { data, error } = await supabase
+    .from("respostas")
+    .select("id, data_referencia, enviado_em, total_itens, formularios(nome)")
+    .order("enviado_em", { ascending: false })
+    .limit(50);
+
+  if (error) throw error;
+
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    formNome:
+      typeof row.formularios === "object" && row.formularios && "nome" in row.formularios
+        ? String((row.formularios as { nome: string | null }).nome ?? "Formulário")
+        : "Formulário",
+    dataReferencia: String(row.data_referencia),
+    enviadoEm: String(row.enviado_em),
+    totalItens: Number(row.total_itens ?? 0),
   }));
 }
 

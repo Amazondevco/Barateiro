@@ -1,35 +1,72 @@
 import { Preferences } from "@capacitor/preferences";
 
-// Cache de leitura para funcionar offline: guarda o último resultado de cada
-// consulta (memberships, home da rede, definição de formulário, perfil, avisos)
-// e o devolve quando não há internet ou a consulta falha.
+// Cache de leitura para funcionar offline e tornar a navegação instantânea.
+// Duas camadas:
+//  - memória (Map): leitura SÍNCRONA → a tela já monta com o dado, sem spinner.
+//  - Preferences: persiste entre sessões; aquecido para a memória no boot.
 
 const PREFIX = "cache:";
+const mem = new Map<string, unknown>();
 
 function online() {
   return typeof navigator === "undefined" ? true : navigator.onLine !== false;
 }
 
+// Leitura síncrona da memória (usada para o estado inicial das telas).
+export function peek<T>(key: string): T | null {
+  return mem.has(key) ? (mem.get(key) as T) : null;
+}
+
 async function readCache<T>(key: string): Promise<T | null> {
+  if (mem.has(key)) return mem.get(key) as T;
   try {
     const { value } = await Preferences.get({ key: PREFIX + key });
-    return value ? (JSON.parse(value) as T) : null;
+    if (!value) return null;
+    const parsed = JSON.parse(value) as T;
+    mem.set(key, parsed);
+    return parsed;
   } catch {
     return null;
   }
 }
 
 async function writeCache<T>(key: string, data: T) {
+  mem.set(key, data);
   try {
     await Preferences.set({ key: PREFIX + key, value: JSON.stringify(data) });
   } catch {
-    /* cota cheia / storage indisponível — ignora silenciosamente */
+    /* cota cheia / storage indisponível — ignora */
   }
 }
 
-// Cache-first (stale-while-revalidate): se há cache, devolve NA HORA (navegação
-// instantânea, sem spinner) e revalida em segundo plano — quando o dado fresco
-// chega, chama onRevalidate para a tela se atualizar. Sem cache, busca normal.
+// Carrega tudo que está em disco para a memória (chamado no boot), para que a
+// primeira visita a cada aba já seja instantânea (peek encontra o dado).
+export async function warmCache() {
+  try {
+    const { keys } = await Preferences.keys();
+    await Promise.all(
+      keys
+        .filter((k) => k.startsWith(PREFIX))
+        .map(async (k) => {
+          const short = k.slice(PREFIX.length);
+          if (mem.has(short)) return;
+          const { value } = await Preferences.get({ key: k });
+          if (!value) return;
+          try {
+            mem.set(short, JSON.parse(value));
+          } catch {
+            /* ignora entrada corrompida */
+          }
+        }),
+    );
+  } catch {
+    /* ignora */
+  }
+}
+
+// Cache-first (stale-while-revalidate): devolve o cache NA HORA (memória →
+// disco) e revalida em segundo plano; quando o dado fresco chega, chama
+// onRevalidate para a tela se atualizar. Sem cache, busca normal.
 export async function withCache<T>(
   key: string,
   fetcher: () => Promise<T>,
@@ -52,7 +89,6 @@ export async function withCache<T>(
     return cached;
   }
 
-  // Primeira vez (sem cache): precisa buscar.
   const fresh = await fetcher();
   void writeCache(key, fresh);
   return fresh;
@@ -60,6 +96,7 @@ export async function withCache<T>(
 
 // Limpa o cache (ex.: no logout, para não vazar dados entre contas).
 export async function clearCache() {
+  mem.clear();
   try {
     const { keys } = await Preferences.keys();
     await Promise.all(

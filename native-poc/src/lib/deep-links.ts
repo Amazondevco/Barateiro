@@ -3,6 +3,8 @@ const routeAliases: Record<string, string> = {
   inicio: "/app",
   home: "/app",
   avisos: "/app/avisos",
+  formularios: "/app/formularios",
+  enviados: "/app/formularios",
   perfil: "/app/perfil",
   config: "/app/config",
   configuracoes: "/app/config",

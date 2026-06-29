@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/auth-context";
-import { fetchProfile } from "../lib/operator-api";
+import { fetchProfile, peekProfile } from "../lib/operator-api";
 import type { ProfileData } from "../lib/operator-types";
 import { LoadingScreen } from "../ui/loading-screen";
 
@@ -13,8 +13,9 @@ function fmtCpf(cpf: string | null | undefined) {
 
 export function ProfilePage() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const initial = user?.id ? peekProfile(user.id) : null;
+  const [loading, setLoading] = useState(initial === null);
+  const [profile, setProfile] = useState<ProfileData | null>(initial);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
