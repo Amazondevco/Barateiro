@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
-import { Upload, Loader2, Check, Smartphone } from "lucide-react";
+import { Upload, Loader2, Check, Smartphone, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { updateAplicativoRede, type AppRedeState } from "./aplicativo-actions";
@@ -142,9 +142,16 @@ function ImageField({
           )}
         </div>
         <div className="space-y-1">
-          <Button type="button" variant="outline" size="sm" onClick={() => ref.current?.click()} disabled={subindo}>
-            {subindo ? <><Loader2 className="h-4 w-4 animate-spin" /> Enviando…</> : <><Upload className="h-4 w-4" /> {value ? "Trocar" : "Escolher"}</>}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => ref.current?.click()} disabled={subindo}>
+              {subindo ? <><Loader2 className="h-4 w-4 animate-spin" /> Enviando…</> : <><Upload className="h-4 w-4" /> {value ? "Trocar" : "Escolher"}</>}
+            </Button>
+            {value && !subindo && (
+              <Button type="button" variant="ghost" size="sm" onClick={() => onChange("")}>
+                <Trash2 className="h-4 w-4" /> Remover
+              </Button>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground">{hint}</p>
         </div>
       </div>
