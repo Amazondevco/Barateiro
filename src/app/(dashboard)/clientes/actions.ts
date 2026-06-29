@@ -2,9 +2,62 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { getSessionContext } from "@/lib/auth";
 
 export type FormState = { error?: string; ok?: boolean };
+
+// Convida o responsável (contato) da rede a se cadastrar como admin dela.
+// Cria o usuário no Auth com metadata (papel/rede_id) — o trigger handle_new_user
+// provisiona o profile — e dispara o e-mail de convite (link → /auth/redefinir).
+export async function convidarResponsavel(
+  redeId: string,
+): Promise<{ ok?: boolean; error?: string; email?: string }> {
+  const { profile } = await getSessionContext();
+  if (profile?.papel !== "super_admin") {
+    return { error: "Apenas super admin pode convidar responsáveis." };
+  }
+
+  const admin = createAdminClient();
+  const { data: rede } = await admin
+    .from("redes")
+    .select("id, nome, contato_nome, contato_email")
+    .eq("id", redeId)
+    .single();
+
+  const email = rede?.contato_email?.trim();
+  if (!email) {
+    return { error: "Esta rede não tem e-mail de contato cadastrado." };
+  }
+
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const redirectTo = host ? `${proto}://${host}/auth/redefinir` : undefined;
+
+  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: {
+      nome: rede?.contato_nome ?? "",
+      papel: "admin_supermercado",
+      rede_id: rede!.id,
+    },
+    redirectTo,
+  });
+
+  if (error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+      return {
+        error: `Já existe uma conta para ${email}. Peça para entrar ou recuperar a senha.`,
+        email,
+      };
+    }
+    return { error: error.message, email };
+  }
+
+  return { ok: true, email };
+}
 
 function parseRede(formData: FormData) {
   const dias = formData
@@ -50,6 +103,16 @@ export async function createRede(
     .single();
 
   if (error) return { error: error.message };
+
+  // Convida o responsável automaticamente (best-effort; não bloqueia a criação).
+  if (payload.contato_email) {
+    try {
+      await convidarResponsavel(data.id);
+    } catch {
+      /* o convite pode ser reenviado depois na tela da rede */
+    }
+  }
+
   revalidatePath("/clientes");
   redirect(`/clientes/${data.id}`);
 }

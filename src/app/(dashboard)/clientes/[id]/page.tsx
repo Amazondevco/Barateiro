@@ -13,6 +13,7 @@ import { createUnidade, setUnidadeStatus } from "./unidade-actions";
 import { AddUnidadeForm } from "./add-unidade-form";
 import { AddUsuarioForm } from "@/components/add-usuario-form";
 import { createUsuario } from "../../usuarios/actions";
+import { ConviteResponsavelButton } from "./convite-button";
 
 const TABS = [
   { key: "dados", label: "Dados" },
@@ -191,7 +192,8 @@ export default async function RedeDetailPage({
 
       {tab === "usuarios" && (
         <div className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between gap-3">
+            <ConviteResponsavelButton redeId={id} email={rede.contato_email} />
             <AddUsuarioForm
               action={createUsuario}
               redeId={id}
