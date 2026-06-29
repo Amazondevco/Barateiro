@@ -15,7 +15,7 @@ export default async function AppRedePage({
 
   const { data: membro } = await supabase
     .from("rede_membros")
-    .select("rede_id, status, assinatura_svg, redes(nome), unidades(nome), cargos(nome)")
+    .select("rede_id, status, assinatura_svg, unidade_id, departamento_id, redes(nome), unidades(nome, tipo), cargos(nome)")
     .eq("id", id)
     .single();
   if (!membro) notFound();
@@ -23,8 +23,10 @@ export default async function AppRedePage({
     rede_id: string;
     status: string;
     assinatura_svg: string | null;
+    unidade_id: string | null;
+    departamento_id: string | null;
     redes: { nome: string } | null;
-    unidades: { nome: string } | null;
+    unidades: { nome: string; tipo: string } | null;
     cargos: { nome: string } | null;
   };
 
@@ -33,12 +35,42 @@ export default async function AppRedePage({
 
   const { data: forms } = await supabase
     .from("formularios")
-    .select("id, nome, descricao")
+    .select(
+      "id, nome, descricao, tipo_unidade, dias_semana, formulario_unidades(unidade_id), formulario_departamentos(departamento_id)",
+    )
     .eq("rede_id", m.rede_id)
     .eq("status", "ativo")
     .order("nome");
-  type Form = { id: string; nome: string; descricao: string | null };
-  const lista = (forms ?? []) as Form[];
+
+  type Form = {
+    id: string;
+    nome: string;
+    descricao: string | null;
+    tipo_unidade: string | null;
+    dias_semana: number[] | null;
+    formulario_unidades: { unidade_id: string }[];
+    formulario_departamentos: { departamento_id: string }[];
+  };
+
+  // Segmentação: formulário aparece se casa com unidade/tipo, departamento e dia.
+  const diaJs = new Date().getDay(); // 0=Dom..6=Sáb
+  const diaIso = diaJs === 0 ? 7 : diaJs; // 1=Seg..7=Dom
+  const tipoUni = m.unidades?.tipo ?? null;
+
+  const lista = ((forms ?? []) as Form[]).filter((f) => {
+    if (tipoUni && f.tipo_unidade && f.tipo_unidade !== tipoUni) return false;
+
+    const us = (f.formulario_unidades ?? []).map((x) => x.unidade_id);
+    if (us.length && (!m.unidade_id || !us.includes(m.unidade_id))) return false;
+
+    const ds = (f.formulario_departamentos ?? []).map((x) => x.departamento_id);
+    if (ds.length && (!m.departamento_id || !ds.includes(m.departamento_id))) return false;
+
+    const dias = f.dias_semana ?? [];
+    if (dias.length && !dias.includes(diaIso)) return false;
+
+    return true;
+  });
 
   const unidade = m.unidades?.nome ?? m.redes?.nome ?? "Minha unidade";
   const subtitulo = [m.redes?.nome, m.cargos?.nome].filter(Boolean).join(" · ");

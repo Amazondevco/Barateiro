@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Home, Mail, User, Settings, ArrowLeftRight, LogOut } from "lucide-react";
+import { Menu, X, Home, Bell, ClipboardCheck, User, Settings, ArrowLeftRight, LogOut } from "lucide-react";
 import { signOut } from "@/lib/auth-actions";
 
 const ITENS = [
   { href: "/app", label: "Início", icon: Home },
-  { href: "/app/avisos", label: "Avisos", icon: Mail },
+  { href: "/app/avisos", label: "Avisos", icon: Bell },
+  { href: "/app/formularios", label: "Formulários enviados", icon: ClipboardCheck },
   { href: "/app/perfil", label: "Perfil", icon: User },
   { href: "/app/config", label: "Configurações", icon: Settings },
 ];
