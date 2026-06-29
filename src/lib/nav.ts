@@ -8,6 +8,7 @@ import {
   Receipt,
   LifeBuoy,
   Settings,
+  Lightbulb,
   type LucideIcon,
 } from "lucide-react";
 import type { Papel } from "@/lib/types";
@@ -58,6 +59,12 @@ export const NAV: NavItem[] = [
     label: "Faturamento",
     icon: Receipt,
     roles: ["super_admin"], // admin não vê faturamento
+  },
+  {
+    href: "/sugestoes",
+    label: "Sugestões",
+    icon: Lightbulb,
+    roles: ["super_admin", "admin_supermercado"],
   },
   {
     href: "/suporte",
