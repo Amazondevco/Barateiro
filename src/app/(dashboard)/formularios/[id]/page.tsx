@@ -6,11 +6,14 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { FormBuilder } from "../form-builder";
 import { RespostasView, type RespostaRow } from "./respostas-view";
+import { RelatoriosView } from "./relatorios-view";
+import { carregarBase, computar, type Kind } from "@/lib/relatorios";
 import type { ItemTipo, UnidadeTipo } from "@/lib/types";
 
 const TABS = [
   { key: "modelo", label: "Modelo" },
   { key: "respostas", label: "Respostas" },
+  { key: "painel", label: "Painel" },
 ];
 
 type Periodo = "dia" | "semana" | "mes";
@@ -76,6 +79,8 @@ export default async function FormularioDetailPage({
           periodo={periodo}
           refIso={ref}
         />
+      ) : tab === "painel" ? (
+        <PainelTab supabase={supabase} redeId={redeId} formId={id} />
       ) : (
         <ModeloTab supabase={supabase} redeId={redeId} form={form} />
       )}
@@ -94,6 +99,41 @@ type Form = {
   disponivel_ate: string | null;
   dias_semana: number[] | null;
 };
+
+async function PainelTab({
+  supabase,
+  redeId,
+  formId,
+}: {
+  supabase: SB;
+  redeId: string;
+  formId: string;
+}) {
+  const [{ data: rels }, base] = await Promise.all([
+    supabase
+      .from("relatorios")
+      .select("id, titulo, kind, spec, origem, ordem")
+      .eq("formulario_id", formId)
+      .order("ordem"),
+    carregarBase(supabase, formId, redeId),
+  ]);
+  const relatorios = (
+    (rels ?? []) as {
+      id: string;
+      titulo: string;
+      kind: Kind;
+      spec: { topN?: number } | null;
+      origem: string;
+    }[]
+  ).map((r) => ({
+    id: r.id,
+    titulo: r.titulo,
+    kind: r.kind,
+    origem: r.origem,
+    data: computar(r.kind, r.spec ?? {}, base),
+  }));
+  return <RelatoriosView formId={formId} relatorios={relatorios} />;
+}
 
 async function ModeloTab({
   supabase,

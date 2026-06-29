@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { gerarPainelIA } from "./[id]/relatorio-actions";
 import type { ItemTipo, UnidadeTipo } from "@/lib/types";
 
 export type ItemDraft = {
@@ -45,6 +46,7 @@ export async function saveFormulario(
 
   const supabase = await createClient();
   let id = formId;
+  const ehNovo = !formId;
 
   const meta = {
     nome: payload.nome.trim(),
@@ -144,6 +146,15 @@ export async function saveFormulario(
     await supabase.from("formulario_usuarios").insert(
       payload.usuarios.map((user_id) => ({ formulario_id: id, user_id })),
     );
+  }
+
+  // Formulário novo → a IA já monta o painel de relatórios (não bloqueia o save).
+  if (ehNovo && id) {
+    try {
+      await gerarPainelIA(id);
+    } catch {
+      /* painel pode ser gerado depois na aba Painel */
+    }
   }
 
   revalidatePath("/formularios");

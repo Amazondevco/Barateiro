@@ -123,6 +123,12 @@ Assistente IA (sparkle). Empilham no canto inferior direito.
 - Busca global (`TopbarSearch`) → dropdown por seções → `/busca` (ver `src/lib/search.ts`).
 - Tabelas/listas com linhas clicáveis levam ao detalhe; painel lateral para detalhe
   de resposta (`resposta-panel`).
+- **Painel de relatórios** (aba "Painel" do formulário): cartões `rounded-xl border
+  bg-card` com gráficos **leves em SVG/CSS** (donut, barras, linha, KPI) na cor
+  `--primary`/`stroke-primary`/`fill-primary` — **sem libs de chart**. A IA (Groq)
+  propõe os relatórios de um **catálogo fixo de tipos** (`src/lib/relatorios.ts`);
+  o app calcula com as respostas reais. Novo relatório por **texto ou áudio**
+  (Whisper). Mantenha esse estilo de gráfico minimalista.
 
 ---
 
