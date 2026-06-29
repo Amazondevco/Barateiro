@@ -21,8 +21,8 @@ export default function LoginPage() {
           </span>
         </Link>
 
-        {/* Form central */}
-        <div className="mx-auto w-full max-w-sm py-10">
+        {/* Form — alinhado à esquerda, mesma coluna da logo e do footer */}
+        <div className="w-full max-w-sm py-10">
           <h1 className="text-3xl font-bold tracking-tight">Entrar</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Acesse o painel da sua rede.
@@ -32,7 +32,7 @@ export default function LoginPage() {
             <LoginForm />
           </div>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          <p className="mt-6 text-sm text-muted-foreground">
             Ainda não tem uma conta?{" "}
             <Link href="/cadastro" className="font-semibold text-primary hover:underline">
               Cadastre-se
@@ -41,7 +41,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Check.AI · Gestão para redes de supermercado
+          © Amazon Dev &amp; Co. · {new Date().getFullYear()}
         </p>
       </div>
 
