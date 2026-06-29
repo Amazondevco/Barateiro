@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   Building2,
   ClipboardList,
-  Smartphone,
   Users,
   BarChart3,
   Receipt,
@@ -35,12 +34,6 @@ export const NAV: NavItem[] = [
     label: "Formulários",
     icon: ClipboardList,
     roles: ["admin_supermercado", "gerente"], // página da rede, não da plataforma
-  },
-  {
-    href: "/aplicativos",
-    label: "Aplicativos",
-    icon: Smartphone,
-    roles: ["admin_supermercado"], // admin da rede decide como é o app
   },
   {
     href: "/usuarios",

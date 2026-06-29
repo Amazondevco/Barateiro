@@ -1,5 +1,30 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AppChrome } from "@/components/app-chrome";
+
+// iOS usa apple-touch-icon (não o manifest) → ícone da rede por sessão.
+export async function generateMetadata(): Promise<Metadata> {
+  let apple = "/icon-512.svg";
+  try {
+    const supabase = await createClient();
+    const { data: claims } = await supabase.auth.getClaims();
+    const sub = (claims?.claims as { sub?: string } | undefined)?.sub;
+    if (sub) {
+      const { data: membro } = await supabase
+        .from("rede_membros")
+        .select("redes(app_icone_url, logo_url)")
+        .eq("identidade_id", sub)
+        .eq("status", "ativo")
+        .limit(1)
+        .maybeSingle();
+      const rede = (membro as { redes?: { app_icone_url: string | null; logo_url: string | null } } | null)?.redes;
+      if (rede) apple = rede.app_icone_url || rede.logo_url || apple;
+    }
+  } catch {
+    /* fallback */
+  }
+  return { icons: { apple } };
+}
 
 export default async function AppLoggedLayout({
   children,

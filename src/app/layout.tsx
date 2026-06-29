@@ -36,6 +36,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        {/* Manifest dinâmico por rede — use-credentials envia o cookie de sessão */}
+        <link rel="manifest" href="/api/manifest" crossOrigin="use-credentials" />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch(e){}`,

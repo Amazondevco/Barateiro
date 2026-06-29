@@ -17,7 +17,7 @@ export default async function AppRedePage({
   const { data: membro } = await supabase
     .from("rede_membros")
     .select(
-      "rede_id, status, assinatura_svg, unidade_id, departamento_id, redes(nome, logo_url, cor_primaria), unidades(nome, tipo), cargos(nome)",
+      "rede_id, status, assinatura_svg, unidade_id, departamento_id, redes(nome, logo_url, cor_primaria, banner_url), unidades(nome, tipo), cargos(nome)",
     )
     .eq("id", id)
     .single();
@@ -28,7 +28,7 @@ export default async function AppRedePage({
     assinatura_svg: string | null;
     unidade_id: string | null;
     departamento_id: string | null;
-    redes: { nome: string; logo_url: string | null; cor_primaria: string | null } | null;
+    redes: { nome: string; logo_url: string | null; cor_primaria: string | null; banner_url: string | null } | null;
     unidades: { nome: string; tipo: string } | null;
     cargos: { nome: string } | null;
   };
@@ -75,11 +75,19 @@ export default async function AppRedePage({
 
   const cor = m.redes?.cor_primaria || "var(--primary)";
   const redeNome = m.redes?.nome ?? "Minha rede";
+  const banner = m.redes?.banner_url;
+  const bannerStyle: React.CSSProperties = banner
+    ? {
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.5)), url(${banner})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
+    : { background: cor };
 
   return (
     <div className="flex flex-1 flex-col">
       {/* Banner da REDE: hambúrguer + logo + nome centralizados */}
-      <div className="relative px-5 pb-7 pt-3 text-white" style={{ background: cor }}>
+      <div className="relative px-5 pb-7 pt-3 text-white" style={bannerStyle}>
         <div className="absolute left-2 top-3">
           <AppDrawer nome={redeNome} />
         </div>

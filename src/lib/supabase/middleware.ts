@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   "/offline",
   "/cadastro",
   "/termo",
+  "/api/manifest",
 ];
 
 export async function updateSession(request: NextRequest) {

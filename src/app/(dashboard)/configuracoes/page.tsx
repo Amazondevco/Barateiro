@@ -39,6 +39,7 @@ import { PermissoesTab } from "./permissoes-tab";
 import { AddRosterForm } from "./add-roster-form";
 import { ImportRosterForm } from "./import-roster-form";
 import { addRosterPessoa, importarRoster } from "./roster-actions";
+import { AplicativoForm } from "./aplicativo-form";
 
 export const metadata = { title: "Configurações — Check.AI" };
 
@@ -47,6 +48,7 @@ const TABS = [
   { key: "departamentos", label: "Departamentos", adminOnly: false },
   { key: "usuarios", label: "Usuários", adminOnly: false },
   { key: "equipe", label: "Equipe do app", adminOnly: true },
+  { key: "aplicativo", label: "Aplicativo", adminOnly: true },
   { key: "permissoes", label: "Permissões", adminOnly: false },
   { key: "auditoria", label: "Auditoria", adminOnly: true },
   { key: "aparencia", label: "Aparência", adminOnly: true },
@@ -219,6 +221,9 @@ export default async function ConfiguracoesPage({
           {activeTab === "equipe" && isAdminRede && (
             <EquipeAppTab supabase={supabase} redeId={redeId} />
           )}
+          {activeTab === "aplicativo" && isAdminRede && (
+            <AplicativoTab supabase={supabase} redeId={redeId} />
+          )}
           {activeTab === "permissoes" && (
             <CargosTab supabase={supabase} redeId={redeId} />
           )}
@@ -252,6 +257,21 @@ function fmtCpf(cpf: string) {
   return d.length === 11
     ? `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
     : cpf;
+}
+
+async function AplicativoTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
+  const { data: rede } = await supabase
+    .from("redes")
+    .select("app_icone_url, banner_url, logo_url")
+    .eq("id", redeId)
+    .single();
+  return (
+    <AplicativoForm
+      redeId={redeId}
+      iconeUrl={rede?.app_icone_url ?? rede?.logo_url ?? null}
+      bannerUrl={rede?.banner_url ?? null}
+    />
+  );
 }
 
 async function EquipeAppTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
