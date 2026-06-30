@@ -101,9 +101,6 @@ export function NetworkHomePage() {
           </div>
           <p className="text-xl font-bold tracking-tight">{data.brand.nome}</p>
           <p className="text-[13px] font-medium opacity-90">{subtitulo}</p>
-          <span className="mt-1 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-semibold">
-            ✨ Atualizado via OTA
-          </span>
         </div>
       </div>
 
