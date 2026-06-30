@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
 
 export type RosterState = { error?: string; ok?: boolean };
@@ -89,18 +89,39 @@ export async function updateRosterPessoa(
   const nome = String(formData.get("nome") ?? "").trim();
   if (!nome) return { error: "Informe o nome." };
 
-  const { error } = await supabase
+  const cargo_id = String(formData.get("cargo_id") ?? "").trim() || null;
+  const unidade_id = String(formData.get("unidade_id") ?? "").trim() || null;
+  const departamento_id =
+    String(formData.get("departamento_id") ?? "").trim() || null;
+
+  const { data: rosterRow, error } = await supabase
     .from("rede_roster")
-    .update({
-      nome,
-      cargo_id: String(formData.get("cargo_id") ?? "").trim() || null,
-      unidade_id: String(formData.get("unidade_id") ?? "").trim() || null,
-      departamento_id: String(formData.get("departamento_id") ?? "").trim() || null,
-    })
+    .update({ nome, cargo_id, unidade_id, departamento_id })
     .eq("id", id)
-    .eq("rede_id", caller.rede_id);
+    .eq("rede_id", caller.rede_id)
+    .select("cpf")
+    .maybeSingle();
 
   if (error) return { error: error.message };
+
+  // Sincroniza o VÍNCULO REAL (rede_membros) — é o que o app lê para decidir
+  // quais checklists a pessoa vê. Sem isso, mexer no roster não muda nada para
+  // quem já está cadastrado. Espelha unidade, departamento e cargo (permissão).
+  if (rosterRow?.cpf) {
+    const admin = createAdminClient();
+    const { data: ident } = await admin
+      .from("identidades")
+      .select("id")
+      .eq("cpf", rosterRow.cpf)
+      .maybeSingle();
+    if (ident?.id) {
+      await admin
+        .from("rede_membros")
+        .update({ unidade_id, departamento_id, cargo_id })
+        .eq("identidade_id", ident.id)
+        .eq("rede_id", caller.rede_id);
+    }
+  }
 
   revalidatePath("/configuracoes");
   return { ok: true };

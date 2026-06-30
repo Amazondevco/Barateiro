@@ -1,8 +1,25 @@
+import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { Geolocation } from "@capacitor/geolocation";
 import { BottomNav } from "./bottom-nav";
 import { NativeStatusBanner } from "./native-status-banner";
 import { PullToRefresh } from "./pull-to-refresh";
+import { isNativePlatform } from "../lib/platform";
 import { checkForUpdate } from "../lib/ota";
+
+// Pede a permissão de localização logo ao entrar (uma vez), para que o envio de
+// checklist com geolocalização não falhe na hora por falta de permissão.
+async function pedirPermissaoLocalizacao() {
+  if (!isNativePlatform()) return;
+  try {
+    const p = await Geolocation.checkPermissions();
+    if (p.location === "prompt" || p.location === "prompt-with-rationale") {
+      await Geolocation.requestPermissions();
+    }
+  } catch {
+    /* ignore */
+  }
+}
 
 // Puxar pra baixo: checa atualização (OTA) e recarrega o app.
 async function aoRecarregar() {
@@ -12,6 +29,9 @@ async function aoRecarregar() {
 
 export function AppShell() {
   const location = useLocation();
+  useEffect(() => {
+    void pedirPermissaoLocalizacao();
+  }, []);
   const compact =
     /\/formularios\/teste-offline$/.test(location.pathname) ||
     /\/rede\/[^/]+\/form\/[^/]+$/.test(location.pathname);
