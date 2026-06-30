@@ -15,20 +15,27 @@ export async function quickSwitch(email: string) {
   const atual = user?.email;
   if (!atual || !DEV_EMAILS.includes(atual)) return;
 
-  // Usa admin API para gerar magic link — sem precisar saber a senha da conta alvo
+  // Gera um OTP de magic link pela admin API (sem precisar saber a senha) e
+  // verifica na hora — isso troca a sessão do cookie para a conta alvo.
   const admin = createAdminClient();
-  const { data: linkData, error } = await admin.auth.admin.generateLink({
+  const { data: link, error: linkErr } = await admin.auth.admin.generateLink({
     type: "magiclink",
     email,
   });
-  if (error || !linkData?.properties?.email_otp) return;
+  if (linkErr || !link?.properties?.email_otp) {
+    throw new Error(`Troca falhou (generateLink): ${linkErr?.message ?? "sem email_otp"}`);
+  }
 
-  await supabase.auth.signOut();
-  await supabase.auth.verifyOtp({
+  // NÃO chamar signOut antes: o verifyOtp já substitui a sessão e grava os
+  // cookies novos. Um signOut no meio pode atrapalhar a gravação.
+  const { data: verify, error: verifyErr } = await supabase.auth.verifyOtp({
     email,
-    token: linkData.properties.email_otp,
+    token: link.properties.email_otp,
     type: "magiclink",
   });
+  if (verifyErr || !verify?.session) {
+    throw new Error(`Troca falhou (verifyOtp): ${verifyErr?.message ?? "sem sessão"}`);
+  }
 
   redirect(target.view === "app" ? "/app" : "/");
 }
