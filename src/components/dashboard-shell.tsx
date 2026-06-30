@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Menu, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
 import { type Profile } from "@/lib/types";
 import type { RedeBrand } from "@/lib/auth";
 import { SuggestionFab } from "@/components/suggestion-fab";
@@ -140,15 +139,14 @@ export function DashboardShell({
       {/* Coluna principal */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <header
-          className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4 lg:px-6"
+          className="relative z-10 flex h-16 shrink-0 items-center justify-between border-b border-border px-4 shadow-[0_6px_20px_-8px_rgba(2,6,23,0.18)] lg:px-6"
           style={headerStyle}
         >
           <div className="flex min-w-0 flex-1 items-center gap-2">
             {/* Recolher/expandir sidebar (desktop) */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hidden shrink-0 lg:flex"
+            <button
+              type="button"
+              className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-foreground/10 hover:text-foreground lg:flex"
               onClick={toggleCollapsed}
               aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
               title={collapsed ? "Expandir menu" : "Recolher menu"}
@@ -158,17 +156,16 @@ export function DashboardShell({
               ) : (
                 <PanelLeftClose className="h-5 w-5" />
               )}
-            </Button>
+            </button>
             {/* Menu (mobile) */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="shrink-0 lg:hidden"
+            <button
+              type="button"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-foreground/10 hover:text-foreground lg:hidden"
               onClick={() => setOpen((v) => !v)}
               aria-label="Menu"
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+            </button>
             <div className="mx-1 hidden h-8 w-px shrink-0 bg-border lg:block" />
             <TopbarTitle />
           </div>

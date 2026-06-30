@@ -233,13 +233,6 @@ export function Sidebar({
             </div>
           )}
         </div>
-
-        {!collapsed && (
-          <p className="px-2 pt-3 text-[11px] leading-relaxed text-sidebar-muted">
-            Painel Check.AI · v1.0.0
-            <br />© 2026 Check.AI
-          </p>
-        )}
       </div>
     </aside>
   );
