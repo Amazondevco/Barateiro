@@ -133,8 +133,8 @@ export function FormsBoard({
         />
       </div>
 
-      {/* filtros + ordenar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      {/* filtros + ordenar (sem overflow: o overflow corta o menu que abre embaixo) */}
+      <div className="flex flex-wrap items-center gap-2">
         <Popover
           label="Filtros"
           icon={SlidersHorizontal}
@@ -240,11 +240,11 @@ function Popover({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    function onDown(e: MouseEvent) {
+    function onDown(e: PointerEvent) {
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
   }, []);
 
   return (
