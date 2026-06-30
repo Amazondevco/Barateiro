@@ -48,12 +48,81 @@ export async function addRosterPessoa(
   return { ok: true };
 }
 
-export async function removeRosterPessoa(id: string) {
+// Uma linha do roster é "fixa/padrão" (gerenciada pela Check.AI) quando não tem
+// criador (semeada na criação da rede) ou foi criada por um super_admin. Essas
+// não podem ser editadas nem apagadas pelo admin da rede.
+async function rosterProtegido(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  id: string,
+  redeId: string,
+): Promise<{ existe: boolean; protegido: boolean }> {
+  const { data: row } = await supabase
+    .from("rede_roster")
+    .select("created_by, rede_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!row || row.rede_id !== redeId) return { existe: false, protegido: true };
+  if (!row.created_by) return { existe: true, protegido: true };
+  const { data: criador } = await supabase
+    .from("profiles")
+    .select("papel")
+    .eq("id", row.created_by)
+    .maybeSingle();
+  return { existe: true, protegido: criador?.papel === "super_admin" };
+}
+
+export async function updateRosterPessoa(
+  id: string,
+  _prev: RosterState,
+  formData: FormData,
+): Promise<RosterState> {
   const caller = await getSessionProfile();
-  if (caller?.papel !== "admin_supermercado") return;
+  if (caller?.papel !== "admin_supermercado" || !caller.rede_id) {
+    return { error: "Sem permissão." };
+  }
+
   const supabase = await createClient();
-  await supabase.from("rede_roster").delete().eq("id", id);
+  const { existe, protegido } = await rosterProtegido(supabase, id, caller.rede_id);
+  if (!existe) return { error: "Pessoa não encontrada." };
+  if (protegido) return { error: "Este cadastro é padrão da Check.AI e não pode ser editado." };
+
+  const nome = String(formData.get("nome") ?? "").trim();
+  if (!nome) return { error: "Informe o nome." };
+
+  const { error } = await supabase
+    .from("rede_roster")
+    .update({
+      nome,
+      cargo_id: String(formData.get("cargo_id") ?? "").trim() || null,
+      unidade_id: String(formData.get("unidade_id") ?? "").trim() || null,
+      departamento_id: String(formData.get("departamento_id") ?? "").trim() || null,
+    })
+    .eq("id", id)
+    .eq("rede_id", caller.rede_id);
+
+  if (error) return { error: error.message };
+
   revalidatePath("/configuracoes");
+  return { ok: true };
+}
+
+export async function removeRosterPessoa(id: string): Promise<RosterState> {
+  const caller = await getSessionProfile();
+  if (caller?.papel !== "admin_supermercado" || !caller.rede_id) {
+    return { error: "Sem permissão." };
+  }
+  const supabase = await createClient();
+  const { existe, protegido } = await rosterProtegido(supabase, id, caller.rede_id);
+  if (!existe) return { error: "Pessoa não encontrada." };
+  if (protegido) return { error: "Este cadastro é padrão da Check.AI e não pode ser removido." };
+
+  await supabase
+    .from("rede_roster")
+    .delete()
+    .eq("id", id)
+    .eq("rede_id", caller.rede_id);
+  revalidatePath("/configuracoes");
+  return { ok: true };
 }
 
 export type ImportState = {

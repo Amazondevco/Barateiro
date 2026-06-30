@@ -36,6 +36,7 @@ import {
 import { PermissoesTab } from "./permissoes-tab";
 import { AddRosterForm } from "./add-roster-form";
 import { ImportRosterForm } from "./import-roster-form";
+import { RosterRow } from "./roster-row";
 import { addRosterPessoa, importarRoster } from "./roster-actions";
 import { AplicativoForm } from "./aplicativo-form";
 
@@ -285,7 +286,7 @@ async function EquipeAppTab({ supabase, redeId }: { supabase: SB; redeId: string
       supabase
         .from("rede_roster")
         .select(
-          "id, nome, cpf, status, cargos(nome), unidades(nome), departamentos(nome)",
+          "id, nome, cpf, status, created_by, cargo_id, unidade_id, departamento_id, cargos(nome), unidades(nome), departamentos(nome)",
         )
         .eq("rede_id", redeId)
         .order("nome"),
@@ -299,11 +300,29 @@ async function EquipeAppTab({ supabase, redeId }: { supabase: SB; redeId: string
     nome: string;
     cpf: string;
     status: string;
+    created_by: string | null;
+    cargo_id: string | null;
+    unidade_id: string | null;
+    departamento_id: string | null;
     cargos: { nome: string } | null;
     unidades: { nome: string } | null;
     departamentos: { nome: string } | null;
   };
   const lista = (roster ?? []) as unknown as Row[];
+
+  // Linhas "fixas/padrão" da Check.AI: sem criador (semeadas na criação da rede)
+  // ou criadas por um super_admin. Essas não podem ser editadas/apagadas.
+  const criadorIds = [...new Set(lista.map((p) => p.created_by).filter(Boolean))] as string[];
+  const superSet = new Set<string>();
+  if (criadorIds.length) {
+    const { data: criadores } = await supabase
+      .from("profiles")
+      .select("id, papel")
+      .in("id", criadorIds);
+    for (const c of criadores ?? [])
+      if (c.papel === "super_admin") superSet.add(c.id as string);
+  }
+  const ehProtegido = (p: Row) => !p.created_by || superSet.has(p.created_by);
 
   return (
     <div className="space-y-4">
@@ -335,22 +354,30 @@ async function EquipeAppTab({ supabase, redeId }: { supabase: SB; redeId: string
               <TH>Unidade</TH>
               <TH>Departamento</TH>
               <TH>Status</TH>
+              <TH className="text-right">Ações</TH>
             </TR>
           </THead>
           <tbody>
             {lista.map((p) => (
-              <TR key={p.id}>
-                <TD><span className="font-medium">{p.nome}</span></TD>
-                <TD>{fmtCpf(p.cpf)}</TD>
-                <TD>{p.cargos?.nome ?? "—"}</TD>
-                <TD>{p.unidades?.nome ?? "—"}</TD>
-                <TD>{p.departamentos?.nome ?? "—"}</TD>
-                <TD>
-                  <Badge tone={p.status === "vinculado" ? "success" : "warning"}>
-                    {p.status === "vinculado" ? "Cadastrado" : "Aguardando"}
-                  </Badge>
-                </TD>
-              </TR>
+              <RosterRow
+                key={p.id}
+                pessoa={{
+                  id: p.id,
+                  nome: p.nome,
+                  cpfFmt: fmtCpf(p.cpf),
+                  status: p.status,
+                  cargo_id: p.cargo_id,
+                  unidade_id: p.unidade_id,
+                  departamento_id: p.departamento_id,
+                  cargoNome: p.cargos?.nome ?? null,
+                  unidadeNome: p.unidades?.nome ?? null,
+                  deptNome: p.departamentos?.nome ?? null,
+                  protegido: ehProtegido(p),
+                }}
+                unidades={unidades ?? []}
+                cargos={cargos ?? []}
+                departamentos={deptos ?? []}
+              />
             ))}
           </tbody>
         </Table>
