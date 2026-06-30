@@ -139,7 +139,7 @@ export function DashboardShell({
       {/* Coluna principal */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <header
-          className="relative z-10 flex h-16 shrink-0 items-center justify-between border-b border-border px-4 shadow-[0_6px_20px_-8px_rgba(2,6,23,0.18)] lg:px-6"
+          className="relative z-10 flex h-16 shrink-0 items-center justify-between px-4 shadow-[0_6px_20px_-8px_rgba(2,6,23,0.18)] lg:px-6"
           style={headerStyle}
         >
           <div className="flex min-w-0 flex-1 items-center gap-2">

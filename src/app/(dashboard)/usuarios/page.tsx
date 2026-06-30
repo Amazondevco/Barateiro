@@ -1,4 +1,6 @@
+import { Monitor, Smartphone } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { PillTabs } from "@/components/ui/pill-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
 import { LeadCell } from "@/components/ui/icon-chip";
@@ -8,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
 import { PAPEL_LABEL, type Papel } from "@/lib/types";
 import { createUsuario } from "./actions";
+import { EquipeAppPanel } from "./equipe-app-panel";
 
 export const metadata = { title: "Usuários — Check.AI" };
 
@@ -23,9 +26,20 @@ type Row = {
   departamentos: { nome: string } | null;
 };
 
-export default async function UsuariosPage() {
+export default async function UsuariosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const profile = await getSessionProfile();
   const isSuper = profile?.papel === "super_admin";
+  const redeId = profile?.rede_id ?? null;
+  // Admin de rede tem as duas abas (Sistema = usuários do painel; Aplicativo =
+  // equipe do app). Super admin vê só a lista de usuários da plataforma.
+  const showTabs = !isSuper && !!redeId;
+  const sp = await searchParams;
+  const tab = showTabs && sp.tab === "aplicativo" ? "aplicativo" : "sistema";
+
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -72,17 +86,43 @@ export default async function UsuariosPage() {
           isSuper ? "Todos os usuários da plataforma." : "Usuários da sua rede."
         }
         action={
-          <AddUsuarioForm
-            action={createUsuario}
-            redeId={isSuper ? undefined : (profile?.rede_id ?? undefined)}
-            redes={redes ?? undefined}
-            unidades={unidadeOpts}
-            departamentos={deptoOpts}
-          />
+          tab === "sistema" ? (
+            <AddUsuarioForm
+              action={createUsuario}
+              redeId={isSuper ? undefined : (profile?.rede_id ?? undefined)}
+              redes={redes ?? undefined}
+              unidades={unidadeOpts}
+              departamentos={deptoOpts}
+            />
+          ) : undefined
         }
       />
 
-      {usuarios.length === 0 ? (
+      {showTabs && (
+        <PillTabs
+          className="mb-6"
+          tabs={[
+            {
+              key: "sistema",
+              label: "Sistema",
+              icon: Monitor,
+              href: "/usuarios?tab=sistema",
+              active: tab === "sistema",
+            },
+            {
+              key: "aplicativo",
+              label: "Aplicativo",
+              icon: Smartphone,
+              href: "/usuarios?tab=aplicativo",
+              active: tab === "aplicativo",
+            },
+          ]}
+        />
+      )}
+
+      {tab === "aplicativo" && redeId ? (
+        <EquipeAppPanel supabase={supabase} redeId={redeId} />
+      ) : usuarios.length === 0 ? (
         <EmptyState
           title="Nenhum usuário"
           description="Crie o primeiro usuário usando o botão acima."

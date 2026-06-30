@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  Smartphone,
   Box,
   Shield,
   FileText,
@@ -30,17 +29,12 @@ import {
   PermissoesPadraoForm,
 } from "./padroes-avancados";
 import { PermissoesTab } from "./permissoes-tab";
-import { AddRosterForm } from "./add-roster-form";
-import { ImportRosterForm } from "./import-roster-form";
-import { RosterRow } from "./roster-row";
-import { addRosterPessoa, importarRoster } from "./roster-actions";
 import { AplicativoForm } from "./aplicativo-form";
 
 export const metadata = { title: "Configurações — Check.AI" };
 
 // Unidades, Departamentos e Usuários viraram páginas próprias (Gestão de Rede).
 const TABS: { key: string; label: string; adminOnly: boolean; icon: LucideIcon }[] = [
-  { key: "equipe", label: "Equipe do app", adminOnly: true, icon: Smartphone },
   { key: "aplicativo", label: "Aplicativo", adminOnly: true, icon: Box },
   { key: "permissoes", label: "Permissões", adminOnly: false, icon: Shield },
   { key: "auditoria", label: "Auditoria", adminOnly: true, icon: FileText },
@@ -199,9 +193,6 @@ export default async function ConfiguracoesPage({
         </Card>
       ) : (
         <>
-          {activeTab === "equipe" && isAdminRede && (
-            <EquipeAppTab supabase={supabase} redeId={redeId} />
-          )}
           {activeTab === "aplicativo" && isAdminRede && (
             <AplicativoTab supabase={supabase} redeId={redeId} />
           )}
@@ -233,13 +224,6 @@ export default async function ConfiguracoesPage({
 
 type SB = Awaited<ReturnType<typeof createClient>>;
 
-function fmtCpf(cpf: string) {
-  const d = (cpf ?? "").replace(/\D/g, "");
-  return d.length === 11
-    ? `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
-    : cpf;
-}
-
 async function AplicativoTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
   const { data: rede } = await supabase
     .from("redes")
@@ -252,112 +236,6 @@ async function AplicativoTab({ supabase, redeId }: { supabase: SB; redeId: strin
       iconeUrl={rede?.app_icone_url ?? rede?.logo_url ?? null}
       cor={rede?.app_cor ?? rede?.cor_primaria ?? null}
     />
-  );
-}
-
-async function EquipeAppTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
-  const [{ data: roster }, { data: unidades }, { data: cargos }, { data: deptos }] =
-    await Promise.all([
-      supabase
-        .from("rede_roster")
-        .select(
-          "id, nome, cpf, status, created_by, cargo_id, unidade_id, departamento_id, cargos(nome), unidades(nome), departamentos(nome)",
-        )
-        .eq("rede_id", redeId)
-        .order("nome"),
-      supabase.from("unidades").select("id,nome").eq("rede_id", redeId).eq("status", "ativo").order("nome"),
-      supabase.from("cargos").select("id,nome").eq("rede_id", redeId).order("nome"),
-      supabase.from("departamentos").select("id,nome").eq("rede_id", redeId).eq("status", "ativo").order("nome"),
-    ]);
-
-  type Row = {
-    id: string;
-    nome: string;
-    cpf: string;
-    status: string;
-    created_by: string | null;
-    cargo_id: string | null;
-    unidade_id: string | null;
-    departamento_id: string | null;
-    cargos: { nome: string } | null;
-    unidades: { nome: string } | null;
-    departamentos: { nome: string } | null;
-  };
-  const lista = (roster ?? []) as unknown as Row[];
-
-  // Linhas "fixas/padrão" da Check.AI: sem criador (semeadas na criação da rede)
-  // ou criadas por um super_admin. Essas não podem ser editadas/apagadas.
-  const criadorIds = [...new Set(lista.map((p) => p.created_by).filter(Boolean))] as string[];
-  const superSet = new Set<string>();
-  if (criadorIds.length) {
-    const { data: criadores } = await supabase
-      .from("profiles")
-      .select("id, papel")
-      .in("id", criadorIds);
-    for (const c of criadores ?? [])
-      if (c.papel === "super_admin") superSet.add(c.id as string);
-  }
-  const ehProtegido = (p: Row) => !p.created_by || superSet.has(p.created_by);
-
-  return (
-    <div className="space-y-4">
-      <p className="max-w-2xl text-sm text-muted-foreground">
-        Lista de quem pode usar o app. A pessoa entra automaticamente ao se
-        cadastrar com o CPF cadastrado aqui, já com unidade, cargo e departamento.
-      </p>
-      <div className="flex justify-end gap-2">
-        <ImportRosterForm action={importarRoster} />
-        <AddRosterForm
-          action={addRosterPessoa}
-          unidades={unidades ?? []}
-          cargos={cargos ?? []}
-          departamentos={deptos ?? []}
-        />
-      </div>
-      {lista.length === 0 ? (
-        <EmptyState
-          title="Equipe vazia"
-          description="Adicione as pessoas (por CPF) que vão usar o app."
-        />
-      ) : (
-        <Table>
-          <THead>
-            <TR>
-              <TH>Nome</TH>
-              <TH>CPF</TH>
-              <TH>Cargo</TH>
-              <TH>Unidade</TH>
-              <TH>Departamento</TH>
-              <TH>Status</TH>
-              <TH className="text-right">Ações</TH>
-            </TR>
-          </THead>
-          <tbody>
-            {lista.map((p) => (
-              <RosterRow
-                key={p.id}
-                pessoa={{
-                  id: p.id,
-                  nome: p.nome,
-                  cpfFmt: fmtCpf(p.cpf),
-                  status: p.status,
-                  cargo_id: p.cargo_id,
-                  unidade_id: p.unidade_id,
-                  departamento_id: p.departamento_id,
-                  cargoNome: p.cargos?.nome ?? null,
-                  unidadeNome: p.unidades?.nome ?? null,
-                  deptNome: p.departamentos?.nome ?? null,
-                  protegido: ehProtegido(p),
-                }}
-                unidades={unidades ?? []}
-                cargos={cargos ?? []}
-                departamentos={deptos ?? []}
-              />
-            ))}
-          </tbody>
-        </Table>
-      )}
-    </div>
   );
 }
 
