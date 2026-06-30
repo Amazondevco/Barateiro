@@ -19,8 +19,8 @@ export async function quickSwitch(email: string) {
   const supabase = await createClient();
 
   // só permite trocar se o usuário ATUAL já pertence ao círculo demo
-  const { data: claims } = await supabase.auth.getClaims();
-  const atual = (claims?.claims as { email?: string } | undefined)?.email;
+  const { data: { user } } = await supabase.auth.getUser();
+  const atual = user?.email;
   if (!atual || !DEV_EMAILS.includes(atual)) return;
 
   await supabase.auth.signOut();
