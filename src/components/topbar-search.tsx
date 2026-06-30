@@ -41,11 +41,7 @@ export function TopbarSearch() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Abre a barra (opcionalmente já focando) / recolhe se vazia e sem painel.
-  function abrirBarra(focar: boolean) {
-    setExpandido(true);
-    if (focar) setTimeout(() => inputRef.current?.focus(), 0);
-  }
+  // Recolhe a barra se estiver vazia, sem foco e sem o painel aberto.
   function talvezRecolher() {
     const focado = document.activeElement === inputRef.current;
     if (!focado && !q.trim() && !open) setExpandido(false);
@@ -148,31 +144,28 @@ export function TopbarSearch() {
       onMouseEnter={() => setExpandido(true)}
       onMouseLeave={talvezRecolher}
     >
-      {expandido ? (
-        <>
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/70" />
-          <input
-            ref={inputRef}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onFocus={() => setOpen(true)}
-            onBlur={talvezRecolher}
-            onKeyDown={onKeyDown}
-            placeholder="Buscar em tudo…"
-            className="h-9 w-72 rounded-lg border border-foreground/25 bg-foreground/10 pl-8 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground"
-          />
-        </>
-      ) : (
-        <button
-          type="button"
-          onClick={() => abrirBarra(true)}
-          aria-label="Buscar"
-          title="Buscar"
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-foreground/10 hover:text-foreground"
-        >
-          <Search className="h-[18px] w-[18px]" />
-        </button>
-      )}
+      {/* Lupa fixa (sobreposta) + input que cresce suavemente para a esquerda */}
+      <span className="pointer-events-none absolute left-0 top-0 flex h-9 w-9 items-center justify-center text-foreground/70">
+        <Search className="h-[18px] w-[18px]" />
+      </span>
+      <input
+        ref={inputRef}
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        onFocus={() => {
+          setExpandido(true);
+          setOpen(true);
+        }}
+        onBlur={talvezRecolher}
+        onKeyDown={onKeyDown}
+        placeholder="Buscar em tudo…"
+        aria-label="Buscar"
+        className={`h-9 rounded-lg border bg-foreground/5 pl-9 pr-3 text-sm text-foreground outline-none transition-[width,background-color,border-color] duration-300 ease-out placeholder:text-muted-foreground ${
+          expandido
+            ? "w-72 cursor-text border-foreground/25 bg-foreground/10"
+            : "w-9 cursor-pointer border-transparent bg-transparent"
+        }`}
+      />
 
       {showPanel &&
         rect &&
