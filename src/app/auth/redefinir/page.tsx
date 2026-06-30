@@ -1,20 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
-import { createClient } from "@/lib/supabase/client";
 
 // Tela de cadastro do responsável (alvo do link de convite) e de redefinição de
 // senha. O link do e-mail traz a sessão; aqui mostramos os dados já cadastrados
 // (rede + e-mail + nome) e a pessoa só define a senha para concluir.
 type Ctx = { email: string; nome: string; redeNome: string | null };
 
+// Client SEM detectSessionInUrl: nós mesmos lemos o token do # e fazemos
+// setSession (evita a corrida que limpava o hash antes da sessão se estabelecer).
+function makeClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { detectSessionInUrl: false } },
+  );
+}
+
 export default function RedefinirSenhaPage() {
   const router = useRouter();
+  // Captura o # na primeira render, antes de qualquer client poder limpá-lo.
+  const hashRef = useRef<string | null>(null);
+  if (hashRef.current === null && typeof window !== "undefined") {
+    hashRef.current = window.location.hash;
+  }
   const [ready, setReady] = useState(false);
   const [ctx, setCtx] = useState<Ctx | null>(null);
   const [senha, setSenha] = useState("");
@@ -24,12 +39,12 @@ export default function RedefinirSenhaPage() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = makeClient();
 
     async function carregar() {
-      // O link traz o token no # da URL. Estabelecemos a sessão explicitamente
-      // (não dependemos do detectSessionInUrl / fluxo PKCE).
-      const hash = window.location.hash.replace(/^#/, "");
+      // O link traz o token no # (capturado em hashRef). Estabelecemos a sessão
+      // explicitamente — sem depender do detectSessionInUrl / fluxo PKCE.
+      const hash = (hashRef.current ?? "").replace(/^#/, "");
       if (hash) {
         const p = new URLSearchParams(hash);
         const access_token = p.get("access_token");
@@ -89,7 +104,7 @@ export default function RedefinirSenhaPage() {
       return;
     }
     setLoading(true);
-    const supabase = createClient();
+    const supabase = makeClient();
     const { error } = await supabase.auth.updateUser({ password: senha });
     setLoading(false);
     if (error) {
