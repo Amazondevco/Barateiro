@@ -6,7 +6,8 @@ import { PillTabs } from "@/components/ui/pill-tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { getSessionProfile } from "@/lib/auth";
 import { PAPEL_LABEL, type Papel } from "@/lib/types";
 import { RedeForm } from "../rede-form";
 import { updateRede, setRedeStatus } from "../actions";
@@ -27,6 +28,23 @@ const TIPO_LABEL: Record<string, string> = {
   cd: "CD / Galpão",
   escritorio: "Escritório",
   outro: "Outro",
+};
+
+function fmtCpf(cpf: string) {
+  const d = (cpf ?? "").replace(/\D/g, "");
+  return d.length === 11
+    ? `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
+    : cpf || "—";
+}
+
+type RosterApp = {
+  id: string;
+  nome: string;
+  cpf: string;
+  status: string;
+  cargos: { nome: string } | null;
+  unidades: { nome: string } | null;
+  departamentos: { nome: string } | null;
 };
 
 export default async function RedeDetailPage({
@@ -70,6 +88,18 @@ export default async function RedeDetailPage({
 
   const unidadeOpts = (unidades ?? []).map((u) => ({ id: u.id, nome: u.nome }));
   const deptoOpts = (departamentos ?? []).map((d) => ({ id: d.id, nome: d.nome }));
+
+  // Usuários do APLICATIVO (roster) da rede. O super admin é murado por RLS
+  // de `rede_roster` (só admin_da_rede lê); como esta é a console do super admin,
+  // lemos com o admin client para ele ver todos. Admin da rede usa o client normal.
+  const isSuper = (await getSessionProfile())?.papel === "super_admin";
+  const rosterClient = isSuper ? createAdminClient() : supabase;
+  const { data: rosterApp } = await rosterClient
+    .from("rede_roster")
+    .select("id,nome,cpf,status,cargos(nome),unidades(nome),departamentos(nome)")
+    .eq("rede_id", id)
+    .order("nome");
+  const appUsers = (rosterApp ?? []) as unknown as RosterApp[];
 
   return (
     <>
@@ -183,57 +213,110 @@ export default async function RedeDetailPage({
       )}
 
       {tab === "usuarios" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">
-              Gere o link de acesso de cada usuário e envie a ele (WhatsApp, etc.)
-              para definir a senha. Links expiram — gere um novo antes de enviar.
-            </p>
-            <AddUsuarioForm
-              action={createUsuario}
-              redeId={id}
-              unidades={unidadeOpts}
-              departamentos={deptoOpts}
-            />
-          </div>
-          {(usuarios ?? []).length === 0 ? (
-            <EmptyState
-              title="Nenhum usuário"
-              description="Crie o admin do supermercado e os gerentes desta rede."
-            />
-          ) : (
-            <Table>
-              <THead>
-                <TR>
-                  <TH>Nome</TH>
-                  <TH>E-mail</TH>
-                  <TH>Papel</TH>
-                  <TH>Status</TH>
-                  <TH>Acesso</TH>
-                </TR>
-              </THead>
-              <tbody>
-                {(usuarios ?? []).map((u) => (
-                  <TR key={u.id}>
-                    <TD className="font-medium">{u.nome || "—"}</TD>
-                    <TD>{u.email}</TD>
-                    <TD>{PAPEL_LABEL[u.papel as Papel]}</TD>
-                    <TD>
-                      <Badge tone={u.status === "ativo" ? "success" : "neutral"}>
-                        {u.status}
-                      </Badge>
-                    </TD>
-                    <TD>
-                      <UsuarioLinkButton
-                        userId={u.id}
-                        linkInicial={(u as { convite_link?: string | null }).convite_link ?? null}
-                      />
-                    </TD>
+        <div className="space-y-8">
+          {/* Usuários do SISTEMA (painel) */}
+          <section className="space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold">Usuários do sistema</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  Acesso ao painel (admin e gerentes). Gere o link de acesso e
+                  envie (WhatsApp, etc.); links expiram — gere um novo antes de
+                  enviar.
+                </p>
+              </div>
+              <AddUsuarioForm
+                action={createUsuario}
+                redeId={id}
+                unidades={unidadeOpts}
+                departamentos={deptoOpts}
+              />
+            </div>
+            {(usuarios ?? []).length === 0 ? (
+              <EmptyState
+                title="Nenhum usuário do sistema"
+                description="Crie o admin do supermercado e os gerentes desta rede."
+              />
+            ) : (
+              <Table>
+                <THead>
+                  <TR>
+                    <TH>Nome</TH>
+                    <TH>E-mail</TH>
+                    <TH>Papel</TH>
+                    <TH>Status</TH>
+                    <TH>Acesso</TH>
                   </TR>
-                ))}
-              </tbody>
-            </Table>
-          )}
+                </THead>
+                <tbody>
+                  {(usuarios ?? []).map((u) => (
+                    <TR key={u.id}>
+                      <TD className="font-medium">{u.nome || "—"}</TD>
+                      <TD>{u.email}</TD>
+                      <TD>{PAPEL_LABEL[u.papel as Papel]}</TD>
+                      <TD>
+                        <Badge tone={u.status === "ativo" ? "success" : "neutral"}>
+                          {u.status}
+                        </Badge>
+                      </TD>
+                      <TD>
+                        <UsuarioLinkButton
+                          userId={u.id}
+                          linkInicial={(u as { convite_link?: string | null }).convite_link ?? null}
+                        />
+                      </TD>
+                    </TR>
+                  ))}
+                </tbody>
+              </Table>
+            )}
+          </section>
+
+          {/* Usuários do APLICATIVO (roster) — leitura */}
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-sm font-semibold">Usuários do aplicativo</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Equipe que usa o app, cadastrada por CPF (gerida pelo admin da
+                rede).
+              </p>
+            </div>
+            {appUsers.length === 0 ? (
+              <EmptyState
+                title="Nenhum usuário de aplicativo"
+                description="A equipe do app desta rede aparece aqui."
+              />
+            ) : (
+              <Table>
+                <THead>
+                  <TR>
+                    <TH>Nome</TH>
+                    <TH>CPF</TH>
+                    <TH>Cargo</TH>
+                    <TH>Unidade</TH>
+                    <TH>Departamento</TH>
+                    <TH>Status</TH>
+                  </TR>
+                </THead>
+                <tbody>
+                  {appUsers.map((p) => (
+                    <TR key={p.id}>
+                      <TD className="font-medium">{p.nome}</TD>
+                      <TD>{fmtCpf(p.cpf)}</TD>
+                      <TD>{p.cargos?.nome ?? "—"}</TD>
+                      <TD>{p.unidades?.nome ?? "—"}</TD>
+                      <TD>{p.departamentos?.nome ?? "—"}</TD>
+                      <TD>
+                        <Badge tone={p.status === "ativo" ? "success" : "neutral"}>
+                          {p.status}
+                        </Badge>
+                      </TD>
+                    </TR>
+                  ))}
+                </tbody>
+              </Table>
+            )}
+          </section>
         </div>
       )}
     </>
