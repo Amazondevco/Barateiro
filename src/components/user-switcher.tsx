@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRightLeft, Check } from "lucide-react";
+import { ArrowRightLeft, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DEV_ACCOUNTS } from "@/lib/dev-accounts";
 import { quickSwitch } from "@/lib/dev-switch-actions";
@@ -11,11 +11,26 @@ import { quickSwitch } from "@/lib/dev-switch-actions";
 export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
   const [open, setOpen] = useState(false);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [pending, start] = useTransition();
   const wrapRef = useRef<HTMLDivElement>(null);
 
   function abrir() {
     if (wrapRef.current) setRect(wrapRef.current.getBoundingClientRect());
     setOpen(true);
+  }
+
+  function trocar(email: string) {
+    setErro(null);
+    start(async () => {
+      const r = await quickSwitch(email);
+      if (r.error) {
+        setErro(r.error);
+        return;
+      }
+      // Recarregamento REAL: usa o cookie novo e ignora o cache do Next.
+      if (r.to) window.location.href = r.to;
+    });
   }
 
   return (
@@ -51,23 +66,32 @@ export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
               {DEV_ACCOUNTS.map((a) => {
                 const current = a.email === currentEmail;
                 return (
-                  <form key={a.email} action={quickSwitch.bind(null, a.email)}>
-                    <button
-                      type="submit"
-                      disabled={current}
-                      className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted disabled:opacity-60"
-                    >
-                      <span>
-                        <span className="block font-medium">{a.label}</span>
-                        <span className="block text-xs text-muted-foreground">
-                          {a.role} · {a.email}
-                        </span>
+                  <button
+                    key={a.email}
+                    type="button"
+                    disabled={current || pending}
+                    onClick={() => trocar(a.email)}
+                    className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted disabled:opacity-60"
+                  >
+                    <span>
+                      <span className="block font-medium">{a.label}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {a.role} · {a.email}
                       </span>
-                      {current && <Check className="h-4 w-4 shrink-0 text-primary" />}
-                    </button>
-                  </form>
+                    </span>
+                    {current ? (
+                      <Check className="h-4 w-4 shrink-0 text-primary" />
+                    ) : pending ? (
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+                    ) : null}
+                  </button>
                 );
               })}
+              {erro && (
+                <p className="border-t border-border bg-danger-bg px-3 py-2 text-xs text-danger">
+                  {erro}
+                </p>
+              )}
             </div>
           </>,
           document.body,
