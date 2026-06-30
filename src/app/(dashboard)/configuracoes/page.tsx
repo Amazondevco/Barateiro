@@ -1,26 +1,9 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
-import { PAPEL_LABEL, type Papel } from "@/lib/types";
-
-import { createUnidade } from "@/app/(dashboard)/clientes/[id]/unidade-actions";
-import { AddUnidadeForm } from "@/app/(dashboard)/clientes/[id]/add-unidade-form";
-import { createUsuario } from "@/app/(dashboard)/usuarios/actions";
-import { AddUsuarioForm } from "@/components/add-usuario-form";
-import {
-  createDepartamento,
-  setDepartamentoStatus,
-} from "./departamento-actions";
-import { AddDepartamentoForm } from "./add-departamento-form";
-import { Power } from "lucide-react";
-import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
-import { UnidadeRow } from "./unidade-row";
-import { EditDepartamentoButton } from "./edit-departamento-button";
-import { EditUsuarioButton } from "@/components/edit-usuario-button";
 import { updateAparencia } from "./actions";
 import { updateAparenciaPlataforma } from "./plataforma-actions";
 import { AparenciaForm } from "./aparencia-form";
@@ -42,10 +25,8 @@ import { AplicativoForm } from "./aplicativo-form";
 
 export const metadata = { title: "Configurações — Check.AI" };
 
+// Unidades, Departamentos e Usuários viraram páginas próprias (Gestão de Rede).
 const TABS = [
-  { key: "unidades", label: "Unidades", adminOnly: false },
-  { key: "departamentos", label: "Departamentos", adminOnly: false },
-  { key: "usuarios", label: "Usuários", adminOnly: false },
   { key: "equipe", label: "Equipe do app", adminOnly: true },
   { key: "aplicativo", label: "Aplicativo", adminOnly: true },
   { key: "permissoes", label: "Permissões", adminOnly: false },
@@ -178,7 +159,7 @@ export default async function ConfiguracoesPage({
   const isAdminRede = profile?.papel === "admin_supermercado";
   const visibleTabs = TABS.filter((t) => !t.adminOnly || isAdminRede);
   const tabPermitida = visibleTabs.some((t) => t.key === tab);
-  const activeTab = tabPermitida ? tab : "unidades";
+  const activeTab = tabPermitida ? tab : (visibleTabs[0]?.key ?? "permissoes");
 
   return (
     <>
@@ -215,15 +196,6 @@ export default async function ConfiguracoesPage({
         </Card>
       ) : (
         <>
-          {activeTab === "unidades" && (
-            <UnidadesTab supabase={supabase} redeId={redeId} />
-          )}
-          {activeTab === "departamentos" && (
-            <DepartamentosTab supabase={supabase} redeId={redeId} />
-          )}
-          {activeTab === "usuarios" && (
-            <UsuariosTab supabase={supabase} redeId={redeId} />
-          )}
           {activeTab === "equipe" && isAdminRede && (
             <EquipeAppTab supabase={supabase} redeId={redeId} />
           )}
@@ -379,190 +351,6 @@ async function EquipeAppTab({ supabase, redeId }: { supabase: SB; redeId: string
                 departamentos={deptos ?? []}
               />
             ))}
-          </tbody>
-        </Table>
-      )}
-    </div>
-  );
-}
-
-async function UnidadesTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
-  const { data: unidades } = await supabase
-    .from("unidades")
-    .select("id,nome,codigo,tipo,endereco,cep,bairro,numero,complemento,cidade,uf,geo_lat,geo_lng,status")
-    .eq("rede_id", redeId)
-    .order("nome");
-
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <AddUnidadeForm action={createUnidade.bind(null, redeId)} />
-      </div>
-      {(unidades ?? []).length === 0 ? (
-        <EmptyState title="Nenhuma unidade" description="Adicione lojas, CDs ou escritórios." />
-      ) : (
-        <Table>
-          <THead>
-            <TR>
-              <TH>Unidade</TH>
-              <TH>Tipo</TH>
-              <TH>Cidade</TH>
-              <TH>Status</TH>
-              <TH className="w-40" />
-            </TR>
-          </THead>
-          <tbody>
-            {(unidades ?? []).map((u) => (
-              <UnidadeRow key={u.id} unidade={u} redeId={redeId} />
-            ))}
-          </tbody>
-        </Table>
-      )}
-    </div>
-  );
-}
-
-async function DepartamentosTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
-  const [{ data: deptos }, { data: unidades }] = await Promise.all([
-    supabase
-      .from("departamentos")
-      .select("id,nome,escopo,status,unidade_id,unidades(nome)")
-      .eq("rede_id", redeId)
-      .order("nome"),
-    supabase.from("unidades").select("id,nome").eq("rede_id", redeId).order("nome"),
-  ]);
-  const unidadeOpts = (unidades ?? []).map((u) => ({ id: u.id, nome: u.nome }));
-
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <AddDepartamentoForm action={createDepartamento.bind(null, redeId)} unidades={unidadeOpts} />
-      </div>
-      {(deptos ?? []).length === 0 ? (
-        <EmptyState title="Nenhum departamento" description="Ex.: Açougue (de uma loja) ou RH (geral da rede)." />
-      ) : (
-        <Table>
-          <THead>
-            <TR>
-              <TH>Departamento</TH>
-              <TH>Escopo</TH>
-              <TH>Status</TH>
-              <TH className="w-40" />
-            </TR>
-          </THead>
-          <tbody>
-            {(deptos ?? []).map((d) => {
-              const uni = d.unidades as unknown as { nome: string } | null;
-              return (
-                <TR key={d.id}>
-                  <TD className="font-medium">{d.nome}</TD>
-                  <TD>{d.escopo === "rede" ? "Geral da rede" : `Unidade: ${uni?.nome ?? "—"}`}</TD>
-                  <TD>
-                    <Badge tone={d.status === "ativo" ? "success" : "neutral"}>{d.status}</Badge>
-                  </TD>
-                  <TD>
-                    <div className="flex items-center gap-1">
-                      <EditDepartamentoButton
-                        departamento={{
-                          id: d.id,
-                          nome: d.nome,
-                          escopo: d.escopo,
-                          unidade_id: d.unidade_id,
-                        }}
-                        unidades={unidadeOpts}
-                      />
-                      <Tooltip label={d.status === "ativo" ? "Desativar" : "Ativar"}>
-                        <form action={setDepartamentoStatus.bind(null, d.id, d.status === "ativo" ? "inativo" : "ativo")}>
-                          <button className={iconBtnClass} type="submit">
-                            <Power className="h-4 w-4" />
-                          </button>
-                        </form>
-                      </Tooltip>
-                    </div>
-                  </TD>
-                </TR>
-              );
-            })}
-          </tbody>
-        </Table>
-      )}
-    </div>
-  );
-}
-
-async function UsuariosTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
-  const [{ data: usuarios }, { data: unidades }, { data: departamentos }] =
-    await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id,nome,email,papel,status,departamento_id,departamentos(nome)")
-        .eq("rede_id", redeId)
-        .order("nome"),
-      supabase.from("unidades").select("id,nome").eq("rede_id", redeId).order("nome"),
-      supabase
-        .from("departamentos")
-        .select("id,nome")
-        .eq("rede_id", redeId)
-        .eq("status", "ativo")
-        .order("nome"),
-    ]);
-  const unidadeOpts = (unidades ?? []).map((u) => ({ id: u.id, nome: u.nome }));
-  const deptoOpts = (departamentos ?? []).map((d) => ({ id: d.id, nome: d.nome }));
-
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <AddUsuarioForm
-          action={createUsuario}
-          redeId={redeId}
-          unidades={unidadeOpts}
-          departamentos={deptoOpts}
-        />
-      </div>
-      {(usuarios ?? []).length === 0 ? (
-        <EmptyState title="Nenhum usuário" description="Crie admins e gerentes desta rede." />
-      ) : (
-        <Table>
-          <THead>
-            <TR>
-              <TH>Nome</TH>
-              <TH>E-mail</TH>
-              <TH>Papel</TH>
-              <TH>Departamento</TH>
-              <TH>Status</TH>
-              <TH className="w-20" />
-            </TR>
-          </THead>
-          <tbody>
-            {(usuarios ?? []).map((u) => {
-              const depto = u.departamentos as unknown as { nome: string } | null;
-              return (
-                <TR key={u.id}>
-                  <TD className="font-medium">{u.nome || "—"}</TD>
-                  <TD>{u.email}</TD>
-                  <TD>{PAPEL_LABEL[u.papel as Papel]}</TD>
-                  <TD>{depto?.nome ?? "—"}</TD>
-                  <TD>
-                    <Badge tone={u.status === "ativo" ? "success" : "neutral"}>{u.status}</Badge>
-                  </TD>
-                  <TD>
-                    <EditUsuarioButton
-                      usuario={{
-                        id: u.id,
-                        nome: u.nome,
-                        email: u.email,
-                        papel: u.papel,
-                        status: u.status,
-                        departamento_id:
-                          (u as { departamento_id: string | null })
-                            .departamento_id ?? null,
-                      }}
-                      departamentos={deptoOpts}
-                    />
-                  </TD>
-                </TR>
-              );
-            })}
           </tbody>
         </Table>
       )}

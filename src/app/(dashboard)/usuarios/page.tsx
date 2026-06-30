@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
 import { AddUsuarioForm } from "@/components/add-usuario-form";
+import { EditUsuarioButton } from "@/components/edit-usuario-button";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
 import { PAPEL_LABEL, type Papel } from "@/lib/types";
@@ -16,7 +17,9 @@ type Row = {
   papel: Papel;
   status: "ativo" | "inativo";
   rede_id: string | null;
+  departamento_id: string | null;
   redes: { nome: string } | null;
+  departamentos: { nome: string } | null;
 };
 
 export default async function UsuariosPage() {
@@ -26,11 +29,13 @@ export default async function UsuariosPage() {
 
   const { data } = await supabase
     .from("profiles")
-    .select("id,nome,email,papel,status,rede_id,redes(nome)")
+    .select(
+      "id,nome,email,papel,status,rede_id,departamento_id,redes(nome),departamentos(nome)",
+    )
     .order("nome");
   const usuarios = (data ?? []) as unknown as Row[];
 
-  // Opções para o formulário
+  // Opções para os formulários
   const { data: redes } = isSuper
     ? await supabase.from("redes").select("id,nome").order("nome")
     : { data: null };
@@ -63,9 +68,7 @@ export default async function UsuariosPage() {
       <PageHeader
         title="Usuários"
         subtitle={
-          isSuper
-            ? "Todos os usuários da plataforma."
-            : "Usuários da sua rede."
+          isSuper ? "Todos os usuários da plataforma." : "Usuários da sua rede."
         }
         action={
           <AddUsuarioForm
@@ -90,8 +93,9 @@ export default async function UsuariosPage() {
               <TH>Nome</TH>
               <TH>E-mail</TH>
               <TH>Papel</TH>
-              {isSuper && <TH>Rede</TH>}
+              {isSuper ? <TH>Rede</TH> : <TH>Departamento</TH>}
               <TH>Status</TH>
+              {!isSuper && <TH className="w-20" />}
             </TR>
           </THead>
           <tbody>
@@ -100,12 +104,31 @@ export default async function UsuariosPage() {
                 <TD className="font-medium">{u.nome || "—"}</TD>
                 <TD>{u.email}</TD>
                 <TD>{PAPEL_LABEL[u.papel]}</TD>
-                {isSuper && <TD>{u.redes?.nome ?? "—"}</TD>}
+                {isSuper ? (
+                  <TD>{u.redes?.nome ?? "—"}</TD>
+                ) : (
+                  <TD>{u.departamentos?.nome ?? "—"}</TD>
+                )}
                 <TD>
                   <Badge tone={u.status === "ativo" ? "success" : "neutral"}>
                     {u.status}
                   </Badge>
                 </TD>
+                {!isSuper && (
+                  <TD>
+                    <EditUsuarioButton
+                      usuario={{
+                        id: u.id,
+                        nome: u.nome,
+                        email: u.email,
+                        papel: u.papel,
+                        status: u.status,
+                        departamento_id: u.departamento_id,
+                      }}
+                      departamentos={deptoOpts}
+                    />
+                  </TD>
+                )}
               </TR>
             ))}
           </tbody>

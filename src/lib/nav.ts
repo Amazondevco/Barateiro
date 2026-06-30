@@ -3,6 +3,8 @@ import {
   Building2,
   ClipboardList,
   Users,
+  Store,
+  FolderTree,
   BarChart3,
   Receipt,
   Megaphone,
@@ -43,6 +45,24 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Gestão de Rede",
     items: [
+      {
+        href: "/unidades",
+        label: "Unidades",
+        icon: Store,
+        roles: ["admin_supermercado"],
+      },
+      {
+        href: "/departamentos",
+        label: "Departamentos",
+        icon: FolderTree,
+        roles: ["admin_supermercado"],
+      },
+      {
+        href: "/usuarios",
+        label: "Usuários",
+        icon: Users,
+        roles: ["admin_supermercado"],
+      },
       {
         href: "/comunicados",
         label: "Comunicados",
