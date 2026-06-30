@@ -83,7 +83,7 @@ export function Sidebar({
     >
       <div
         className={cn(
-          "flex items-center border-b border-white/[0.06] py-4",
+          "flex items-center py-4",
           collapsed ? "justify-center px-0" : "px-4",
         )}
       >
@@ -95,12 +95,14 @@ export function Sidebar({
           subtitle={brandSubtitle}
         />
       </div>
+      {/* Separador sutil e inset (não toca as bordas) */}
+      <div className="mx-4 h-px bg-sidebar-divider" />
 
       <nav className="flex-1 overflow-y-auto p-3">
         {grupos.map((grupo, gi) => {
           const fechado = !collapsed && recolhidos.has(grupo.label);
           return (
-          <div key={grupo.label} className={cn(gi > 0 && (collapsed ? "mt-2 border-t border-white/[0.06] pt-2" : "mt-4"))}>
+          <div key={grupo.label} className={cn(gi > 0 && (collapsed ? "mt-2 border-t border-sidebar-divider pt-2" : "mt-4"))}>
             {!collapsed && (
               <button
                 type="button"
@@ -148,10 +150,11 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Rodapé: caixa do usuário + menu (Configurações / Suporte / Sair).
-          Fundo um pouco mais escuro + divisória para destacar do resto. */}
+      {/* Separador sutil e inset acima da caixa do usuário */}
+      <div className="mx-4 h-px bg-sidebar-divider" />
+      {/* Rodapé: caixa do usuário + menu (Configurações / Suporte / Sair). */}
       <div
-        className="border-t border-white/[0.06] bg-black/5 p-3 transition-colors hover:bg-black/10"
+        className="bg-black/5 p-3 transition-colors hover:bg-black/10"
         ref={menuRef}
       >
         <div className="relative">

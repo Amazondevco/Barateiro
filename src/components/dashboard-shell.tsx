@@ -70,6 +70,10 @@ export function DashboardShell({
     vars["--sidebar-border"] = light
       ? `color-mix(in srgb, ${sb} 82%, black)`
       : `color-mix(in srgb, ${sb} 80%, white)`;
+    // Separador: groove preto sutil (não brilha). Em cor clara, bem leve.
+    vars["--sidebar-divider"] = light
+      ? "rgba(0, 0, 0, 0.10)"
+      : "rgba(0, 0, 0, 0.25)";
     vars["--sidebar-foreground"] = light ? "#334155" : "#cbd5e1";
     vars["--sidebar-muted"] = light ? "#64748b" : "#94a3b8";
     vars["--sidebar-strong"] = light ? "#0f172a" : "#ffffff";

@@ -36,6 +36,9 @@
   --sidebar-strong: #ffffff;
   --sidebar-hover: #1e293b;
   --sidebar-border: #1e293b;
+  /* Separador sutil da sidebar: groove preto (não brilha em cor escura). É
+     recalculado por luminância no DashboardShell quando a rede escolhe a cor. */
+  --sidebar-divider: rgba(0, 0, 0, 0.22);
 
   /* Status (checklist) */
   --success: #16a34a;
@@ -80,6 +83,7 @@
   --sidebar-strong: #ffffff;
   --sidebar-hover: #131c2e;
   --sidebar-border: #1e293b;
+  --sidebar-divider: rgba(0, 0, 0, 0.22);
 
   --success: #22c55e;
   --success-bg: #052e16;
@@ -120,6 +124,7 @@
   --color-sidebar-active-foreground: var(--sidebar-active-foreground);
   --color-sidebar-hover: var(--sidebar-hover);
   --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-divider: var(--sidebar-divider);
 
   --color-success: var(--success);
   --color-success-bg: var(--success-bg);
