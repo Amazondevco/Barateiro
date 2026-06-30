@@ -21,12 +21,12 @@ export async function quickSwitch(email: string) {
     type: "magiclink",
     email,
   });
-  if (error || !linkData?.properties?.hashed_token) return;
+  if (error || !linkData?.properties?.email_otp) return;
 
   await supabase.auth.signOut();
   await supabase.auth.verifyOtp({
     email,
-    token: linkData.properties.hashed_token,
+    token: linkData.properties.email_otp,
     type: "magiclink",
   });
 
