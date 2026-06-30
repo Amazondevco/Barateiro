@@ -40,6 +40,7 @@ export type NetworkHomeData = {
     nome: string;
     descricao: string | null;
     enviadoHoje: boolean;
+    foraDoHorario: boolean;
   }>;
 };
 
@@ -104,7 +105,7 @@ async function _fetchNetworkHome(memberId: string, userId: string) {
   const { data: forms, error: formsError } = await supabase
     .from("formularios")
     .select(
-      "id, nome, descricao, tipo_unidade, dias_semana, status, formulario_unidades(unidade_id), formulario_departamentos(departamento_id)",
+      "id, nome, descricao, tipo_unidade, dias_semana, disponivel_de, disponivel_ate, status, formulario_unidades(unidade_id), formulario_departamentos(departamento_id)",
     )
     .eq("rede_id", member.rede_id)
     .eq("status", "ativo")
@@ -113,7 +114,9 @@ async function _fetchNetworkHome(memberId: string, userId: string) {
   if (formsError) throw formsError;
 
   const sentToday = new Set((todayAnswers ?? []).map((row) => String(row.formulario_id)));
-  const today = new Date().getDay() || 7;
+  const agora = new Date();
+  const today = agora.getDay() || 7;
+  const agoraHHMM = `${String(agora.getHours()).padStart(2, "0")}:${String(agora.getMinutes()).padStart(2, "0")}`;
   const unitType =
     typeof member.unidades === "object" && member.unidades && "tipo" in member.unidades
       ? (member.unidades.tipo as string | null)
@@ -121,9 +124,7 @@ async function _fetchNetworkHome(memberId: string, userId: string) {
 
   const filteredForms = (forms ?? [])
     .filter((form) => {
-      const weekdays = (form.dias_semana as number[] | null) ?? [];
-      if (weekdays.length > 0 && !weekdays.includes(today)) return false;
-
+      // Dia/horário NÃO filtram mais — viram "fora do horário" (cinza, preenchível).
       if (form.tipo_unidade && unitType && form.tipo_unidade !== unitType) return false;
 
       const allowedUnits = ((form.formulario_unidades as Array<{ unidade_id: string }> | null) ?? []).map(
@@ -145,12 +146,23 @@ async function _fetchNetworkHome(memberId: string, userId: string) {
 
       return true;
     })
-    .map((form) => ({
-      id: String(form.id),
-      nome: String(form.nome),
-      descricao: (form.descricao as string | null) ?? null,
-      enviadoHoje: sentToday.has(String(form.id)),
-    }));
+    .map((form) => {
+      const weekdays = (form.dias_semana as number[] | null) ?? [];
+      let fora = weekdays.length > 0 && !weekdays.includes(today);
+      const de = (form.disponivel_de as string | null)?.slice(0, 5);
+      const ate = (form.disponivel_ate as string | null)?.slice(0, 5);
+      if (!fora && (de || ate)) {
+        if (de && agoraHHMM < de) fora = true;
+        if (ate && agoraHHMM > ate) fora = true;
+      }
+      return {
+        id: String(form.id),
+        nome: String(form.nome),
+        descricao: (form.descricao as string | null) ?? null,
+        enviadoHoje: sentToday.has(String(form.id)),
+        foraDoHorario: fora,
+      };
+    });
 
   // Pré-carrega (best-effort) as definições dos formulários listados, para que
   // qualquer um deles possa ser aberto/preenchido offline depois. Cada chamada

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { TERMO_PRIVACIDADE, TERMO_VERSAO } from "@/lib/termo-privacidade";
+import { validarSenha, SENHA_REGRAS } from "@/lib/senha";
 
 // ---------- máscaras / validações ----------
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
@@ -112,7 +113,8 @@ export function CadastroForm() {
       if (!cpfValido(cpf)) return "CPF inválido.";
       if (!/^\S+@\S+\.\S+$/.test(email)) return "E-mail inválido.";
       if (onlyDigits(celular).length < 10) return "Celular inválido.";
-      if (senha.length < 6) return "A senha precisa ter ao menos 6 caracteres.";
+      const erroSenha = validarSenha(senha);
+      if (erroSenha) return erroSenha;
       if (senha !== senha2) return "As senhas não conferem.";
     }
     if (passo === 2 && !foto) return "A foto de perfil é obrigatória.";
@@ -229,7 +231,8 @@ export function CadastroForm() {
               <Input value={celular} onChange={(e) => setCelular(maskCelular(e.target.value))} placeholder="(00) 00000-0000" inputMode="numeric" autoComplete="off" />
             </Campo>
             <Campo label="Senha">
-              <Input value={senha} onChange={(e) => setSenha(e.target.value)} type="password" placeholder="mín. 6 caracteres" autoComplete="new-password" />
+              <Input value={senha} onChange={(e) => setSenha(e.target.value)} type="password" placeholder="senha" autoComplete="new-password" />
+              <p className="mt-1 text-xs text-muted-foreground">{SENHA_REGRAS}</p>
             </Campo>
             <Campo label="Confirmar senha">
               <Input value={senha2} onChange={(e) => setSenha2(e.target.value)} type="password" placeholder="repita a senha" autoComplete="new-password" />

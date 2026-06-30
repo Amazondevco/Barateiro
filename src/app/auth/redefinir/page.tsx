@@ -7,6 +7,7 @@ import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
+import { validarSenha, SENHA_REGRAS } from "@/lib/senha";
 
 // Tela de cadastro do responsável / redefinição de senha (alvo do link).
 // IMPORTANTE: visitar o link NÃO estabelece sessão (senão abrir o link de outra
@@ -88,7 +89,8 @@ export default function RedefinirSenhaPage() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    if (senha.length < 8) return setError("A senha precisa ter ao menos 8 caracteres.");
+    const erroSenha = validarSenha(senha);
+    if (erroSenha) return setError(erroSenha);
     if (senha !== confirma) return setError("As senhas não conferem.");
     if (!tokensRef.current) return setError("Link inválido — peça um novo.");
 
@@ -165,6 +167,7 @@ export default function RedefinirSenhaPage() {
                     onChange={(e) => setSenha(e.target.value)}
                     required
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">{SENHA_REGRAS}</p>
                 </div>
                 <div>
                   <Label htmlFor="confirma">Confirmar senha</Label>

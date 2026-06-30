@@ -29,9 +29,9 @@ sempre a **cor da rede** (`--primary`).
   Unidades, Departamentos, Usuários, Equipe, lista de Checklists.
 - [x] **Fase 4 — Header de página + botões.** `PageHeader` maior; botão "Novo X"
   padronizado (arredondado, ícone +, cor da rede).
-- [ ] **Fase 5 — App: checklist fora do horário.** No PWA e no nativo, checklist
+- [x] **Fase 5 — App: checklist fora do horário.** No PWA e no nativo, checklist
   fora do dia/horário aparece **cinza/inativo com ícone de relógio**, mas ainda
   **preenchível** (aviso "fora do horário"). Hoje ele é escondido.
-- [ ] **Fase 6 — Polimento.** Dark mode, responsividade e `DESIGN.md`.
+- [x] **Fase 6 — Polimento.** Dark mode, responsividade e `DESIGN.md`.
 
 > Ordem sugerida: 0 → 1 → 2 → 3 → 4 → 5 → 6 (5 pode ser priorizada se o app urgir).

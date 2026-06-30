@@ -55,7 +55,7 @@ export default async function AppRedePage({
   const { data: forms } = await supabase
     .from("formularios")
     .select(
-      "id, nome, descricao, tipo_unidade, dias_semana, formulario_unidades(unidade_id), formulario_departamentos(departamento_id)",
+      "id, nome, descricao, tipo_unidade, dias_semana, disponivel_de, disponivel_ate, formulario_unidades(unidade_id), formulario_departamentos(departamento_id)",
     )
     .eq("rede_id", m.rede_id)
     .eq("status", "ativo")
@@ -67,13 +67,17 @@ export default async function AppRedePage({
     descricao: string | null;
     tipo_unidade: string | null;
     dias_semana: number[] | null;
+    disponivel_de: string | null;
+    disponivel_ate: string | null;
     formulario_unidades: { unidade_id: string }[];
     formulario_departamentos: { departamento_id: string }[];
   };
 
-  // Segmentação: formulário aparece se casa com unidade/tipo, departamento e dia.
-  const diaJs = new Date().getDay();
-  const diaIso = diaJs === 0 ? 7 : diaJs;
+  // Segmentação: checklist aparece se casa com unidade/tipo e departamento.
+  // O dia/horário NÃO some mais — fica "fora do horário" (cinza), ainda preenchível.
+  const agora = new Date();
+  const diaIso = agora.getDay() === 0 ? 7 : agora.getDay();
+  const agoraHHMM = `${String(agora.getHours()).padStart(2, "0")}:${String(agora.getMinutes()).padStart(2, "0")}`;
   const tipoUni = m.unidades?.tipo ?? null;
 
   // Quais formulários este usuário já enviou hoje (para o filtro pendente/enviado).
@@ -94,16 +98,26 @@ export default async function AppRedePage({
       if (us.length && (!m.unidade_id || !us.includes(m.unidade_id))) return false;
       const ds = (f.formulario_departamentos ?? []).map((x) => x.departamento_id);
       if (ds.length && (!m.departamento_id || !ds.includes(m.departamento_id))) return false;
-      const dias = f.dias_semana ?? [];
-      if (dias.length && !dias.includes(diaIso)) return false;
       return true;
     })
-    .map((f) => ({
-      id: f.id,
-      nome: f.nome,
-      descricao: f.descricao,
-      enviadoHoje: enviados.has(f.id),
-    }));
+    .map((f) => {
+      // Fora do horário = dia não permitido OU horário fora da janela.
+      const dias = f.dias_semana ?? [];
+      let fora = dias.length > 0 && !dias.includes(diaIso);
+      const de = f.disponivel_de?.slice(0, 5);
+      const ate = f.disponivel_ate?.slice(0, 5);
+      if (!fora && (de || ate)) {
+        if (de && agoraHHMM < de) fora = true;
+        if (ate && agoraHHMM > ate) fora = true;
+      }
+      return {
+        id: f.id,
+        nome: f.nome,
+        descricao: f.descricao,
+        enviadoHoje: enviados.has(f.id),
+        foraDoHorario: fora,
+      };
+    });
 
   const cor = marca?.app_cor || marca?.cor_primaria || "#0f172a";
   const redeNome = marca?.nome ?? "Minha rede";

@@ -233,6 +233,10 @@ não-lida tem **ponto `bg-primary`** antes da data/unidade + leve realce
   botão fixo "Confirmar e enviar").
 - **Offline:** envio entra em fila (IndexedDB) e sincroniza sozinho; tarja no topo
   indica offline/pendências (`OfflineSyncProvider`).
+- **Checklist fora do horário:** checklist atribuído ao operador mas fora do
+  dia (`dias_semana`) ou da janela (`disponivel_de`/`disponivel_ate`) **não some** —
+  aparece **cinza** (`opacity-70`, chip `bg-muted`) com badge **"Fora do horário"**
+  (`Clock`, `warning`) e **continua preenchível**. Vale PWA e nativo (`forms-board`).
 - **Safe areas (edge-to-edge):** o app desenha sob as barras do sistema. As telas
   reservam `env(safe-area-inset-top/bottom)` (shell empurra o conteúdo; barra
   inferior flutuante sobe; cabeçalho/rodapé fixos do formulário ganham respiro).
@@ -303,6 +307,17 @@ Botões de resposta selecionados: `border-primary bg-primary/10 text-primary`.
   aqui.").
 
 ---
+
+## 10.1 Senhas / segurança
+
+- **Política de senha** (criar/alterar em qualquer lugar): **mín. 7 caracteres,
+  ≥1 letra maiúscula e ≥1 número**; **sem** exigência de caractere especial. Fonte
+  única em `src/lib/senha.ts` (`validarSenha`/`SENHA_REGRAS`/`SENHA_MIN`) — usar em
+  todo formulário de senha (cadastro, redefinição, criação de usuário). O Supabase
+  Auth também exige `password_min_length = 7` no servidor.
+- **Senhas nunca em texto puro:** ficam só em `auth.users` com **hash bcrypt**
+  (Supabase Auth). Não há coluna de senha no schema `public`; ninguém — nem o super
+  admin — consegue ver a senha de alguém.
 
 ## 11. Regras para qualquer mudança (checklist)
 

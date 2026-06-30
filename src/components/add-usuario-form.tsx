@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useActionToast } from "@/components/toast";
+import { SENHA_MIN, SENHA_REGRAS } from "@/lib/senha";
 import type { FormState } from "@/app/(dashboard)/usuarios/actions";
 
 type Opt = { id: string; nome: string };
@@ -59,9 +60,10 @@ export function AddUsuarioForm({
                   id="us_senha"
                   name="senha"
                   type="text"
-                  minLength={6}
+                  minLength={SENHA_MIN}
                   required
                 />
+                <p className="mt-1 text-xs text-muted-foreground">{SENHA_REGRAS}</p>
               </div>
               <div>
                 <Label htmlFor="us_papel">Papel</Label>

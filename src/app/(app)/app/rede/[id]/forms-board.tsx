@@ -12,6 +12,7 @@ import {
   Check,
   CircleCheck,
   CircleDashed,
+  Clock,
 } from "lucide-react";
 import {
   DndContext,
@@ -34,6 +35,7 @@ export type FormItem = {
   nome: string;
   descricao: string | null;
   enviadoHoje?: boolean;
+  foraDoHorario?: boolean; // fora do dia/horário de preenchimento (ainda preenchível)
 };
 
 type Modo = "az" | "za" | "custom";
@@ -295,12 +297,19 @@ function Opcao({
 }
 
 function FormCard({ form, membroId }: { form: FormItem; membroId: string }) {
+  const fora = !!form.foraDoHorario;
   return (
     <Link
       href={`/app/rede/${membroId}/form/${form.id}`}
-      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
+      className={`flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${
+        fora ? "opacity-70 hover:border-warning" : "hover:border-primary"
+      }`}
     >
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <span
+        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+          fora ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+        }`}
+      >
         <ClipboardList className="h-6 w-6" />
       </span>
       <div className="min-w-0 flex-1">
@@ -313,6 +322,10 @@ function FormCard({ form, membroId }: { form: FormItem; membroId: string }) {
         {form.enviadoHoje ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
             <CircleCheck className="h-3.5 w-3.5" /> Hoje
+          </span>
+        ) : fora ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-warning-bg px-2 py-0.5 text-xs font-semibold text-warning">
+            <Clock className="h-3.5 w-3.5" /> Fora do horário
           </span>
         ) : (
           <span className="h-5" />
@@ -336,8 +349,15 @@ function SortableCard({ form, membroId }: { form: FormItem; membroId: string }) 
       >
         <GripVertical className="h-5 w-5" />
       </button>
-      <Link href={`/app/rede/${membroId}/form/${form.id}`} className="flex min-w-0 flex-1 items-center gap-4">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <Link
+        href={`/app/rede/${membroId}/form/${form.id}`}
+        className={`flex min-w-0 flex-1 items-center gap-4 ${form.foraDoHorario ? "opacity-70" : ""}`}
+      >
+        <span
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+            form.foraDoHorario ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+          }`}
+        >
           <ClipboardList className="h-6 w-6" />
         </span>
         <div className="min-w-0 flex-1">
@@ -346,11 +366,15 @@ function SortableCard({ form, membroId }: { form: FormItem; membroId: string }) 
             <p className="truncate text-[13px] text-muted-foreground">{form.descricao}</p>
           )}
         </div>
-        {form.enviadoHoje && (
+        {form.enviadoHoje ? (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
             <CircleCheck className="h-3.5 w-3.5" /> Hoje
           </span>
-        )}
+        ) : form.foraDoHorario ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-warning-bg px-2 py-0.5 text-xs font-semibold text-warning">
+            <Clock className="h-3.5 w-3.5" /> Fora
+          </span>
+        ) : null}
       </Link>
     </div>
   );

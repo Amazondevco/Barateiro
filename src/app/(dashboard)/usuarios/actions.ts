@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
+import { validarSenha } from "@/lib/senha";
 import type { Papel } from "@/lib/types";
 
 export type FormState = { error?: string; ok?: boolean };
@@ -70,8 +71,8 @@ export async function createUsuario(
 
   if (!nome || !email || !senha)
     return { error: "Preencha nome, e-mail e senha." };
-  if (senha.length < 6)
-    return { error: "A senha deve ter ao menos 6 caracteres." };
+  const erroSenha = validarSenha(senha);
+  if (erroSenha) return { error: erroSenha };
 
   // Autorização
   if (caller.papel === "admin_supermercado") {
