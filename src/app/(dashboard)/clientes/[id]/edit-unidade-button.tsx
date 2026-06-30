@@ -24,11 +24,20 @@ type U = {
 export function EditUnidadeButton({
   unidade,
   redeId,
+  open: openProp,
+  onOpenChange,
+  hideTrigger = false,
 }: {
   unidade: U;
   redeId: string;
+  // Modo controlado: a linha (clicável) abre/fecha o modal.
+  open?: boolean;
+  onOpenChange?: (v: boolean) => void;
+  hideTrigger?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [openLocal, setOpenLocal] = useState(false);
+  const open = onOpenChange ? !!openProp : openLocal;
+  const setOpen = onOpenChange ?? setOpenLocal;
   const [state, formAction, pending] = useActionState(
     updateUnidade.bind(null, unidade.id, redeId),
     {},
@@ -37,11 +46,13 @@ export function EditUnidadeButton({
 
   return (
     <>
-      <Tooltip label="Editar">
-        <button onClick={() => setOpen(true)} className={iconBtnClass}>
-          <Pencil className="h-4 w-4" />
-        </button>
-      </Tooltip>
+      {!hideTrigger && (
+        <Tooltip label="Editar">
+          <button onClick={() => setOpen(true)} className={iconBtnClass}>
+            <Pencil className="h-4 w-4" />
+          </button>
+        </Tooltip>
+      )}
       {open && (
         <Modal title="Editar unidade" onClose={() => setOpen(false)}>
           <form action={formAction} className="space-y-4">

@@ -7,10 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { PAPEL_LABEL, type Papel } from "@/lib/types";
 
-import {
-  createUnidade,
-  setUnidadeStatus,
-} from "@/app/(dashboard)/clientes/[id]/unidade-actions";
+import { createUnidade } from "@/app/(dashboard)/clientes/[id]/unidade-actions";
 import { AddUnidadeForm } from "@/app/(dashboard)/clientes/[id]/add-unidade-form";
 import { createUsuario } from "@/app/(dashboard)/usuarios/actions";
 import { AddUsuarioForm } from "@/components/add-usuario-form";
@@ -21,7 +18,7 @@ import {
 import { AddDepartamentoForm } from "./add-departamento-form";
 import { Power } from "lucide-react";
 import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
-import { EditUnidadeButton } from "@/app/(dashboard)/clientes/[id]/edit-unidade-button";
+import { UnidadeRow } from "./unidade-row";
 import { EditDepartamentoButton } from "./edit-departamento-button";
 import { EditUsuarioButton } from "@/components/edit-usuario-button";
 import { updateAparencia } from "./actions";
@@ -54,13 +51,6 @@ const TABS = [
   { key: "auditoria", label: "Auditoria", adminOnly: true },
   { key: "aparencia", label: "Aparência", adminOnly: true },
 ];
-
-const TIPO_LABEL: Record<string, string> = {
-  loja: "Loja",
-  cd: "CD / Galpão",
-  escritorio: "Escritório",
-  outro: "Outro",
-};
 
 export default async function ConfiguracoesPage({
   searchParams,
@@ -396,31 +386,7 @@ async function UnidadesTab({ supabase, redeId }: { supabase: SB; redeId: string 
           </THead>
           <tbody>
             {(unidades ?? []).map((u) => (
-              <TR key={u.id}>
-                <TD>
-                  <span className="font-medium">{u.nome}</span>
-                  {u.codigo && (
-                    <span className="ml-2 text-xs text-muted-foreground">#{u.codigo}</span>
-                  )}
-                </TD>
-                <TD>{TIPO_LABEL[u.tipo] ?? u.tipo}</TD>
-                <TD>{u.cidade ? `${u.cidade}${u.uf ? "/" + u.uf : ""}` : "—"}</TD>
-                <TD>
-                  <Badge tone={u.status === "ativo" ? "success" : "neutral"}>{u.status}</Badge>
-                </TD>
-                <TD>
-                  <div className="flex items-center gap-1">
-                    <EditUnidadeButton unidade={u} redeId={redeId} />
-                    <Tooltip label={u.status === "ativo" ? "Desativar" : "Ativar"}>
-                      <form action={setUnidadeStatus.bind(null, u.id, redeId, u.status === "ativo" ? "inativo" : "ativo")}>
-                        <button className={iconBtnClass} type="submit">
-                          <Power className="h-4 w-4" />
-                        </button>
-                      </form>
-                    </Tooltip>
-                  </div>
-                </TD>
-              </TR>
+              <UnidadeRow key={u.id} unidade={u} redeId={redeId} />
             ))}
           </tbody>
         </Table>
