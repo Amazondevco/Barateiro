@@ -115,6 +115,9 @@ export function FillFormPage() {
   const [invalid, setInvalid] = useState<Record<string, string>>({});
   const [flashMsg, setFlashMsg] = useState<string | null>(null);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Rascunho automático: salva cada mudança localmente e restaura ao reabrir.
+  const draftKey = `checkai-draft:${memberId}:${formId}`;
+  const draftFirst = useRef(true);
 
   function flash(msg: string) {
     setFlashMsg(msg);
@@ -138,6 +141,27 @@ export function FillFormPage() {
         setForm(result.form);
         setSavedSignature(result.signature);
         // Assinatura começa vazia — anexada pelo bloco fixo na revisão (igual ao PWA).
+
+        // Restaura rascunho salvo (se houver) — não perde o que já foi preenchido.
+        try {
+          const raw = localStorage.getItem(draftKey);
+          if (raw) {
+            const d = JSON.parse(raw) as {
+              values?: Record<string, string>;
+              notes?: Record<string, string>;
+              photos?: Record<string, string>;
+              stepIndex?: number;
+              signature?: string | null;
+            };
+            if (d.values) setValues(d.values);
+            if (d.notes) setNotes(d.notes);
+            if (d.photos) setPhotos(d.photos);
+            if (typeof d.stepIndex === "number") setStepIndex(d.stepIndex);
+            if (d.signature) setSignature(d.signature);
+          }
+        } catch {
+          /* rascunho corrompido — ignora */
+        }
       } catch (loadError) {
         setError(
           loadError instanceof Error
@@ -150,7 +174,35 @@ export function FillFormPage() {
     }
 
     void load();
-  }, [formId, memberId]);
+  }, [formId, memberId, draftKey]);
+
+  // Salva o rascunho a cada mudança (debounce). Pula a 1ª execução para não
+  // gravar o estado vazio inicial por cima de um rascunho existente.
+  useEffect(() => {
+    if (draftFirst.current) {
+      draftFirst.current = false;
+      return;
+    }
+    const handle = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({ values, notes, photos, stepIndex, signature }),
+        );
+      } catch {
+        // Sem espaço (fotos grandes): salva ao menos respostas/observações.
+        try {
+          localStorage.setItem(
+            draftKey,
+            JSON.stringify({ values, notes, stepIndex, signature }),
+          );
+        } catch {
+          /* ignora */
+        }
+      }
+    }, 400);
+    return () => clearTimeout(handle);
+  }, [values, notes, photos, stepIndex, signature, draftKey]);
 
   const steps = useMemo(() => {
     if (!form) return [] as FormSection[][];
@@ -331,6 +383,13 @@ export function FillFormPage() {
         lat,
         lng,
       });
+
+      // Enviado/enfileirado com sucesso → descarta o rascunho.
+      try {
+        localStorage.removeItem(draftKey);
+      } catch {
+        /* ignora */
+      }
 
       if (typeof navigator === "undefined" || navigator.onLine) {
         await syncQueue();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -132,6 +132,58 @@ export function FillForm({
   const [invalido, setInvalido] = useState<Record<string, string>>({});
   const [flashMsg, setFlashMsg] = useState<string | null>(null);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Rascunho automático: salva cada mudança e restaura ao reabrir.
+  const draftKey = `checkai-draft:${redeMembroId}:${form.id}`;
+  const draftFirst = useRef(true);
+
+  // Restaura rascunho salvo (client-only, após hidratação).
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const d = JSON.parse(raw) as {
+          valores?: Record<string, string>;
+          obs?: Record<string, string>;
+          fotos?: Record<string, string>;
+          etapa?: number;
+          assinada?: string | null;
+        };
+        if (d.valores) setValores(d.valores);
+        if (d.obs) setObs(d.obs);
+        if (d.fotos) setFotos(d.fotos);
+        if (typeof d.etapa === "number") setEtapa(d.etapa);
+        if (d.assinada) setAssinada(d.assinada);
+      }
+    } catch {
+      /* rascunho corrompido — ignora */
+    }
+  }, [draftKey]);
+
+  // Salva a cada mudança (debounce); pula a 1ª execução p/ não gravar vazio.
+  useEffect(() => {
+    if (draftFirst.current) {
+      draftFirst.current = false;
+      return;
+    }
+    const h = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({ valores, obs, fotos, etapa, assinada }),
+        );
+      } catch {
+        try {
+          localStorage.setItem(
+            draftKey,
+            JSON.stringify({ valores, obs, etapa, assinada }),
+          );
+        } catch {
+          /* ignora */
+        }
+      }
+    }, 400);
+    return () => clearTimeout(h);
+  }, [valores, obs, fotos, etapa, assinada, draftKey]);
 
   function setVal(id: string, v: string) {
     setValores((p) => ({ ...p, [id]: v }));
@@ -270,6 +322,12 @@ export function FillForm({
         lat,
         lng,
       });
+      // Enfileirado com sucesso → descarta o rascunho.
+      try {
+        localStorage.removeItem(draftKey);
+      } catch {
+        /* ignora */
+      }
       await sincronizar();
       const restante = await pendingCount();
       router.push(
