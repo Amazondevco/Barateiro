@@ -144,6 +144,21 @@
   border-color: var(--border);
 }
 
+/* Toast (balão de feedback): entra deslizando suavemente do topo. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.toast-in {
+  animation: toast-in 0.18s ease-out;
+}
+
 /* Elevação sutil em "todos os acessos" do painel: cartões claros ganham uma
    sombra suave para não ficarem chapados. Exclui controles de formulário,
    botões e células de tabela. Use `.no-elev` para optar por sair. */

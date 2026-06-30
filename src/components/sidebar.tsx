@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LifeBuoy } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { NAV } from "@/lib/nav";
 import type { Papel } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+const APP_VERSAO = "v1.0.0";
 
 export function Sidebar({
   papel,
@@ -74,6 +77,28 @@ export function Sidebar({
           );
         })}
       </nav>
+
+      {/* Rodapé: suporte + versão/copyright (recolhe junto com a barra) */}
+      <div className="border-t border-sidebar-border p-3">
+        <Link
+          href="/suporte"
+          onClick={onNavigate}
+          title={collapsed ? "Suporte Check.AI" : undefined}
+          className={cn(
+            "flex items-center rounded-lg py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-[color:var(--sidebar-strong)]",
+            collapsed ? "justify-center px-0" : "gap-3 px-3",
+          )}
+        >
+          <LifeBuoy className="h-[18px] w-[18px] shrink-0" />
+          {!collapsed && "Suporte Check.AI"}
+        </Link>
+        {!collapsed && (
+          <div className="px-3 pt-3 text-[11px] leading-relaxed text-sidebar-muted">
+            <p>Painel Check.AI · {APP_VERSAO}</p>
+            <p>© 2026 Check.AI</p>
+          </div>
+        )}
+      </div>
     </aside>
   );
 }

@@ -8,6 +8,7 @@ import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { EnderecoFields } from "./endereco-fields";
+import { useActionToast } from "@/components/toast";
 import { updateUnidade } from "./unidade-actions";
 
 type U = {
@@ -47,6 +48,7 @@ export function EditUnidadeButton({
     updateUnidade.bind(null, unidade.id, redeId),
     {},
   );
+  useActionToast(state, { success: "Unidade atualizada." });
   if (state.ok && open) setOpen(false);
 
   return (

@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { EnderecoFields } from "./endereco-fields";
+import { useActionToast } from "@/components/toast";
 import type { FormState } from "./unidade-actions";
 
 export function AddUnidadeForm({
@@ -16,6 +17,7 @@ export function AddUnidadeForm({
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(action, {});
+  useActionToast(state, { success: "Unidade criada." });
 
   if (state.ok && open) setOpen(false);
 

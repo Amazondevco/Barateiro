@@ -36,6 +36,7 @@ import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { useToast } from "@/components/toast";
 import { saveFormulario, type FormularioPayload } from "./actions";
 import { AiFormDialog } from "./ai-form-dialog";
 import type { AiForm } from "./ai-actions";
@@ -175,6 +176,7 @@ export function FormBuilder({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
   const [aiOpen, setAiOpen] = useState(false);
   const [dadosOpen, setDadosOpen] = useState(true);
 
@@ -366,10 +368,19 @@ export function FormBuilder({
         })),
       })),
     };
+    const tid = toast.loading(formId ? "Salvando alterações…" : "Criando formulário…");
     startTransition(async () => {
       const res = await saveFormulario(redeId, formId, payload);
-      if (res.error) setError(res.error);
-      else router.push("/formularios");
+      if (res.error) {
+        toast.update(tid, { type: "error", message: res.error });
+        setError(res.error);
+      } else {
+        toast.update(tid, {
+          type: "success",
+          message: formId ? "Formulário atualizado." : "Formulário criado.",
+        });
+        router.push("/formularios");
+      }
     });
   }
 

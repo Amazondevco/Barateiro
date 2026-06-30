@@ -12,6 +12,7 @@ import {
   Eraser,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useActionToast } from "@/components/toast";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import type { FormState } from "./actions";
@@ -226,6 +227,7 @@ export function AparenciaForm({
   corSidebar: string | null;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
+  useActionToast(state, { success: "Aparência salva." });
   const [logo, setLogo] = useState(logoUrl ?? "");
   const [favicon, setFavicon] = useState(faviconUrl ?? "");
   const [banner, setBanner] = useState(bannerUrl ?? "");

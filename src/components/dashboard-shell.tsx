@@ -15,6 +15,7 @@ import { DEV_EMAILS } from "@/lib/dev-accounts";
 import { PageTitleProvider, TopbarTitle } from "@/components/page-title";
 import { TopbarSearch } from "@/components/topbar-search";
 import { NotificationBell } from "@/components/notification-bell";
+import { ToastProvider } from "@/components/toast";
 
 // true se a cor (hex) for clara → texto escuro fica legível
 function isLightHex(hex: string): boolean {
@@ -101,6 +102,7 @@ export function DashboardShell({
 
   return (
     <PageTitleProvider>
+    <ToastProvider>
     <div className="flex h-dvh overflow-hidden" style={brandStyle}>
       {/* Sidebar desktop (recolhível em rail de ícones) */}
       <div className="hidden lg:block">
@@ -219,6 +221,7 @@ export function DashboardShell({
       )}
       {profile.papel === "admin_supermercado" && <SuggestionFab raised />}
     </div>
+    </ToastProvider>
     </PageTitleProvider>
   );
 }

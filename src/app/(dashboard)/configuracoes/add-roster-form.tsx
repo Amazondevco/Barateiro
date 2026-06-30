@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { useActionToast } from "@/components/toast";
 import type { RosterState } from "./roster-actions";
 
 type Opt = { id: string; nome: string };
@@ -33,6 +34,7 @@ export function AddRosterForm({
   const [open, setOpen] = useState(false);
   const [cpf, setCpf] = useState("");
   const [state, formAction, pending] = useActionState(action, {});
+  useActionToast(state, { success: "Pessoa adicionada à equipe." });
 
   if (state.ok && open) {
     setOpen(false);

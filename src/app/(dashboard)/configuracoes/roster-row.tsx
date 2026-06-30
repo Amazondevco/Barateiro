@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
+import { useToast, useActionToast } from "@/components/toast";
 import {
   updateRosterPessoa,
   removeRosterPessoa,
@@ -43,10 +44,12 @@ export function RosterRow({
   departamentos: Opt[];
 }) {
   const [open, setOpen] = useState(false);
+  const { success: toastSuccess } = useToast();
   const [state, formAction, pending] = useActionState(
     updateRosterPessoa.bind(null, pessoa.id),
     {},
   );
+  useActionToast(state, { success: "Pessoa atualizada." });
   if (state.ok && open) setOpen(false);
 
   const editavel = !pessoa.protegido;
@@ -89,8 +92,11 @@ export function RosterRow({
                   !window.confirm(
                     `Remover ${pessoa.nome} da equipe do app? A pessoa perde o acesso à rede.`,
                   )
-                )
+                ) {
                   e.preventDefault();
+                  return;
+                }
+                toastSuccess(`${pessoa.nome} removido da equipe.`);
               }}
             >
               <Tooltip label="Apagar">

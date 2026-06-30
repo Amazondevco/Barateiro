@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { useActionToast } from "@/components/toast";
 import { updateDepartamento } from "./departamento-actions";
 
 type D = {
@@ -29,6 +30,7 @@ export function EditDepartamentoButton({
     updateDepartamento.bind(null, departamento.id),
     {},
   );
+  useActionToast(state, { success: "Departamento atualizado." });
   if (state.ok && open) setOpen(false);
 
   return (

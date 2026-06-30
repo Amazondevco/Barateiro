@@ -116,6 +116,22 @@ dentro de um cartão com `overflow-hidden`.
 **lucide-react**, tamanho `h-4 w-4` (inline) ou `h-5 w-5` (ações). Nunca emoji em
 UI de produto.
 
+### Toast — `src/components/toast.tsx`
+**Feedback de AÇÃO do usuário** (salvar/editar/excluir/carregar) — não confundir
+com o sino (`NotificationBell`), que é evento do sistema. Balão no **topo-direito**
+(`rounded-2xl border shadow-md`, ícone em círculo + texto + X no canto superior
+esquerdo), entra com `.toast-in`. Variantes por tom: **success** (`success-bg` +
+`CheckCircle2`), **error** (`danger-bg` + `AlertCircle`, usado em exclusões/falhas),
+**info** (`primary/10`), **loading** (spinner, fica até `update`/`dismiss`).
+- API: `const t = useToast()` → `t.success/error/info(msg)`, `t.loading(msg)` →
+  id, `t.update(id, {type,message})`, `t.dismiss(id)`. Auto-some (success 3,5s /
+  error 5,5s / loading nunca).
+- Forms com Server Action: `useActionToast(state, { success: "…" })` dispara o
+  toast a partir de `state.ok`/`state.error` (useActionState).
+- Carregamento → resultado: `const id = t.loading("Salvando…"); …; t.update(id,
+  {type:"success", message:"Salvo."})`.
+- **Regra:** toda ação de CRUD deve emitir toast. Provider fica no `DashboardShell`.
+
 ### FABs
 Flutuantes, cor primária, `rounded-full shadow-lg`. Sugestão (lâmpada) e
 Assistente IA (sparkle). Empilham no canto inferior direito.
@@ -124,7 +140,9 @@ Assistente IA (sparkle). Empilham no canto inferior direito.
 
 ## 7. Padrões do Painel
 
-- Sidebar **escura** (tokens `--sidebar-*`) recolhível; topbar herda a cor da sidebar.
+- Sidebar **escura** (tokens `--sidebar-*`) recolhível; **rodapé** com "Suporte
+  Check.AI" (`LifeBuoy` → `/suporte`) + versão e "© 2026 Check.AI" em
+  `text-sidebar-muted` (recolhe junto com a barra). Topbar herda a cor da sidebar.
 - **Topbar (à direita):** busca + **sino de notificações** + tema + usuário. A
   **busca** fica recolhida só como **lupa** (botão `h-9 w-9`); passar o mouse ou
   clicar expande a barra (`TopbarSearch`), recolhendo ao sair se vazia. O **sino**

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { useActionToast } from "@/components/toast";
 import type { FormState } from "@/app/(dashboard)/usuarios/actions";
 
 type Opt = { id: string; nome: string };
@@ -26,6 +27,7 @@ export function AddUsuarioForm({
   const [open, setOpen] = useState(false);
   const [papel, setPapel] = useState<string>("gerente");
   const [state, formAction, pending] = useActionState(action, {});
+  useActionToast(state, { success: "Usuário criado." });
 
   if (state.ok && open) setOpen(false);
 

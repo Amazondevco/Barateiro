@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { useActionToast } from "@/components/toast";
 import { updateUsuario } from "@/app/(dashboard)/usuarios/actions";
 
 type U = {
@@ -32,6 +33,7 @@ export function EditUsuarioButton({
     updateUsuario.bind(null, usuario.id),
     {},
   );
+  useActionToast(state, { success: "Usuário atualizado." });
   if (state.ok && open) setOpen(false);
 
   return (
