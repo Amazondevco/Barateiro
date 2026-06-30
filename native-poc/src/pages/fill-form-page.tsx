@@ -122,7 +122,7 @@ export function FillFormPage() {
         setError(
           loadError instanceof Error
             ? loadError.message
-            : "Falha ao carregar formulário.",
+            : "Falha ao carregar checklist.",
         );
       } finally {
         setLoading(false);
@@ -149,14 +149,14 @@ export function FillFormPage() {
   }, [form]);
 
   if (loading) {
-    return <LoadingScreen label="Carregando formulário do operador…" />;
+    return <LoadingScreen label="Carregando checklist do operador…" />;
   }
 
   if (!form) {
     return (
       <div className="mx-auto w-full max-w-md p-4">
         <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
-          {error ?? "Formulário indisponível."}
+          {error ?? "Checklist indisponível."}
         </p>
       </div>
     );
@@ -219,7 +219,7 @@ export function FillFormPage() {
       const loc = await pegarLocalizacao();
       if (!loc) {
         setError(
-          "Não foi possível obter a localização. Ative o GPS e a permissão de localização para enviar este formulário.",
+          "Não foi possível obter a localização. Ative o GPS e a permissão de localização para enviar este checklist.",
         );
         setSubmitting(false);
         return;
@@ -277,7 +277,7 @@ export function FillFormPage() {
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Falha ao enviar o formulário.",
+          : "Falha ao enviar o checklist.",
       );
     } finally {
       setSubmitting(false);

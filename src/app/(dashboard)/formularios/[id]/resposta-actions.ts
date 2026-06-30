@@ -83,7 +83,7 @@ export async function getRespostaDetalhe(id: string): Promise<RespostaDetalhe | 
   }));
 
   return {
-    formulario: r.formularios?.nome ?? "Formulário",
+    formulario: r.formularios?.nome ?? "Checklist",
     unidade: r.unidades?.nome ?? "—",
     autor: (prof.data?.nome ?? ident.data?.nome ?? "—") as string,
     data: r.enviado_em,
@@ -117,7 +117,7 @@ export async function resumirResposta(id: string): Promise<{ resumo: string }> {
         s.itens.map((i) => `- ${i.texto}: ${i.valor}${i.observacao ? ` (obs: ${i.observacao})` : ""}`).join("\n"),
     )
     .join("\n");
-  const contexto = `Formulário: ${det.formulario}\nUnidade: ${det.unidade}\nPreenchido por: ${det.autor}\nNão-conformidades: ${det.total_nao} de ${det.total_itens}\n\n${itensTxt}`;
+  const contexto = `Checklist: ${det.formulario}\nUnidade: ${det.unidade}\nPreenchido por: ${det.autor}\nNão-conformidades: ${det.total_nao} de ${det.total_itens}\n\n${itensTxt}`;
 
   if (!key) {
     return {

@@ -58,7 +58,7 @@ export function AssinarForm({
 
       <p className="mb-5 text-sm text-muted-foreground">
         Antes de começar, crie sua assinatura eletrônica. Ela ficará registrada
-        em todos os formulários que você preencher nesta rede.
+        em todos os checklists que você preencher nesta rede.
       </p>
 
       <div className="space-y-4">
@@ -78,7 +78,7 @@ export function AssinarForm({
           />
           <span className="leading-snug text-muted-foreground">
             Entendo que esta assinatura tem validade de confirmação de que fui eu
-            quem assinei, e ficará registrada em todos os formulários que eu
+            quem assinei, e ficará registrada em todos os checklists que eu
             preencher.
           </span>
         </label>

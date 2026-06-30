@@ -24,7 +24,7 @@ const TIPOS: ItemTipo[] = [
 ];
 const UNIDADES: UnidadeTipo[] = ["loja", "cd", "escritorio", "outro"];
 
-const SYSTEM = `Você é um especialista em formulários digitais de checklist operacional para redes de supermercado.
+const SYSTEM = `Você é um especialista em checklists digitais operacionais para redes de supermercado.
 Gere a estrutura de um formulário de checklist a partir da entrada do usuário (descrição em texto OU conteúdo de um formulário impresso para digitalizar).
 
 Responda APENAS com JSON válido (sem markdown, sem comentários), exatamente neste formato:
@@ -129,7 +129,7 @@ async function callGroq(userMessage: string): Promise<AiResult> {
       return { error: "A IA não conseguiu estruturar. Tente detalhar mais." };
     return { ok: true, data };
   } catch {
-    return { error: "Não foi possível gerar o formulário. Tente novamente." };
+    return { error: "Não foi possível gerar o checklist. Tente novamente." };
   }
 }
 
@@ -140,14 +140,14 @@ export async function generateFormulario(
   const desc = descricao.trim();
   const file = fileText?.trim();
   if (!desc && !file)
-    return { error: "Descreva o que o formulário precisa verificar." };
+    return { error: "Descreva o que o checklist precisa verificar." };
 
   if (file) {
     const extra = desc
       ? `\n\nInstruções adicionais do usuário: ${desc}`
       : "";
     return callGroq(
-      `Digitalize o formulário impresso abaixo em um checklist digital estruturado e mobile-first, preservando seções e itens. Conteúdo extraído do arquivo:\n\n${file}${extra}`,
+      `Digitalize o checklist impresso abaixo em um checklist digital estruturado e mobile-first, preservando seções e itens. Conteúdo extraído do arquivo:\n\n${file}${extra}`,
     );
   }
   return callGroq(desc);

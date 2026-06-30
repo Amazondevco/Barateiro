@@ -116,12 +116,12 @@ export function FormulariosList({
   if (forms.length === 0) {
     return (
       <EmptyState
-        title="Nenhum formulário ainda"
+        title="Nenhum checklist ainda"
         description="Crie o primeiro modelo de checklist para suas unidades."
         action={
           <Link href="/formularios/novo">
             <Button>
-              <Plus className="h-4 w-4" /> Novo formulário
+              <Plus className="h-4 w-4" /> Novo checklist
             </Button>
           </Link>
         }
@@ -141,12 +141,12 @@ export function FormulariosList({
             <input
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar formulário…"
+              placeholder="Buscar checklist…"
               className="h-10 w-full rounded-lg border border-input bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
         </div>
-        <Campo label="Tipo de formulário">
+        <Campo label="Tipo de checklist">
           <MultiSelect
             emptyLabel="Todos os tipos"
             options={TIPO_OPTS}
@@ -184,14 +184,14 @@ export function FormulariosList({
 
         <Link href="/formularios/novo" className="ml-auto">
           <Button>
-            <Plus className="h-4 w-4" /> Novo formulário
+            <Plus className="h-4 w-4" /> Novo checklist
           </Button>
         </Link>
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState
-          title="Nenhum formulário para os filtros"
+          title="Nenhum checklist para os filtros"
           description="Ajuste os filtros para ver mais resultados."
         />
       ) : (

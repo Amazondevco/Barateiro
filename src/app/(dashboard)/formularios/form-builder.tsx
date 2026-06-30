@@ -368,7 +368,7 @@ export function FormBuilder({
         })),
       })),
     };
-    const tid = toast.loading(formId ? "Salvando alterações…" : "Criando formulário…");
+    const tid = toast.loading(formId ? "Salvando alterações…" : "Criando checklist…");
     startTransition(async () => {
       const res = await saveFormulario(redeId, formId, payload);
       if (res.error) {
@@ -377,7 +377,7 @@ export function FormBuilder({
       } else {
         toast.update(tid, {
           type: "success",
-          message: formId ? "Formulário atualizado." : "Formulário criado.",
+          message: formId ? "Checklist atualizado." : "Checklist criado.",
         });
         router.push("/formularios");
       }
@@ -415,7 +415,7 @@ export function FormBuilder({
             className="flex w-full items-center justify-between"
           >
             <h3 className="font-semibold">
-              Dados do formulário
+              Dados do checklist
               {!dadosOpen && nome ? (
                 <span className="ml-2 font-normal text-muted-foreground">
                   · {nome}
@@ -668,7 +668,7 @@ export function FormBuilder({
           Cancelar
         </Button>
         <Button type="button" onClick={save} disabled={pending}>
-          {pending ? "Salvando…" : "Salvar formulário"}
+          {pending ? "Salvando…" : "Salvar checklist"}
         </Button>
       </div>
         </div>
@@ -794,7 +794,7 @@ function PhonePreview({
           {/* header do app (cor primária) */}
           <div className="bg-primary px-4 pb-3 pt-8 text-primary-foreground">
             <p className="truncate text-sm font-semibold">
-              {nome || "Novo formulário"}
+              {nome || "Novo checklist"}
             </p>
             <p className="text-[11px] opacity-80">
               {total > 1 ? `Etapa ${idx + 1} de ${total}` : "Checklist · hoje"}

@@ -140,9 +140,16 @@ Assistente IA (sparkle). Empilham no canto inferior direito.
 
 ## 7. Padrões do Painel
 
-- Sidebar **escura** (tokens `--sidebar-*`) recolhível; **rodapé** com "Suporte
-  Check.AI" (`LifeBuoy` → `/suporte`) + versão e "© 2026 Check.AI" em
-  `text-sidebar-muted` (recolhe junto com a barra). Topbar herda a cor da sidebar.
+- Sidebar **escura** (tokens `--sidebar-*`) recolhível, **agrupada por seção**
+  (`NAV_GROUPS` em `src/lib/nav.ts`): rótulo do grupo em `text-sidebar-muted
+  uppercase tracking-wider`; recolhida, os rótulos somem e viram divisória. Grupos
+  são **role-aware** (`gruposPara(papel)` oculta itens/grupos vazios).
+- **Caixa do usuário** fica no **rodapé da sidebar** (não na topbar): avatar de
+  iniciais + nome + papel·rede, e um **menu** (abre pra cima) com **Configurações**,
+  **Suporte Check.AI** e **Sair** (vermelho); versão + "© 2026 Check.AI" abaixo.
+  `Configurações` e `Suporte` **saíram da lista de nav** e vivem só nesse menu.
+- **Termo de produto = "Checklist"** em toda a UI (nunca "Formulário" no texto
+  visível); rotas/tabelas/colunas seguem `formulario*`.
 - **Topbar (à direita):** busca + **sino de notificações** + tema + usuário. A
   **busca** fica recolhida só como **lupa** (botão `h-9 w-9`); passar o mouse ou
   clicar expande a barra (`TopbarSearch`), recolhendo ao sair se vazia. O **sino**

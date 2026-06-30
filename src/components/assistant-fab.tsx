@@ -14,7 +14,7 @@ export function AssistantFab({ papel }: { papel: "super_admin" | "admin_supermer
       content:
         papel === "super_admin"
           ? "Olá. Sou o assistente do Check.AI. Posso consultar números e métricas das redes (sem acessar conteúdo de checklists nem dados sensíveis)."
-          : "Olá. Sou o assistente da sua rede. Posso consultar os dados da SUA rede — equipe, formulários, respostas e pendências. Não vejo outras redes nem dados do sistema.",
+          : "Olá. Sou o assistente da sua rede. Posso consultar os dados da SUA rede — equipe, checklists, respostas e pendências. Não vejo outras redes nem dados do sistema.",
     },
   ]);
   const endRef = useRef<HTMLDivElement>(null);

@@ -28,7 +28,7 @@ ${link}
 *Como usar:*
 • Toque no ícone *${nomeCurto || nome}* para abrir o app
 • Faça login com o acesso que você já recebeu
-• Pronto: seus formulários e checklists ficam disponíveis ali
+• Pronto: seus checklists ficam disponíveis ali
 
 Qualquer dúvida, fale com o gestor da rede.`;
 }

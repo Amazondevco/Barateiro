@@ -14,7 +14,7 @@ Este termo explica como seus dados são tratados ao usar o aplicativo, em confor
 ## 1. Quem trata seus dados
 
 - **Plataforma (Check.AI)** — responsável pela sua conta de identidade (cadastro global) e pela infraestrutura do aplicativo.
-- **Rede (supermercado)** à qual você se vincula — responsável pelos dados da sua atuação (cargo, unidade, departamento) e pelo conteúdo dos formulários que você preenche.
+- **Rede (supermercado)** à qual você se vincula — responsável pelos dados da sua atuação (cargo, unidade, departamento) e pelo conteúdo dos checklists que você preenche.
 
 ## 2. Dados que coletamos
 
@@ -22,25 +22,25 @@ Este termo explica como seus dados são tratados ao usar o aplicativo, em confor
 
 **No vínculo com a rede:** cargo/função, unidade, departamento e sua assinatura eletrônica.
 
-**No uso:** as respostas dos formulários/checklists, fotos enviadas, data, hora e, quando aplicável, localização do envio.
+**No uso:** as respostas dos checklists, fotos enviadas, data, hora e, quando aplicável, localização do envio.
 
 ## 3. Para que usamos
 
 - Identificar você com segurança e dar acesso ao aplicativo.
-- Vincular você à sua rede e liberar os formulários conforme suas permissões.
+- Vincular você à sua rede e liberar os checklists conforme suas permissões.
 - Registrar e comprovar o preenchimento de checklists, incluindo a autoria por meio da sua assinatura eletrônica.
 
 ## 4. Assinatura eletrônica
 
 Ao adotar sua assinatura no aplicativo, você declara estar ciente de que:
 
-- A assinatura que você cria **tem validade como confirmação de que foi você** quem preencheu e assinou o formulário.
-- Essa assinatura ficará **registrada em todos os formulários que você preencher**, aplicada por você ao confirmar o envio.
+- A assinatura que você cria **tem validade como confirmação de que foi você** quem preencheu e assinou o checklist.
+- Essa assinatura ficará **registrada em todos os checklists que você preencher**, aplicada por você ao confirmar o envio.
 - O registro inclui data e hora, para fins de comprovação e auditoria.
 
 ## 5. Compartilhamento
 
-Seus dados de identidade são compartilhados com a(s) rede(s) à qual você se vincula. Os dados de atuação e o conteúdo dos formulários ficam restritos à respectiva rede e **não** são acessados pela plataforma. Não vendemos seus dados.
+Seus dados de identidade são compartilhados com a(s) rede(s) à qual você se vincula. Os dados de atuação e o conteúdo dos checklists ficam restritos à respectiva rede e **não** são acessados pela plataforma. Não vendemos seus dados.
 
 ## 6. Por quanto tempo guardamos
 

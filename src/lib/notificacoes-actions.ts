@@ -38,7 +38,7 @@ export async function getNotificacoes(): Promise<{
     return {
       id: String(r.id),
       titulo: "Nova resposta",
-      subtitulo: `${form?.nome ?? "Formulário"}${uni?.nome ? ` · ${uni.nome}` : ""}`,
+      subtitulo: `${form?.nome ?? "Checklist"}${uni?.nome ? ` · ${uni.nome}` : ""}`,
       href: `/formularios/${r.formulario_id}?tab=respostas`,
       quando: String(r.enviado_em),
     };

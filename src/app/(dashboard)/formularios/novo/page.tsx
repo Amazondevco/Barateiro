@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { FormBuilder } from "../form-builder";
 
-export const metadata = { title: "Novo formulário — Check.AI" };
+export const metadata = { title: "Novo checklist — Check.AI" };
 
 export default async function NovoFormularioPage() {
   const { profile } = await getSessionContext();
@@ -13,10 +13,10 @@ export default async function NovoFormularioPage() {
   if (!redeId) {
     return (
       <>
-        <PageHeader title="Novo formulário" />
+        <PageHeader title="Novo checklist" />
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Formulários são por rede. Acesse como admin de uma rede.
+            Checklists são por rede. Acesse como admin de uma rede.
           </CardContent>
         </Card>
       </>
@@ -48,7 +48,7 @@ export default async function NovoFormularioPage() {
 
   return (
     <>
-      <PageHeader title="Novo formulário" />
+      <PageHeader title="Novo checklist" />
       <FormBuilder
         redeId={redeId}
         formId={null}

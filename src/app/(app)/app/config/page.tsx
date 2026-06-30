@@ -31,7 +31,7 @@ export default function ConfigPage() {
       <Secao titulo="Conta">
         <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <LinhaLink href="/app/perfil" icon={User} label="Meus dados" />
-          <LinhaLink href="/app/formularios" icon={FileText} label="Formulários enviados" />
+          <LinhaLink href="/app/formularios" icon={FileText} label="Checklists enviados" />
         </div>
       </Secao>
 

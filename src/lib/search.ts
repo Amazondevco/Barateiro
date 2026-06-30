@@ -71,7 +71,7 @@ export async function buscaGlobal(
       const { data } = await qb.limit(perGroup);
       return group(
         "formularios",
-        "Formulários",
+        "Checklists",
         (data ?? []).map((f) => ({
           id: f.id as string,
           title: f.nome as string,

@@ -170,7 +170,7 @@ export function FillForm({
   }
 
   async function enviar() {
-    if (!assinada) return setErro("Assine para enviar o formulário.");
+    if (!assinada) return setErro("Assine para enviar o checklist.");
     setErro(null);
     setEnviando(true);
 

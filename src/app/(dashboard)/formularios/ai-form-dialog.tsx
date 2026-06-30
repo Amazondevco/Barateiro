@@ -116,7 +116,7 @@ export function AiFormDialog({
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Sparkles className="h-4 w-4" />
             </span>
-            <h3 className="font-semibold">Criar formulário com IA</h3>
+            <h3 className="font-semibold">Criar checklist com IA</h3>
           </div>
           <button
             onClick={onClose}
@@ -129,7 +129,7 @@ export function AiFormDialog({
 
         <div className="space-y-3 p-4">
           <p className="text-sm text-muted-foreground">
-            Importe um formulário impresso ou descreva — o agente monta as
+            Importe um checklist impresso ou descreva — o agente monta as
             seções e itens, otimizados para o preenchimento no celular.
           </p>
 
@@ -174,8 +174,8 @@ export function AiFormDialog({
             )}
             <p className="mt-1 text-center text-xs text-muted-foreground">
               {fileName
-                ? 'Clique em "Gerar formulário" para criar a partir do arquivo.'
-                : "A IA lê seu formulário impresso; você gera quando quiser."}
+                ? 'Clique em "Gerar checklist" para criar a partir do arquivo.'
+                : "A IA lê seu checklist impresso; você gera quando quiser."}
             </p>
           </div>
 
@@ -228,7 +228,7 @@ export function AiFormDialog({
             disabled={pending || (!text.trim() && !fileText)}
           >
             <Sparkles className="h-4 w-4" />
-            {pending ? "Gerando…" : "Gerar formulário"}
+            {pending ? "Gerando…" : "Gerar checklist"}
           </Button>
         </div>
       </div>

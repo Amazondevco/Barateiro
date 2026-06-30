@@ -42,7 +42,7 @@ export async function saveFormulario(
   formId: string | null,
   payload: FormularioPayload,
 ): Promise<SaveResult> {
-  if (!payload.nome.trim()) return { error: "Informe o nome do formulário." };
+  if (!payload.nome.trim()) return { error: "Informe o nome do checklist." };
   if (payload.secoes.length === 0)
     return { error: "Adicione ao menos uma seção." };
 

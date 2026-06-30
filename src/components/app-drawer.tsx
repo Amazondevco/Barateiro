@@ -8,7 +8,7 @@ import { signOut } from "@/lib/auth-actions";
 const ITENS = [
   { href: "/app", label: "Início", icon: Home },
   { href: "/app/avisos", label: "Avisos", icon: Bell },
-  { href: "/app/formularios", label: "Formulários enviados", icon: ClipboardCheck },
+  { href: "/app/formularios", label: "Checklists enviados", icon: ClipboardCheck },
   { href: "/app/perfil", label: "Perfil", icon: User },
   { href: "/app/config", label: "Configurações", icon: Settings },
 ];

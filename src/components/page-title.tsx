@@ -15,9 +15,11 @@ const Ctx = createContext<{
 
 // Títulos derivados da rota (fallback imediato até a página definir o seu)
 const EXTRA: Record<string, { title: string; crumb?: string }> = {
-  "/": { title: "Visão geral" },
+  "/": { title: "Painel Principal" },
   "/clientes/nova": { title: "Nova rede" },
   "/busca": { title: "Busca" },
+  "/configuracoes": { title: "Configurações" },
+  "/suporte": { title: "Suporte" },
 };
 
 export function routeTitle(pathname: string): { title: string; crumb?: string } {

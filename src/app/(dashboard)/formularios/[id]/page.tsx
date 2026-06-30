@@ -51,7 +51,7 @@ export default async function FormularioDetailPage({
         href="/formularios"
         className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
       >
-        <ArrowLeft className="h-4 w-4" /> Formulários
+        <ArrowLeft className="h-4 w-4" /> Checklists
       </Link>
       <PageHeader title={form.nome} crumb={form.nome} />
 

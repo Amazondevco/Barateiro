@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { FormulariosTabs, type EnviadoItem } from "./pending-enviados";
 
-export const metadata = { title: "Formulários enviados — Check.AI" };
+export const metadata = { title: "Checklists enviados — Check.AI" };
 
 export default async function EnviadosPage() {
   const supabase = await createClient();
@@ -29,7 +29,7 @@ export default async function EnviadosPage() {
 
   const enviados: EnviadoItem[] = lista.map((r) => ({
     id: r.id,
-    formNome: r.formularios?.nome ?? "Formulário",
+    formNome: r.formularios?.nome ?? "Checklist",
     data: new Date(r.enviado_em).toLocaleString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
@@ -44,7 +44,7 @@ export default async function EnviadosPage() {
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-6">
       <header className="mb-6 mt-2">
-        <h1 className="text-2xl font-bold tracking-tight">Formulários</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Checklists</h1>
         <p className="mt-0.5 text-sm font-medium text-muted-foreground">
           Seus envios e o que ainda está na fila.
         </p>

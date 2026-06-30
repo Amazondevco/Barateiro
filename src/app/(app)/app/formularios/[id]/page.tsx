@@ -79,7 +79,7 @@ export default async function EnvioDetalhePage({
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold leading-tight">{r.formularios?.nome ?? "Formulário"}</p>
+          <p className="truncate text-sm font-semibold leading-tight">{r.formularios?.nome ?? "Checklist"}</p>
           <p className="truncate text-xs text-muted-foreground">
             {data}
             {r.unidades?.nome ? ` · ${r.unidades.nome}` : ""}

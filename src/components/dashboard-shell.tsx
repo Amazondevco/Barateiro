@@ -1,17 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, X, LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Menu, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { signOut } from "@/lib/auth-actions";
-import { PAPEL_LABEL, type Profile } from "@/lib/types";
+import { type Profile } from "@/lib/types";
 import type { RedeBrand } from "@/lib/auth";
-import { UserSwitcher } from "@/components/user-switcher";
 import { SuggestionFab } from "@/components/suggestion-fab";
 import { AssistantFab } from "@/components/assistant-fab";
-import { DEV_EMAILS } from "@/lib/dev-accounts";
 import { PageTitleProvider, TopbarTitle } from "@/components/page-title";
 import { TopbarSearch } from "@/components/topbar-search";
 import { NotificationBell } from "@/components/notification-bell";
@@ -93,12 +90,6 @@ export function DashboardShell({
     ["--border"]: "var(--sidebar-border)",
     ["--card"]: "var(--sidebar)",
   } as React.CSSProperties;
-  const initials = (profile.nome || profile.email)
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 
   return (
     <PageTitleProvider>
@@ -116,6 +107,8 @@ export function DashboardShell({
               : "Gestão da Rede"
           }
           collapsed={collapsed}
+          userName={profile.nome || profile.email}
+          userEmail={profile.email}
         />
       </div>
 
@@ -137,6 +130,8 @@ export function DashboardShell({
                   : "Gestão da Rede"
               }
               onNavigate={() => setOpen(false)}
+              userName={profile.nome || profile.email}
+              userEmail={profile.email}
             />
           </div>
         </div>
@@ -178,38 +173,11 @@ export function DashboardShell({
             <TopbarTitle />
           </div>
 
+          {/* Identidade/conta agora vivem na caixa do usuário na sidebar. */}
           <div className="flex shrink-0 items-center justify-end gap-2">
             <TopbarSearch />
             <NotificationBell />
             <ThemeToggle />
-
-            <div className="flex items-center gap-3 border-l border-border pl-3">
-              <div className="hidden text-right sm:block">
-                <p className="text-sm font-medium leading-tight">
-                  {profile.nome || profile.email}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {PAPEL_LABEL[profile.papel]}
-                </p>
-              </div>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                {initials}
-              </span>
-              {DEV_EMAILS.includes(profile.email) && (
-                <UserSwitcher currentEmail={profile.email} />
-              )}
-              <form action={signOut}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  type="submit"
-                  aria-label="Sair"
-                  title="Sair"
-                >
-                  <LogOut className="h-[18px] w-[18px]" />
-                </Button>
-              </form>
-            </div>
           </div>
         </header>
 

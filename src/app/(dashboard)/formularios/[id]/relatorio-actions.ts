@@ -110,7 +110,7 @@ function resumoForm(f: FormCtx): string {
           .join("; ")}`,
     )
     .join("\n");
-  return `Formulário: ${f.nome}\n${f.descricao ?? ""}\n${linhas}`;
+  return `Checklist: ${f.nome}\n${f.descricao ?? ""}\n${linhas}`;
 }
 
 async function inserir(
@@ -140,7 +140,7 @@ export async function gerarPainelIA(formId: string): Promise<RelState> {
   const { supabase, form } = ctx;
 
   const out = await callGroq(
-    `${resumoForm(form)}\n\nProponha de 3 a 5 relatórios importantes para este formulário. Responda JSON: {"relatorios":[{"titulo","kind","spec"}]}`,
+    `${resumoForm(form)}\n\nProponha de 3 a 5 relatórios importantes para este checklist. Responda JSON: {"relatorios":[{"titulo","kind","spec"}]}`,
   );
   const props = validar((out as { relatorios?: unknown })?.relatorios, itensValidos(form));
   if (!props.length) return { error: "A IA não conseguiu propor relatórios. Tente de novo." };

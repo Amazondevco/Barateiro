@@ -88,7 +88,7 @@ export function RegistroRedeForm({
 
       <p className="mb-4 text-sm text-muted-foreground">
         Crie sua assinatura eletrônica. Ela ficará registrada em todos os
-        formulários que você preencher nesta rede.
+        checklists que você preencher nesta rede.
       </p>
 
       <div className="space-y-4">
@@ -104,7 +104,7 @@ export function RegistroRedeForm({
           />
           <span>
             Entendo que esta assinatura tem validade de confirmação de que fui eu
-            quem assinei, e ficará registrada em todos os formulários que eu
+            quem assinei, e ficará registrada em todos os checklists que eu
             preencher.
           </span>
         </label>

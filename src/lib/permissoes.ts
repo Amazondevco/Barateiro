@@ -11,7 +11,7 @@ export const PERMISSOES: GrupoPermissao[] = [
     grupo: "Operação",
     itens: [
       { key: "checklist.preencher", label: "Preencher checklists" },
-      { key: "formularios.gerenciar", label: "Criar e editar formulários" },
+      { key: "formularios.gerenciar", label: "Criar e editar checklists" },
       { key: "formularios.respostas.ver", label: "Ver respostas dos checklists" },
       { key: "relatorios.ver", label: "Ver relatórios" },
     ],

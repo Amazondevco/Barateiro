@@ -49,7 +49,7 @@ export function FormsPage() {
   return (
     <div className="mx-auto w-full max-w-md space-y-4 p-4">
       <header className="mb-2 mt-2">
-        <h1 className="text-2xl font-bold tracking-tight">Formulários</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Checklists</h1>
         <p className="mt-1 text-sm font-medium text-muted-foreground">
           Seus envios e o que ainda está na fila.
         </p>
@@ -120,7 +120,7 @@ function EnviadosList({
       <EmptyState
         icon={<CheckCircle2 className="h-7 w-7" />}
         title="Nenhum envio ainda"
-        subtitle="Os formulários enviados aparecem aqui."
+        subtitle="Os checklists enviados aparecem aqui."
       />
     );
   }

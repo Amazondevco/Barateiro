@@ -54,7 +54,7 @@ export default async function BuscaPage({
           <Search className="h-8 w-8 text-muted-foreground" />
           <p className="font-medium">Nada encontrado para “{q}”.</p>
           <p className="max-w-sm text-sm text-muted-foreground">
-            Tente outro termo — nome de formulário, unidade, departamento,
+            Tente outro termo — nome de checklist, unidade, departamento,
             usuário ou cliente.
           </p>
         </div>

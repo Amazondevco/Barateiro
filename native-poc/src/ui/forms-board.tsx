@@ -128,7 +128,7 @@ export function FormsBoard({
         <input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar formulário…"
+          placeholder="Buscar checklist…"
           className="h-12 w-full rounded-xl border border-border bg-card pl-11 pr-4 text-sm shadow-sm outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring"
         />
       </div>
@@ -188,7 +188,7 @@ export function FormsBoard({
       {ordenados.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
           <ClipboardList className="h-8 w-8 text-muted-foreground" />
-          <p className="font-medium">Nenhum formulário</p>
+          <p className="font-medium">Nenhum checklist</p>
           <p className="max-w-xs text-sm text-muted-foreground">
             {busca || filtroAtivo
               ? "Ajuste a busca ou os filtros."

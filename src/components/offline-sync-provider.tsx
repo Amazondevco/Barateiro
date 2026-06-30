@@ -79,7 +79,7 @@ export function OfflineSyncProvider() {
         ) : (
           <>
             <RefreshCw className="h-3.5 w-3.5 animate-spin text-primary" />
-            Enviando {pend} {pend === 1 ? "formulário" : "formulários"}…
+            Enviando {pend} {pend === 1 ? "checklist" : "checklists"}…
           </>
         )}
       </div>

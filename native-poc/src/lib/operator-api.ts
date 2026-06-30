@@ -288,8 +288,8 @@ async function _fetchEnviados(): Promise<Enviado[]> {
     id: String(row.id),
     formNome:
       typeof row.formularios === "object" && row.formularios && "nome" in row.formularios
-        ? String((row.formularios as { nome: string | null }).nome ?? "Formulário")
-        : "Formulário",
+        ? String((row.formularios as { nome: string | null }).nome ?? "Checklist")
+        : "Checklist",
     dataReferencia: String(row.data_referencia),
     enviadoEm: String(row.enviado_em),
     totalItens: Number(row.total_itens ?? 0),
