@@ -79,6 +79,16 @@ export function RespostaPanel({ id, onClose }: { id: string; onClose: () => void
                 <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
                   {det.status === "no_prazo" ? "No prazo" : "Fora do prazo"}
                 </span>
+                {det.presenca_ok === false && (
+                  <span className="rounded-full bg-danger-bg px-2.5 py-1 text-xs font-medium text-danger">
+                    Fora do local
+                  </span>
+                )}
+                {det.presenca_ok === true && (
+                  <span className="rounded-full bg-success-bg px-2.5 py-1 text-xs font-medium text-success">
+                    No local
+                  </span>
+                )}
                 <span className="text-sm text-muted-foreground">Por {det.autor}</span>
               </div>
               {resumo ? (

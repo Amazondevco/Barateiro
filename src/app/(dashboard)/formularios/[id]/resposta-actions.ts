@@ -13,6 +13,7 @@ export type RespostaDetalhe = {
   total_itens: number;
   total_nao: number;
   assinatura: string | null;
+  presenca_ok: boolean | null; // true=no local, false=fora do raio, null=n/a
   secoes: SecaoDetalhe[];
 };
 
@@ -31,7 +32,7 @@ export async function getRespostaDetalhe(id: string): Promise<RespostaDetalhe | 
 
   const { data: resp } = await supabase
     .from("respostas")
-    .select("formulario_id, enviado_em, status, total_itens, total_nao, assinatura_svg, usuario_id, formularios(nome), unidades(nome)")
+    .select("formulario_id, enviado_em, status, total_itens, total_nao, assinatura_svg, presenca_ok, usuario_id, formularios(nome), unidades(nome)")
     .eq("id", id)
     .single();
   if (!resp) return null;
@@ -42,6 +43,7 @@ export async function getRespostaDetalhe(id: string): Promise<RespostaDetalhe | 
     total_itens: number;
     total_nao: number;
     assinatura_svg: string | null;
+    presenca_ok: boolean | null;
     usuario_id: string;
     formularios: { nome: string } | null;
     unidades: { nome: string } | null;
@@ -86,6 +88,7 @@ export async function getRespostaDetalhe(id: string): Promise<RespostaDetalhe | 
     total_itens: r.total_itens,
     total_nao: r.total_nao,
     assinatura: r.assinatura_svg,
+    presenca_ok: r.presenca_ok,
     secoes: secsDetalhe,
   };
 }
