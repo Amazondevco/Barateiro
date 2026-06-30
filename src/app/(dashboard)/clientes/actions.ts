@@ -5,12 +5,14 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
+import { enviarEmail, emailConviteHtml } from "@/lib/email";
 
 export type FormState = { error?: string; ok?: boolean };
 
 // Convida o responsável (contato) da rede a se cadastrar como admin dela.
-// Cria o usuário no Auth com metadata (papel/rede_id) — o trigger handle_new_user
-// provisiona o profile — e dispara o e-mail de convite (link → /auth/redefinir).
+// Cria/recupera o usuário no Auth com metadata (papel/rede_id) — o trigger
+// handle_new_user provisiona o profile — gera o link e envia um e-mail com a
+// marca Check.AI via Resend (não usa o e-mail do Supabase → sem rate limit).
 export async function convidarResponsavel(
   redeId: string,
 ): Promise<{ ok?: boolean; error?: string; email?: string }> {
@@ -36,28 +38,51 @@ export async function convidarResponsavel(
   const proto = h.get("x-forwarded-proto") ?? "https";
   const redirectTo = host ? `${proto}://${host}/auth/redefinir` : undefined;
 
-  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: {
-      nome: rede?.contato_nome ?? "",
-      papel: "admin_supermercado",
-      rede_id: rede!.id,
+  // Gera o link (sem enviar e-mail pelo Supabase). 1º como convite (cria a
+  // conta); se já existir, como recuperação (cai na mesma tela de cadastro).
+  let link: string | undefined;
+  const invite = await admin.auth.admin.generateLink({
+    type: "invite",
+    email,
+    options: {
+      data: {
+        nome: rede?.contato_nome ?? "",
+        papel: "admin_supermercado",
+        rede_id: rede!.id,
+      },
+      redirectTo,
     },
-    redirectTo,
   });
-
-  if (error) {
-    const msg = error.message.toLowerCase();
-    // Já existe conta (ex.: convite anterior não aceito): reenvia como
-    // recuperação — o link cai na mesma tela de cadastro e ele define a senha.
+  if (invite.error) {
+    const msg = invite.error.message.toLowerCase();
     if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
-      const { error: recErr } = await admin.auth.resetPasswordForEmail(email, {
-        redirectTo,
+      const rec = await admin.auth.admin.generateLink({
+        type: "recovery",
+        email,
+        options: { redirectTo },
       });
-      if (recErr) return { error: recErr.message, email };
-      return { ok: true, email };
+      if (rec.error) return { error: rec.error.message, email };
+      link = rec.data.properties?.action_link;
+    } else {
+      return { error: invite.error.message, email };
     }
-    return { error: error.message, email };
+  } else {
+    link = invite.data.properties?.action_link;
   }
+
+  if (!link) return { error: "Não foi possível gerar o link do convite.", email };
+
+  const html = await emailConviteHtml({
+    redeNome: rede?.nome ?? "sua rede",
+    contatoNome: rede?.contato_nome ?? "",
+    link,
+  });
+  const sent = await enviarEmail({
+    to: email,
+    subject: `Convite — administrar ${rede?.nome ?? "sua rede"} no Check.AI`,
+    html,
+  });
+  if (sent.error) return { error: sent.error, email };
 
   return { ok: true, email };
 }
