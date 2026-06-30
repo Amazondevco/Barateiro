@@ -185,7 +185,7 @@ export async function enviarComunicado(input: {
   corpo: string;
   alvoTipo: AlvoTipo;
   alvoIds: string[];
-}): Promise<{ ok?: boolean; error?: string }> {
+}): Promise<{ ok?: boolean; error?: string; pushEnviados?: number; pushTotal?: number }> {
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   const sub = (claims?.claims as { sub?: string } | undefined)?.sub;
@@ -217,17 +217,21 @@ export async function enviarComunicado(input: {
   // Push (best effort): resolve os tokens do alvo e dispara via FCM. Se a
   // credencial não estiver configurada, sendPush é no-op — o comunicado já
   // chega pela inbox (aba Avisos). Nunca falha o envio por causa do push.
+  let pushEnviados = 0;
+  let pushTotal = 0;
   try {
     const tokens = await tokensDoAlvo(rede, input.alvoTipo, alvoIds);
+    pushTotal = tokens.length;
     if (tokens.length > 0) {
       const { imageUrl, color } = await brandingDoPush(rede);
-      const { invalid } = await sendPush(tokens, {
+      const { sent, invalid } = await sendPush(tokens, {
         title: titulo,
         body: corpo,
         imageUrl,
         color,
         data: { tipo: "comunicado", rede_id: rede, color },
       });
+      pushEnviados = sent;
       if (invalid.length > 0) {
         await createAdminClient().from("device_tokens").delete().in("token", invalid);
       }
@@ -237,5 +241,5 @@ export async function enviarComunicado(input: {
   }
 
   revalidatePath("/comunicados");
-  return { ok: true };
+  return { ok: true, pushEnviados, pushTotal };
 }

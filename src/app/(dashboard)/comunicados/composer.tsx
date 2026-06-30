@@ -94,7 +94,16 @@ export function ComunicadoComposer({
         setMsg({ ok: false, text: r.error });
         return;
       }
-      setMsg({ ok: true, text: "Comunicado enviado." });
+      // Feedback do push: ajuda a perceber se as notificações realmente saíram.
+      const total = r.pushTotal ?? 0;
+      const enviados = r.pushEnviados ?? 0;
+      const detalhe =
+        total === 0
+          ? "Ninguém com app instalado no alvo."
+          : enviados === 0
+            ? "Push não enviado (verifique a configuração do FCM)."
+            : `${enviados} notificação${enviados === 1 ? "" : "ões"} enviada${enviados === 1 ? "" : "s"}.`;
+      setMsg({ ok: true, text: `Comunicado enviado. ${detalhe}` });
       setTitulo("");
       setCorpo("");
       setAlvoTipo("todos");

@@ -80,8 +80,15 @@ export async function sendPush(
     color?: string;
   },
 ): Promise<{ sent: number; invalid: string[] }> {
+  if (tokens.length === 0) return { sent: 0, invalid: [] };
   const sa = loadServiceAccount();
-  if (!sa || tokens.length === 0) return { sent: 0, invalid: [] };
+  if (!sa) {
+    console.warn(
+      `[fcm] FCM_SERVICE_ACCOUNT ausente/inválido — ${tokens.length} push NÃO enviados. ` +
+        "Configure a service account do Firebase em produção (Vercel).",
+    );
+    return { sent: 0, invalid: [] };
+  }
 
   const accessToken = await getAccessToken(sa);
   const url = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
@@ -123,6 +130,10 @@ export async function sendPush(
         } else if (res.status === 404 || res.status === 400) {
           // UNREGISTERED / token inválido → marca pra limpeza.
           invalid.push(token);
+        } else {
+          // 401/403/5xx → credencial errada, projeto errado, etc. Loga pra diagnose.
+          const txt = await res.text().catch(() => "");
+          console.error(`[fcm] envio falhou (${res.status}): ${txt.slice(0, 200)}`);
         }
       }),
     );
