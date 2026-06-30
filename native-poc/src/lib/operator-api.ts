@@ -125,7 +125,7 @@ async function _fetchNetworkHome(memberId: string, userId: string) {
   const filteredForms = (forms ?? [])
     .filter((form) => {
       // Dia/horário NÃO filtram mais — viram "fora do horário" (cinza, preenchível).
-      if (form.tipo_unidade && unitType && form.tipo_unidade !== unitType) return false;
+      // Tipo de unidade foi removido do produto — não filtra mais por tipo.
 
       const allowedUnits = ((form.formulario_unidades as Array<{ unidade_id: string }> | null) ?? []).map(
         (row) => row.unidade_id,

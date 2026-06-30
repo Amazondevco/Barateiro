@@ -73,12 +73,12 @@ export default async function AppRedePage({
     formulario_departamentos: { departamento_id: string }[];
   };
 
-  // Segmentação: checklist aparece se casa com unidade/tipo e departamento.
+  // Segmentação: checklist aparece se casa com unidade e departamento.
+  // (Tipo de unidade foi removido do produto — não filtra mais por tipo.)
   // O dia/horário NÃO some mais — fica "fora do horário" (cinza), ainda preenchível.
   const agora = new Date();
   const diaIso = agora.getDay() === 0 ? 7 : agora.getDay();
   const agoraHHMM = `${String(agora.getHours()).padStart(2, "0")}:${String(agora.getMinutes()).padStart(2, "0")}`;
-  const tipoUni = m.unidades?.tipo ?? null;
 
   // Quais formulários este usuário já enviou hoje (para o filtro pendente/enviado).
   const hoje = new Date().toISOString().slice(0, 10);
@@ -93,7 +93,6 @@ export default async function AppRedePage({
 
   const lista: FormItem[] = ((forms ?? []) as Form[])
     .filter((f) => {
-      if (tipoUni && f.tipo_unidade && f.tipo_unidade !== tipoUni) return false;
       const us = (f.formulario_unidades ?? []).map((x) => x.unidade_id);
       if (us.length && (!m.unidade_id || !us.includes(m.unidade_id))) return false;
       const ds = (f.formulario_departamentos ?? []).map((x) => x.departamento_id);
