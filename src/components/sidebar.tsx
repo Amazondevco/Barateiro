@@ -151,7 +151,7 @@ export function Sidebar({
       {/* Rodapé: caixa do usuário + menu (Configurações / Suporte / Sair).
           Fundo um pouco mais escuro + divisória para destacar do resto. */}
       <div
-        className="border-t border-sidebar-border bg-sidebar-footer p-3"
+        className="border-t border-sidebar-border bg-black/5 p-3"
         ref={menuRef}
       >
         <div className="relative">
