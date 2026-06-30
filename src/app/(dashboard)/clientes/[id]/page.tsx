@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Power } from "lucide-react";
+import { ArrowLeft, Power, Info, Building2, Users } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { PillTabs } from "@/components/ui/pill-tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
@@ -16,9 +17,9 @@ import { createUsuario } from "../../usuarios/actions";
 import { UsuarioLinkButton } from "./usuario-link-button";
 
 const TABS = [
-  { key: "dados", label: "Dados" },
-  { key: "unidades", label: "Unidades" },
-  { key: "usuarios", label: "Usuários" },
+  { key: "dados", label: "Dados", icon: Info },
+  { key: "unidades", label: "Unidades", icon: Building2 },
+  { key: "usuarios", label: "Usuários", icon: Users },
 ];
 
 const TIPO_LABEL: Record<string, string> = {
@@ -74,7 +75,7 @@ export default async function RedeDetailPage({
     <>
       <Link
         href="/clientes"
-        className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="mb-4 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
       >
         <ArrowLeft className="h-4 w-4" /> Clientes
       </Link>
@@ -103,22 +104,17 @@ export default async function RedeDetailPage({
         }
       />
 
-      {/* Abas */}
-      <div className="mb-6 flex gap-1 border-b border-border">
-        {TABS.map((t) => (
-          <Link
-            key={t.key}
-            href={`/clientes/${id}?tab=${t.key}`}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-              tab === t.key
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </div>
+      {/* Abas — mesmo molde das outras páginas (PillTabs) */}
+      <PillTabs
+        className="mb-6"
+        tabs={TABS.map((t) => ({
+          key: t.key,
+          label: t.label,
+          icon: t.icon,
+          href: `/clientes/${id}?tab=${t.key}`,
+          active: tab === t.key,
+        }))}
+      />
 
       {/* Conteúdo */}
       {tab === "dados" && (
