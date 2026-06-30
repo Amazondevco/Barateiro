@@ -21,8 +21,18 @@ export function AppChrome({
   if (telaCheia) return <>{children}</>;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="flex flex-1 flex-col pb-[110px]">{children}</main>
+    // Safe areas (edge-to-edge): empurra o conteúdo para baixo da barra de status
+    // e reserva o espaço da barra de navegação do sistema na base.
+    <div
+      className="flex min-h-screen flex-col"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
+      <main
+        className="flex flex-1 flex-col"
+        style={{ paddingBottom: "calc(110px + env(safe-area-inset-bottom))" }}
+      >
+        {children}
+      </main>
 
       {/* Troca de usuário: só para contas de DEV (teste). Discreto. */}
       {DEV_EMAILS.includes(email) && (

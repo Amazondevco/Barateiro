@@ -290,7 +290,10 @@ export function FillFormPage() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
       {/* Cabeçalho */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
+      <header
+        className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur"
+        style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
+      >
         <button
           type="button"
           onClick={() =>
@@ -459,7 +462,10 @@ export function FillFormPage() {
       </div>
 
       {/* Barra fixa: navegação / (na revisão) assinatura + confirmação */}
-      <div className="sticky bottom-0 z-10 border-t border-border bg-background/95 backdrop-blur">
+      <div
+        className="sticky bottom-0 z-10 border-t border-border bg-background/95 backdrop-blur"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         {reviewing ? (
           <div className="space-y-3 p-4">
             {/* Assinatura recolhível — fixa na base, igual ao mockup/PWA */}

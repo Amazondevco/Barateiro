@@ -19,7 +19,11 @@ export function AppBottomNav() {
 
   return (
     // Barra flutuante: não encosta nas bordas; cliques passam pelas laterais.
-    <nav className="pointer-events-none fixed inset-x-0 bottom-6 z-30 px-5">
+    // Sobe acima da barra de navegação do sistema (safe-area-inset-bottom).
+    <nav
+      className="pointer-events-none fixed inset-x-0 z-30 px-5"
+      style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+    >
       <div className="pointer-events-auto mx-auto flex h-16 max-w-md items-center justify-between rounded-[32px] bg-card px-4 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.12),0_8px_10px_-6px_rgba(0,0,0,0.1)]">
         {TABS.map((t, i) => {
           const Icon = t.icon;

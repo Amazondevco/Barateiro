@@ -233,7 +233,10 @@ export function FillForm({
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex items-center gap-3 border-b border-border bg-card/95 p-4 backdrop-blur">
+      <header
+        className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-card/95 p-4 backdrop-blur"
+        style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}
+      >
         <button
           onClick={() =>
             revisando
@@ -352,7 +355,10 @@ export function FillForm({
       </div>
 
       {/* rodapé fixo: navegação por etapas / (na revisão) assinatura + confirmação */}
-      <div className="sticky bottom-0 border-t border-border bg-card/95 backdrop-blur">
+      <div
+        className="sticky bottom-0 border-t border-border bg-card/95 backdrop-blur"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         {revisando ? (
           <div className="space-y-3 p-5 pb-8">
             {/* Assinatura recolhível — fixa na base, igual ao mockup */}

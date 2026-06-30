@@ -17,9 +17,22 @@ export function AppShell() {
     /\/rede\/[^/]+\/form\/[^/]+$/.test(location.pathname);
 
   return (
-    <div className="app-shell flex min-h-screen flex-col bg-background">
+    // Safe areas do Android/iOS (edge-to-edge): no topo, empurra o conteúdo das
+    // telas normais para baixo da barra de status; nas telas com cabeçalho fixo
+    // (formulário) o respiro do topo é tratado no próprio header.
+    <div
+      className="app-shell flex min-h-screen flex-col bg-background"
+      style={{ paddingTop: compact ? undefined : "env(safe-area-inset-top)" }}
+    >
       <NativeStatusBanner />
-      <main className={`flex-1 ${compact ? "" : "pb-[110px]"}`}>
+      <main
+        className="flex-1"
+        style={{
+          paddingBottom: compact
+            ? undefined
+            : "calc(110px + env(safe-area-inset-bottom))",
+        }}
+      >
         <PullToRefresh onRefresh={aoRecarregar}>
           <Outlet />
         </PullToRefresh>
