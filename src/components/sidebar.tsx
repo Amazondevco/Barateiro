@@ -82,10 +82,16 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "relative z-10 flex h-full shrink-0 flex-col border-r border-border bg-sidebar transition-[width] duration-200",
+        "relative z-10 flex h-full shrink-0 flex-col bg-sidebar transition-[width] duration-200",
         collapsed ? "w-16" : "w-64",
       )}
     >
+      {/* Divisor sutil na borda direita: fino (1px), recuado (altura menor) e
+          levemente mais visível. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-4 right-0 w-px bg-foreground/15"
+      />
       <div
         className={cn(
           "flex items-center py-4",
