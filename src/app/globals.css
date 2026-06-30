@@ -36,6 +36,9 @@
   --sidebar-strong: #ffffff;
   --sidebar-hover: #1e293b;
   --sidebar-border: #1e293b;
+  /* Rodapé (caixa do usuário): um pouco mais escuro que a cor da sidebar,
+     seguindo automaticamente a cor escolhida pela rede (via color-mix). */
+  --sidebar-footer: color-mix(in srgb, var(--sidebar) 88%, black);
 
   /* Status (checklist) */
   --success: #16a34a;
@@ -120,6 +123,7 @@
   --color-sidebar-active-foreground: var(--sidebar-active-foreground);
   --color-sidebar-hover: var(--sidebar-hover);
   --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-footer: var(--sidebar-footer);
 
   --color-success: var(--success);
   --color-success-bg: var(--success-bg);

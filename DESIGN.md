@@ -165,6 +165,11 @@ Assistente IA (sparkle). Empilham no canto inferior direito.
   iniciais + nome + papel·rede, e um **menu** (abre pra cima) com **Configurações**,
   **Suporte Check.AI** e **Sair** (vermelho); versão + "© 2026 Check.AI" abaixo.
   `Configurações` e `Suporte` **saíram da lista de nav** e vivem só nesse menu.
+  A caixa usa `bg-sidebar-footer` (um tom **um pouco mais escuro** que a sidebar —
+  `--sidebar-footer = color-mix(--sidebar 88%, black)`, segue a cor da rede) +
+  divisória `border-t` para destacá-la.
+- A sidebar tem **sombra na borda direita** (`shadow-[6px_0_24px_-6px_…]` + `z-10`)
+  para separá-la do conteúdo principal.
 - **Termo de produto = "Checklist"** em toda a UI (nunca "Formulário" no texto
   visível); rotas/tabelas/colunas seguem `formulario*`.
 - **Topbar (à direita):** busca + **sino de notificações** + tema + usuário. A

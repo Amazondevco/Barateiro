@@ -77,7 +77,7 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "flex h-full shrink-0 flex-col bg-sidebar transition-[width] duration-200",
+        "relative z-10 flex h-full shrink-0 flex-col bg-sidebar shadow-[6px_0_24px_-6px_rgba(2,6,23,0.22)] transition-[width] duration-200",
         collapsed ? "w-16" : "w-64",
       )}
     >
@@ -148,8 +148,12 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Rodapé: caixa do usuário + menu (Configurações / Suporte / Sair) */}
-      <div className="border-t border-sidebar-border p-3" ref={menuRef}>
+      {/* Rodapé: caixa do usuário + menu (Configurações / Suporte / Sair).
+          Fundo um pouco mais escuro + divisória para destacar do resto. */}
+      <div
+        className="border-t border-sidebar-border bg-sidebar-footer p-3"
+        ref={menuRef}
+      >
         <div className="relative">
           <button
             type="button"
