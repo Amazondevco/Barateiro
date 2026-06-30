@@ -27,6 +27,8 @@ export type FormularioPayload = {
   disponivel_de: string | null; // "HH:MM" ou null = sem restrição
   disponivel_ate: string | null; // "HH:MM" ou null = sem restrição
   dias_semana: number[]; // ISO 1=Seg…7=Dom; vazio = todos os dias
+  exige_localizacao: boolean; // captura GPS no envio
+  geofence_raio_m: number | null; // raio (m) da unidade; null = só captura, sem validar
   unidades: string[]; // vazio = todas as unidades do tipo
   departamentos: string[]; // vazio = todos da unidade
   usuarios: string[]; // vazio = todos do departamento
@@ -56,6 +58,10 @@ export async function saveFormulario(
     disponivel_de: payload.disponivel_de || null,
     disponivel_ate: payload.disponivel_ate || null,
     dias_semana: payload.dias_semana ?? [],
+    exige_localizacao: payload.exige_localizacao,
+    geofence_raio_m: payload.exige_localizacao
+      ? (payload.geofence_raio_m ?? null)
+      : null,
   };
 
   if (!id) {

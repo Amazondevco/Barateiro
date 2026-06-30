@@ -106,6 +106,8 @@ type Initial = {
   disponivel_de?: string | null;
   disponivel_ate?: string | null;
   dias_semana?: number[];
+  exige_localizacao?: boolean;
+  geofence_raio_m?: number | null;
   unidades: string[];
   departamentos: string[];
   usuarios: string[];
@@ -188,6 +190,10 @@ export function FormBuilder({
   const [dispAte, setDispAte] = useState(initial?.disponivel_ate ?? "");
   const [diasSemana, setDiasSemana] = useState<number[]>(
     initial?.dias_semana ?? [],
+  );
+  const [exigeLoc, setExigeLoc] = useState(initial?.exige_localizacao ?? false);
+  const [raioM, setRaioM] = useState<number | null>(
+    initial?.geofence_raio_m ?? null,
   );
   const [selUnidades, setSelUnidades] = useState<string[]>(
     initial?.unidades ?? [],
@@ -340,6 +346,8 @@ export function FormBuilder({
       disponivel_de: dispDe || null,
       disponivel_ate: dispAte || null,
       dias_semana: diasSemana,
+      exige_localizacao: exigeLoc,
+      geofence_raio_m: raioM,
       unidades: selUnidades,
       departamentos: deps,
       usuarios: usuariosSel,
@@ -515,6 +523,48 @@ export function FormBuilder({
                 })}
               </div>
             </div>
+          </div>
+
+          {/* Localização (captura GPS / geofence pela unidade) */}
+          <div className="space-y-3 border-t border-border pt-4">
+            <div>
+              <h4 className="text-sm font-semibold">Localização</h4>
+              <p className="text-xs text-muted-foreground">
+                Captura o GPS no envio. Com um raio, valida se o colaborador está
+                na unidade — usa o endereço cadastrado da unidade.
+              </p>
+            </div>
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={exigeLoc}
+                onChange={(e) => setExigeLoc(e.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              Exigir localização no envio
+            </label>
+            {exigeLoc && (
+              <div>
+                <Label htmlFor="raio">Raio permitido (a partir da unidade)</Label>
+                <Select
+                  id="raio"
+                  value={raioM == null ? "" : String(raioM)}
+                  onChange={(e) =>
+                    setRaioM(e.target.value ? Number(e.target.value) : null)
+                  }
+                >
+                  <option value="">Sem raio (só registra a localização)</option>
+                  <option value="50">50 m</option>
+                  <option value="100">100 m</option>
+                  <option value="250">250 m</option>
+                  <option value="500">500 m</option>
+                  <option value="1000">1 km</option>
+                </Select>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Fora do raio, o envio é registrado como “fora do local”.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Quem preenche (cascata Unidade → Departamento → Usuário) */}

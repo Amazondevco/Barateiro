@@ -39,7 +39,7 @@ export default async function FormularioDetailPage({
   const { data: form } = await supabase
     .from("formularios")
     .select(
-      "id,nome,descricao,tipo_unidade,status,disponivel_de,disponivel_ate,dias_semana",
+      "id,nome,descricao,tipo_unidade,status,disponivel_de,disponivel_ate,dias_semana,exige_localizacao,geofence_raio_m",
     )
     .eq("id", id)
     .single();
@@ -239,6 +239,10 @@ async function ModeloTab({
       ? form.disponivel_ate.slice(0, 5)
       : null,
     dias_semana: form.dias_semana ?? [],
+    exige_localizacao:
+      (form as { exige_localizacao?: boolean }).exige_localizacao ?? false,
+    geofence_raio_m:
+      (form as { geofence_raio_m?: number | null }).geofence_raio_m ?? null,
     unidades: (assignedUnits ?? []).map((a) => a.unidade_id),
     departamentos: (assigned ?? []).map((a) => a.departamento_id),
     usuarios: (assignedUsers ?? []).map((a) => a.user_id),
