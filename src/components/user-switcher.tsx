@@ -66,10 +66,18 @@ export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
         typeof document !== "undefined" &&
         createPortal(
           <>
-            <div className="fixed inset-0 z-[60]" onClick={() => setOpen(false)} />
-            {/* Abre à DIREITA do botão e ancorado para cima — visível mesmo na
-                sidebar (que fica colada na borda esquerda). */}
             <div
+              data-userswitcher=""
+              className="fixed inset-0 z-[60]"
+              onClick={() => setOpen(false)}
+            />
+            {/* Abre à DIREITA do botão e ancorado para cima — visível mesmo na
+                sidebar (que fica colada na borda esquerda).
+                data-userswitcher: o menu do usuário ignora cliques aqui — sem
+                isto, o handler de "clique fora" (no mousedown) fechava/desmontava
+                este portal ANTES do click disparar, e a troca nunca rodava. */}
+            <div
+              data-userswitcher=""
               className="fixed z-[61] max-h-[70vh] w-64 overflow-auto rounded-xl border border-border bg-card text-foreground shadow-xl"
               style={{
                 left: rect.right + 8,

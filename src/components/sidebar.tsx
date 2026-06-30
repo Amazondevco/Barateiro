@@ -39,7 +39,12 @@ export function Sidebar({
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     function onDown(e: MouseEvent) {
-      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+      const t = e.target as Element | null;
+      if (menuRef.current?.contains(t as Node)) return;
+      // O switcher abre num portal (fora do menu). Não feche o menu ao clicar
+      // nele — senão o portal desmonta antes do clique na conta disparar.
+      if (t?.closest?.("[data-userswitcher]")) return;
+      setMenuOpen(false);
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
