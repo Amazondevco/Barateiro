@@ -391,6 +391,12 @@ export function applyPrimaryColor(color: string | null) {
   const root = document.documentElement.style;
   root.setProperty("--primary", color);
   root.setProperty("--primary-hover", `color-mix(in srgb, ${color} 85%, black)`);
+  // Persiste para reaplicar no boot (se a página recarregar, a cor permanece).
+  try {
+    localStorage.setItem("checkai-primary", color);
+  } catch {
+    /* ignora */
+  }
 }
 
 export function fetchFormDefinition(memberId: string, formId: string) {

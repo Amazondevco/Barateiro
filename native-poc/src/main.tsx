@@ -14,6 +14,17 @@ const prefersDark =
     window.matchMedia?.("(prefers-color-scheme: dark)")?.matches);
 document.documentElement.classList.toggle("dark", Boolean(prefersDark));
 
+// Cor da rede: reaplica no boot (se a página recarregar dentro do app, ex.: no
+// meio de um checklist, a cor não volta ao padrão). Salva em applyPrimaryColor.
+const savedPrimary = localStorage.getItem("checkai-primary");
+if (savedPrimary) {
+  document.documentElement.style.setProperty("--primary", savedPrimary);
+  document.documentElement.style.setProperty(
+    "--primary-hover",
+    `color-mix(in srgb, ${savedPrimary} 85%, black)`,
+  );
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <HashRouter>

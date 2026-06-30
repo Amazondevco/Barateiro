@@ -145,6 +145,13 @@ body,
   margin: 0;
 }
 
+/* Desativa o "puxar pra recarregar" (pull-to-refresh) do webview: dentro do
+   app um reload acidental atrapalha (ex.: no meio de um checklist). */
+html,
+body {
+  overscroll-behavior-y: contain;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
