@@ -60,6 +60,12 @@ utilitários Tailwind via `@theme inline` (`bg-card`, `text-foreground`, etc.).
 | `--success` / `--success-bg` | `#16a34a`/`#dcfce7` | — | Conforme/OK |
 | `--warning` / `--warning-bg` | `#d97706`/`#fef3c7` | — | Atenção/pendente |
 | `--danger` / `--danger-bg` | `#dc2626`/`#fee2e2` | — | Não-conformidade/erro |
+| `--ia` / `--ia-strong` | `#7c3aed`/`#6d28d9` | `#8b5cf6`/`#7c3aed` | **Acento de IA** (violeta) — só em IA |
+
+> **Acento de IA (violeta).** Constante do **produto** (como o verde `#15803d` da
+> logo), **não** é cor de rede. Use `bg-ia`/`text-ia`/`from-ia to-ia-strong` e o
+> par `Sparkles` só em superfícies de IA (botão "Resumir com IA", bloco de resumo).
+> Nunca para ações comuns — essas seguem `--primary` (cor da rede).
 
 Texto sobre cor de marca: calcule a luminância e use texto escuro em cor clara
 (`isLightHex`, já usado no banner do app e na sidebar).
@@ -123,6 +129,35 @@ Assistente IA (sparkle). Empilham no canto inferior direito.
 - Busca global (`TopbarSearch`) → dropdown por seções → `/busca` (ver `src/lib/search.ts`).
 - Tabelas/listas com linhas clicáveis levam ao detalhe; painel lateral para detalhe
   de resposta (`resposta-panel`).
+
+### 7.1 Painel de detalhe da resposta (`resposta-panel`)
+Painel flutuante à direita: `bg-card`, `sm:m-3 sm:rounded-3xl shadow-2xl`,
+`max-w-3xl` (tela cheia no mobile), backdrop `bg-black/40`. Estrutura:
+- **Cabeçalho:** título `text-xl/2xl font-bold`; subtítulo com `Calendar` + data •
+  `Store` + unidade (`text-muted-foreground`); badge **"Lido pelo admin"** (`Eye`,
+  pílula `bg-muted`) quando lida; fechar = `X` em botão circular.
+- **Cartão de resumo** (`rounded-2xl border bg-muted/30 p-5`): pílulas de status em
+  **cartão branco com borda** (`rounded-full border bg-card`, ícone lucide +
+  `text-success/-warning/-danger`): não-conformidades (`CircleAlert`), prazo
+  (`Clock`), presença (`MapPin`: "No local"/"Fora do local"), autor (avatar de
+  iniciais + nome). Botão **"Resumir com IA"** no acento violeta
+  (`bg-gradient-to-r from-ia to-ia-strong text-ia-foreground`, `Sparkles`); o
+  resumo aparece num bloco `border-ia/30 bg-ia/5`.
+- **Seções:** cabeçalho com ícone em caixa `rounded-lg bg-primary/10 text-primary`
+  + título uppercase. O ícone é inferido do título (`secaoIcon`: mercearia, frios,
+  hortifruti…); sem match → `Package`.
+- **Itens:** cartão `rounded-2xl border divide-y`; cada linha pergunta + **badge**
+  de resposta (`rounded-lg px-3 py-1 font-semibold`, Sim=`success-bg`, Não=`danger-bg`,
+  neutro=`muted`). Anexo (foto/observação) num **cartão tracejado** (`border-dashed
+  bg-muted/40`) com miniatura clicável (lightbox) + nome do arquivo + observação.
+
+### 7.2 Leitura de respostas (lida / não lida)
+A resposta registra `lida_em`/`lida_por` (migration 0045, RPC
+`marcar_resposta_lida`, SECURITY DEFINER — só `profiles`/painel marcam). Abrir o
+painel = marcar como lida (idempotente, mantém o 1º leitor). Na **listagem**, a
+não-lida tem **ponto `bg-primary`** antes da data/unidade + leve realce
+(`bg-primary/[0.03]` na tabela, borda `border-primary/40` no cartão) e texto em
+`font-semibold`. Feedback é otimista (set local) + `router.refresh()` ao fechar.
 - **Painel de relatórios** (aba "Painel" do formulário): cartões `rounded-xl border
   bg-card` com gráficos **leves em SVG/CSS** (donut, barras, linha, KPI) na cor
   `--primary`/`stroke-primary`/`fill-primary` — **sem libs de chart**. A IA (Groq)

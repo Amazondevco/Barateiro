@@ -245,10 +245,26 @@ ViewTabela.Grupo = function Grupo({
         <TR
           key={r.id}
           onClick={() => onAbrir?.(r.id)}
-          className="cursor-pointer hover:bg-muted/50"
+          className={cn(
+            "cursor-pointer hover:bg-muted/50",
+            !r.lida && "bg-primary/[0.03]",
+          )}
         >
-          <TD>{fmtData(r.data_referencia)}</TD>
-          <TD>{r.unidade_nome || "—"}</TD>
+          <TD>
+            <span className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "h-2 w-2 shrink-0 rounded-full",
+                  r.lida ? "bg-transparent" : "bg-primary",
+                )}
+                aria-label={r.lida ? undefined : "Não lida"}
+              />
+              <span className={cn(!r.lida && "font-semibold")}>
+                {fmtData(r.data_referencia)}
+              </span>
+            </span>
+          </TD>
+          <TD className={cn(!r.lida && "font-medium")}>{r.unidade_nome || "—"}</TD>
           <TD>{r.usuario_nome || "—"}</TD>
           <TD>
             <ConfBadge pct={conformidade(r.total_itens, r.total_nao)} />
@@ -281,11 +297,20 @@ function ViewCartoes({
           <div
             key={r.id}
             onClick={() => onAbrir?.(r.id)}
-            className="cursor-pointer space-y-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary"
+            className={cn(
+              "cursor-pointer space-y-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary",
+              r.lida ? "border-border" : "border-primary/40",
+            )}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="truncate font-semibold">
+                <p className="flex items-center gap-1.5 truncate font-semibold">
+                  {!r.lida && (
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full bg-primary"
+                      aria-label="Não lida"
+                    />
+                  )}
                   {r.unidade_nome || "—"}
                 </p>
                 <p className="truncate text-sm text-muted-foreground">

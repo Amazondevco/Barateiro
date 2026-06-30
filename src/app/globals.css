@@ -44,6 +44,12 @@
   --warning-bg: #fef3c7;
   --danger: #dc2626;
   --danger-bg: #fee2e2;
+
+  /* Acento de IA (violeta) — constante do produto, igual ao verde da logo.
+     Só em superfícies de funcionalidades de IA (ex.: "Resumir com IA"). */
+  --ia: #7c3aed;
+  --ia-strong: #6d28d9;
+  --ia-foreground: #ffffff;
 }
 
 .dark {
@@ -78,6 +84,10 @@
   --warning-bg: #422006;
   --danger: #ef4444;
   --danger-bg: #450a0a;
+
+  --ia: #8b5cf6;
+  --ia-strong: #7c3aed;
+  --ia-foreground: #ffffff;
 }
 
 /* Expor tokens como utilitários Tailwind (bg-primary, text-muted-foreground, etc.) */
@@ -112,6 +122,10 @@
   --color-warning-bg: var(--warning-bg);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
+
+  --color-ia: var(--ia);
+  --color-ia-strong: var(--ia-strong);
+  --color-ia-foreground: var(--ia-foreground);
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 0.25rem);

@@ -352,6 +352,7 @@ type RespRaw = {
   enviado_em: string;
   unidade_id: string;
   usuario_id: string;
+  lida_em: string | null;
   unidades: unknown;
 };
 
@@ -378,7 +379,7 @@ async function RespostasTab({
       supabase
         .from("respostas")
         .select(
-          "id,data_referencia,status,total_nao,total_itens,enviado_em,unidade_id,usuario_id,unidades(nome)",
+          "id,data_referencia,status,total_nao,total_itens,enviado_em,unidade_id,usuario_id,lida_em,unidades(nome)",
         )
         .eq("formulario_id", formId)
         .gte("data_referencia", startISO)
@@ -443,6 +444,7 @@ async function RespostasTab({
       usuario_id: r.usuario_id,
       usuario_nome: ger?.nome ?? "",
       departamento_id: ger?.departamento_id ?? null,
+      lida: r.lida_em != null,
     };
   });
 

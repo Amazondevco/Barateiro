@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search,
   SlidersHorizontal,
@@ -34,6 +35,7 @@ export type RespostaRow = {
   usuario_id: string;
   usuario_nome: string;
   departamento_id: string | null;
+  lida: boolean;
 };
 
 type Unidade = { id: string; nome: string };
@@ -77,6 +79,9 @@ export function RespostasView({
   const [visual, setVisual] = useState<Visualizacao>("tabela");
   const [visualModal, setVisualModal] = useState(false);
   const [detalheId, setDetalheId] = useState<string | null>(null);
+  // IDs lidos nesta sessão (feedback imediato antes do refresh do servidor).
+  const [lidasLocais, setLidasLocais] = useState<Set<string>>(new Set());
+  const router = useRouter();
 
   // Aplica a preferência salva após montar (evita mismatch de hidratação)
   useEffect(() => {
@@ -431,14 +436,25 @@ export function RespostasView({
       ) : (
         <RespostasVisual
           visual={visual}
-          rows={filtered}
+          rows={filtered.map((r) =>
+            lidasLocais.has(r.id) ? { ...r, lida: true } : r,
+          )}
           agruparPorDia={agruparPorDia}
           onAbrir={setDetalheId}
         />
       )}
 
       {detalheId && (
-        <RespostaPanel id={detalheId} onClose={() => setDetalheId(null)} />
+        <RespostaPanel
+          id={detalheId}
+          onRead={(rid) =>
+            setLidasLocais((prev) => new Set(prev).add(rid))
+          }
+          onClose={() => {
+            setDetalheId(null);
+            router.refresh();
+          }}
+        />
       )}
 
       {visualModal && (

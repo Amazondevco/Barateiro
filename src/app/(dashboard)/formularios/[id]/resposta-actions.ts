@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export type ItemDetalhe = { texto: string; valor: string; observacao: string; foto_url: string | null };
@@ -14,6 +15,7 @@ export type RespostaDetalhe = {
   total_nao: number;
   assinatura: string | null;
   presenca_ok: boolean | null; // true=no local, false=fora do raio, null=n/a
+  lida: boolean; // já lida por algum admin do painel
   secoes: SecaoDetalhe[];
 };
 
@@ -32,7 +34,7 @@ export async function getRespostaDetalhe(id: string): Promise<RespostaDetalhe | 
 
   const { data: resp } = await supabase
     .from("respostas")
-    .select("formulario_id, enviado_em, status, total_itens, total_nao, assinatura_svg, presenca_ok, usuario_id, formularios(nome), unidades(nome)")
+    .select("formulario_id, enviado_em, status, total_itens, total_nao, assinatura_svg, presenca_ok, lida_em, usuario_id, formularios(nome), unidades(nome)")
     .eq("id", id)
     .single();
   if (!resp) return null;
@@ -44,6 +46,7 @@ export async function getRespostaDetalhe(id: string): Promise<RespostaDetalhe | 
     total_nao: number;
     assinatura_svg: string | null;
     presenca_ok: boolean | null;
+    lida_em: string | null;
     usuario_id: string;
     formularios: { nome: string } | null;
     unidades: { nome: string } | null;
@@ -89,8 +92,17 @@ export async function getRespostaDetalhe(id: string): Promise<RespostaDetalhe | 
     total_nao: r.total_nao,
     assinatura: r.assinatura_svg,
     presenca_ok: r.presenca_ok,
+    lida: r.lida_em != null,
     secoes: secsDetalhe,
   };
+}
+
+// Marca a resposta como lida pelo admin (idempotente). Revalida a rota para a
+// listagem refletir o "não lida" → "lida".
+export async function marcarRespostaLida(id: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase.rpc("marcar_resposta_lida", { p_resposta: id });
+  revalidatePath("/formularios/[id]", "page");
 }
 
 export async function resumirResposta(id: string): Promise<{ resumo: string }> {
