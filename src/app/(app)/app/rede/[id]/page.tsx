@@ -111,6 +111,9 @@ export default async function AppRedePage({
   // (escuro em cor clara).
   const textoCor = isLightHex(cor) ? "#0f172a" : "#ffffff";
   const bannerStyle: React.CSSProperties = {
+    // Banner edge-to-edge no topo: a cor sobe sob a barra de status; o conteúdo
+    // ganha o respiro da safe-area + o pt original (2.5rem).
+    paddingTop: "calc(env(safe-area-inset-top) + 2.5rem)",
     background: `linear-gradient(135deg, ${cor} 0%, color-mix(in srgb, ${cor} 80%, black) 100%)`,
     color: textoCor,
   };
@@ -120,7 +123,7 @@ export default async function AppRedePage({
       {/* Banner da REDE: gradiente da cor do Admin + logo (cartão branco) +
           nome/subtítulo centralizados; cantos inferiores arredondados. */}
       <div
-        className="relative rounded-b-3xl px-5 pb-8 pt-10 shadow-md ring-1 ring-black/5"
+        className="relative rounded-b-3xl px-5 pb-8 shadow-md ring-1 ring-black/5"
         style={bannerStyle}
       >
         <div className="mx-auto flex max-w-md flex-col items-center gap-2">

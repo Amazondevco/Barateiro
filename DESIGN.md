@@ -209,6 +209,13 @@ não-lida tem **ponto `bg-primary`** antes da data/unidade + leve realce
   botão fixo "Confirmar e enviar").
 - **Offline:** envio entra em fila (IndexedDB) e sincroniza sozinho; tarja no topo
   indica offline/pendências (`OfflineSyncProvider`).
+- **Safe areas (edge-to-edge):** o app desenha sob as barras do sistema. As telas
+  reservam `env(safe-area-inset-top/bottom)` (shell empurra o conteúdo; barra
+  inferior flutuante sobe; cabeçalho/rodapé fixos do formulário ganham respiro).
+  **Exceção:** a **Início da rede** (banner colorido) vai **edge-to-edge no topo**
+  — a cor da rede sobe sob a barra de status; o respiro do conteúdo (logo/nome)
+  fica dentro do banner (`paddingTop: calc(env(safe-area-inset-top) + …)`). Vale
+  para PWA e nativo.
 
 ### 8.1 Vocabulário visual (reskin)
 A cor de destaque é **sempre a cor da rede** (`--primary`/`bg-primary`); o laranja

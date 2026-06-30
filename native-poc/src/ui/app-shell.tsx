@@ -15,6 +15,9 @@ export function AppShell() {
   const compact =
     /\/formularios\/teste-offline$/.test(location.pathname) ||
     /\/rede\/[^/]+\/form\/[^/]+$/.test(location.pathname);
+  // Home da rede (com o banner colorido) vai edge-to-edge no topo: o banner passa
+  // por baixo da barra de status. O respiro do conteúdo é tratado no banner.
+  const immersiveTop = /\/rede\/[^/]+$/.test(location.pathname);
 
   return (
     // Safe areas do Android/iOS (edge-to-edge): no topo, empurra o conteúdo das
@@ -22,7 +25,10 @@ export function AppShell() {
     // (formulário) o respiro do topo é tratado no próprio header.
     <div
       className="app-shell flex min-h-screen flex-col bg-background"
-      style={{ paddingTop: compact ? undefined : "env(safe-area-inset-top)" }}
+      style={{
+        paddingTop:
+          compact || immersiveTop ? undefined : "env(safe-area-inset-top)",
+      }}
     >
       <NativeStatusBanner />
       <main

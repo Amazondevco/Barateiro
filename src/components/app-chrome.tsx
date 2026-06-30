@@ -19,13 +19,16 @@ export function AppChrome({
   const pathname = usePathname();
   const telaCheia = /\/form\/|\/assinar$/.test(pathname);
   if (telaCheia) return <>{children}</>;
+  // Home da rede (banner colorido) vai edge-to-edge no topo: o banner passa sob a
+  // barra de status; o respiro do conteúdo é tratado no próprio banner.
+  const immersiveTop = /\/rede\/[^/]+$/.test(pathname);
 
   return (
     // Safe areas (edge-to-edge): empurra o conteúdo para baixo da barra de status
     // e reserva o espaço da barra de navegação do sistema na base.
     <div
       className="flex min-h-screen flex-col"
-      style={{ paddingTop: "env(safe-area-inset-top)" }}
+      style={{ paddingTop: immersiveTop ? undefined : "env(safe-area-inset-top)" }}
     >
       <main
         className="flex flex-1 flex-col"

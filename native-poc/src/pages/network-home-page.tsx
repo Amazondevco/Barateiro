@@ -79,8 +79,11 @@ export function NetworkHomePage() {
     <div className="flex flex-1 flex-col">
       {/* Banner da REDE: gradiente da cor da rede + logo em cartão + nome centralizados */}
       <div
-        className="relative rounded-b-3xl px-5 pb-10 pt-12 shadow-md ring-1 ring-black/5"
+        className="relative rounded-b-3xl px-5 pb-10 shadow-md ring-1 ring-black/5"
         style={{
+          // Banner edge-to-edge: a cor sobe sob a barra de status; o conteúdo
+          // (logo/nome) ganha o respiro da safe-area + o pt original (3rem).
+          paddingTop: "calc(env(safe-area-inset-top) + 3rem)",
           background: `linear-gradient(135deg, ${cor} 0%, color-mix(in srgb, ${cor} 78%, black) 100%)`,
           color: textoCor,
         }}
