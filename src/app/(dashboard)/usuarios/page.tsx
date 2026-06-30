@@ -85,17 +85,6 @@ export default async function UsuariosPage({
         subtitle={
           isSuper ? "Todos os usuários da plataforma." : "Usuários da sua rede."
         }
-        action={
-          tab === "sistema" ? (
-            <AddUsuarioForm
-              action={createUsuario}
-              redeId={isSuper ? undefined : (profile?.rede_id ?? undefined)}
-              redes={redes ?? undefined}
-              unidades={unidadeOpts}
-              departamentos={deptoOpts}
-            />
-          ) : undefined
-        }
       />
 
       {showTabs && (
@@ -122,13 +111,24 @@ export default async function UsuariosPage({
 
       {tab === "aplicativo" && redeId ? (
         <EquipeAppPanel supabase={supabase} redeId={redeId} />
-      ) : usuarios.length === 0 ? (
-        <EmptyState
-          title="Nenhum usuário"
-          description="Crie o primeiro usuário usando o botão acima."
-        />
       ) : (
-        <Table>
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <AddUsuarioForm
+              action={createUsuario}
+              redeId={isSuper ? undefined : (profile?.rede_id ?? undefined)}
+              redes={redes ?? undefined}
+              unidades={unidadeOpts}
+              departamentos={deptoOpts}
+            />
+          </div>
+          {usuarios.length === 0 ? (
+            <EmptyState
+              title="Nenhum usuário"
+              description="Crie o primeiro usuário usando o botão acima."
+            />
+          ) : (
+            <Table>
           <THead>
             <TR>
               <TH>Nome</TH>
@@ -179,7 +179,9 @@ export default async function UsuariosPage({
               </TR>
             ))}
           </tbody>
-        </Table>
+            </Table>
+          )}
+        </div>
       )}
     </>
   );
