@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
+import { initOta } from "./lib/ota";
 import "@fontsource-variable/geist";
 import "./styles.css";
 
@@ -21,3 +22,6 @@ createRoot(document.getElementById("root")!).render(
     </HashRouter>
   </StrictMode>,
 );
+
+// OTA: confirma o bundle e checa atualização (só em nativo).
+void initOta();

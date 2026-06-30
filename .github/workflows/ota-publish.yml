@@ -1,0 +1,62 @@
+name: Publicar OTA (bundle web)
+
+# Builda a web do app nativo, empacota (zip) e publica no bucket público
+# native-bundles do Supabase + um version.json. O app instalado checa esse
+# version.json e baixa/aplica sem reinstalar (Capgo, modo manual).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "native-poc/src/**"
+      - "native-poc/index.html"
+      - "native-poc/package.json"
+
+concurrency:
+  group: ota-publish
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: native-poc/package-lock.json
+
+      - name: Instalar deps
+        working-directory: native-poc
+        run: npm ci
+
+      - name: Build web
+        working-directory: native-poc
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Empacotar bundle + version.json
+        working-directory: native-poc
+        run: |
+          (cd dist && zip -qr ../bundle.zip .)
+          VER="${GITHUB_SHA::8}"
+          URL="${{ secrets.VITE_SUPABASE_URL }}/storage/v1/object/public/native-bundles/bundle.zip"
+          printf '{"version":"%s","url":"%s"}' "$VER" "$URL" > version.json
+          echo "Publicando versão $VER ($(du -h bundle.zip | cut -f1))"
+
+      - name: Enviar ao Supabase Storage
+        working-directory: native-poc
+        run: |
+          BASE="${{ secrets.VITE_SUPABASE_URL }}/storage/v1/object/native-bundles"
+          AUTH="Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          APIKEY="apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          curl -fsS -X POST "$BASE/bundle.zip" -H "$AUTH" -H "$APIKEY" \
+            -H "x-upsert: true" -H "Content-Type: application/zip" --data-binary @bundle.zip
+          curl -fsS -X POST "$BASE/version.json" -H "$AUTH" -H "$APIKEY" \
+            -H "x-upsert: true" -H "Content-Type: application/json" --data-binary @version.json
+          echo "OTA publicado."
