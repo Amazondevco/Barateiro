@@ -14,6 +14,7 @@ import { AssistantFab } from "@/components/assistant-fab";
 import { DEV_EMAILS } from "@/lib/dev-accounts";
 import { PageTitleProvider, TopbarTitle } from "@/components/page-title";
 import { TopbarSearch } from "@/components/topbar-search";
+import { NotificationBell } from "@/components/notification-bell";
 
 // true se a cor (hex) for clara → texto escuro fica legível
 function isLightHex(hex: string): boolean {
@@ -177,6 +178,7 @@ export function DashboardShell({
 
           <div className="flex shrink-0 items-center justify-end gap-2">
             <TopbarSearch />
+            <NotificationBell />
             <ThemeToggle />
 
             <div className="flex items-center gap-3 border-l border-border pl-3">

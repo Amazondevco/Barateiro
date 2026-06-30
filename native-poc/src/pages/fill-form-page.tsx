@@ -4,10 +4,21 @@ import {
   ArrowRight,
   Camera,
   Check,
+  ChevronDown,
   ClipboardCheck,
   Loader2,
   PenLine,
   Trash2,
+  ShoppingBasket,
+  Snowflake,
+  Apple,
+  Beef,
+  Croissant,
+  Wine,
+  Fish,
+  Milk,
+  Package,
+  type LucideIcon,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Geolocation } from "@capacitor/geolocation";
@@ -38,6 +49,20 @@ const OPTIONS: Record<string, Array<[string, string]>> = {
     ["ruptura", "Ruptura"],
   ],
 };
+
+// Ícone da seção a partir do título (texto livre). Sem match → ícone padrão.
+function secaoIcon(titulo: string): LucideIcon {
+  const t = titulo.toLowerCase();
+  if (/(frio|latic|resfri|congel)/.test(t)) return Snowflake;
+  if (/(mercearia|seco)/.test(t)) return ShoppingBasket;
+  if (/(horti|fruta|verdura|flv|legume)/.test(t)) return Apple;
+  if (/(açougue|acougue|carne)/.test(t)) return Beef;
+  if (/(padaria|pão|pães|confeit)/.test(t)) return Croissant;
+  if (/(bebida|adega|vinho)/.test(t)) return Wine;
+  if (/(peixe|pescado|frutos do mar)/.test(t)) return Fish;
+  if (/(leite|iogurte)/.test(t)) return Milk;
+  return Package;
+}
 
 // Distância em metros entre dois pontos (Haversine) — para o geofence.
 function distanciaM(la1: number, lo1: number, la2: number, lo2: number) {
@@ -81,6 +106,7 @@ export function FillFormPage() {
   const [reviewing, setReviewing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
+  const [assinaturaAberta, setAssinaturaAberta] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [photos, setPhotos] = useState<Record<string, string>>({});
@@ -91,7 +117,7 @@ export function FillFormPage() {
         const result = await fetchFormDefinition(memberId, formId);
         setForm(result.form);
         setSavedSignature(result.signature);
-        setSignature(result.signature);
+        // Assinatura começa vazia — anexada pelo bloco fixo na revisão (igual ao PWA).
       } catch (loadError) {
         setError(
           loadError instanceof Error
@@ -307,7 +333,7 @@ export function FillFormPage() {
         </div>
       ) : null}
 
-      <div className="flex-1 space-y-5 p-4 pb-28">
+      <div className={`flex-1 space-y-5 p-4 ${reviewing ? "pb-52" : "pb-28"}`}>
         {reviewing ? (
           <>
             <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/10 p-4">
@@ -323,12 +349,19 @@ export function FillFormPage() {
               </div>
             </div>
 
-            {form.sections.map((section) => (
+            {form.sections.map((section) => {
+              const Icon = secaoIcon(section.titulo ?? "");
+              return (
               <div key={section.id} className="space-y-2">
                 {section.titulo ? (
-                  <h2 className="px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    {section.titulo}
-                  </h2>
+                  <div className="flex items-center gap-2.5 px-1">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                      {section.titulo}
+                    </h2>
+                  </div>
                 ) : null}
                 <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
                   {section.items.map((item) => {
@@ -384,24 +417,8 @@ export function FillFormPage() {
                   })}
                 </div>
               </div>
-            ))}
-
-            {/* Assinatura */}
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <p className="mb-3 flex items-center gap-2 text-sm font-semibold">
-                <PenLine className="h-4 w-4 text-primary" /> Assinatura
-              </p>
-              {savedSignature && !signature ? (
-                <Button
-                  type="button"
-                  className="mb-3 w-full"
-                  onClick={() => setSignature(savedSignature)}
-                >
-                  <PenLine className="h-4 w-4" /> Usar assinatura salva
-                </Button>
-              ) : null}
-              <SignaturePad value={signature} onChange={setSignature} />
-            </div>
+              );
+            })}
           </>
         ) : (
           currentStep.map((section) => (
@@ -441,36 +458,79 @@ export function FillFormPage() {
         ) : null}
       </div>
 
-      {/* Barra fixa: navegação / confirmação */}
-      <div className="sticky bottom-0 z-10 flex gap-3 border-t border-border bg-background/95 p-4 backdrop-blur">
+      {/* Barra fixa: navegação / (na revisão) assinatura + confirmação */}
+      <div className="sticky bottom-0 z-10 border-t border-border bg-background/95 backdrop-blur">
         {reviewing ? (
-          <>
-            <button
-              type="button"
-              onClick={() => setReviewing(false)}
-              className="flex h-14 flex-none items-center justify-center gap-2 rounded-2xl bg-muted px-5 text-base font-semibold text-foreground transition-colors hover:bg-border"
-            >
-              <ArrowLeft className="h-4 w-4" /> Editar
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleSubmit()}
-              disabled={submitting}
-              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" /> Enviando…
-                </>
-              ) : (
-                <>
-                  <Check className="h-5 w-5" /> Confirmar e enviar
-                </>
-              )}
-            </button>
-          </>
+          <div className="space-y-3 p-4">
+            {/* Assinatura recolhível — fixa na base, igual ao mockup/PWA */}
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+              <button
+                type="button"
+                onClick={() => setAssinaturaAberta((v) => !v)}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
+              >
+                <span
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
+                    signature
+                      ? "border-success bg-success text-white"
+                      : "border-border bg-card"
+                  }`}
+                >
+                  {signature ? <Check className="h-4 w-4" /> : null}
+                </span>
+                <span className="flex-1 text-[15px] font-semibold text-foreground">
+                  {signature ? "Assinatura anexada" : "Anexar minha assinatura"}
+                </span>
+                <ChevronDown
+                  className={`h-5 w-5 text-muted-foreground transition-transform ${
+                    assinaturaAberta ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {assinaturaAberta ? (
+                <div className="border-t border-border p-4">
+                  {savedSignature && !signature ? (
+                    <Button
+                      type="button"
+                      className="mb-3 w-full"
+                      onClick={() => setSignature(savedSignature)}
+                    >
+                      <PenLine className="h-4 w-4" /> Usar assinatura salva
+                    </Button>
+                  ) : null}
+                  <SignaturePad value={signature} onChange={setSignature} />
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setReviewing(false)}
+                className="flex h-14 flex-none items-center justify-center gap-2 rounded-2xl bg-muted px-5 text-base font-semibold text-foreground transition-colors hover:bg-border"
+              >
+                <ArrowLeft className="h-4 w-4" /> Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSubmit()}
+                disabled={submitting || !signature}
+                className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" /> Enviando…
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-5 w-5" /> Confirmar
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         ) : (
-          <>
+          <div className="flex gap-3 p-4">
             {stepIndex > 0 ? (
               <button
                 type="button"
@@ -505,7 +565,7 @@ export function FillFormPage() {
                 Próxima <ArrowRight className="h-5 w-5" />
               </button>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>

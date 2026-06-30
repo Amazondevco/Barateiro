@@ -125,6 +125,12 @@ Assistente IA (sparkle). Empilham no canto inferior direito.
 ## 7. Padrões do Painel
 
 - Sidebar **escura** (tokens `--sidebar-*`) recolhível; topbar herda a cor da sidebar.
+- **Topbar (à direita):** busca + **sino de notificações** + tema + usuário. A
+  **busca** fica recolhida só como **lupa** (botão `h-9 w-9`); passar o mouse ou
+  clicar expande a barra (`TopbarSearch`), recolhendo ao sair se vazia. O **sino**
+  (`NotificationBell`) tem badge `bg-danger` com a contagem e abre um **balão pra
+  baixo** (portal ancorado, `rounded-xl bg-card shadow-xl`) com a lista; v1 lista
+  **respostas não lidas** da rede (`getNotificacoes`), abrir leva ao formulário.
 - Título da página via `page-title` (derivado da rota).
 - Busca global (`TopbarSearch`) → dropdown por seções → `/busca` (ver `src/lib/search.ts`).
 - Tabelas/listas com linhas clicáveis levam ao detalhe; painel lateral para detalhe
@@ -208,9 +214,12 @@ dos mockups é só placeholder. Fonte permanece **Geist**.
 - **Progresso (preencher):** segmentos `h-1 flex-1 rounded-full`; concluído =
   `bg-primary/50`, atual = `bg-primary`, futuro = `bg-border`. Header com voltar +
   "Etapa X de N". Rodapé fixo com botão primário ("Próxima"/"Revisar").
-- **Revisão:** resumo agrupado por seção (cartão com linhas pergunta → badge),
-  indicador de anexo; **bloco de assinatura** expansível; rodapé Editar/Confirmar
-  (Confirmar habilita após assinar).
+- **Revisão:** resumo agrupado por seção (cabeçalho com **ícone** inferido do
+  título via `secaoIcon` + cartão com linhas pergunta → badge), indicador de anexo.
+  **A partir da assinatura tudo fica FIXO na base:** bloco recolhível "Anexar
+  minha assinatura" (quadrado vira ✓ ao assinar + chevron) seguido do rodapé
+  Editar/Confirmar. **Confirmar só habilita após assinar.** Vale para PWA
+  (`fill-form.tsx`) e nativo (`fill-form-page.tsx`) — mantê-los idênticos.
 - **Listagem (Formulários):** controle segmentado Enviados/Pendentes
   (`bg-muted rounded-xl p-1`, ativo `bg-card text-primary shadow-sm` + contador).
 - **Perfil:** avatar circular grande, cartões agrupados (Dados Pessoais / Vínculo)

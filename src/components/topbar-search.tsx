@@ -36,9 +36,20 @@ export function TopbarSearch() {
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(-1); // índice na lista achatada
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const [expandido, setExpandido] = useState(false); // só a lupa até passar o mouse/clicar
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Abre a barra (opcionalmente já focando) / recolhe se vazia e sem painel.
+  function abrirBarra(focar: boolean) {
+    setExpandido(true);
+    if (focar) setTimeout(() => inputRef.current?.focus(), 0);
+  }
+  function talvezRecolher() {
+    const focado = document.activeElement === inputRef.current;
+    if (!focado && !q.trim() && !open) setExpandido(false);
+  }
 
   // lista achatada de hits (p/ navegação por teclado)
   const flat = groups.flatMap((g) => g.hits);
@@ -131,17 +142,37 @@ export function TopbarSearch() {
   const showPanel = open && term.length >= 2;
 
   return (
-    <div ref={wrapRef} className="relative hidden md:block">
-      <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/70" />
-      <input
-        ref={inputRef}
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        onFocus={() => setOpen(true)}
-        onKeyDown={onKeyDown}
-        placeholder="Buscar em tudo…"
-        className="h-9 w-44 rounded-lg border border-foreground/15 bg-foreground/5 pl-8 pr-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:w-72 focus:border-foreground/25 focus:bg-foreground/10"
-      />
+    <div
+      ref={wrapRef}
+      className="relative hidden md:block"
+      onMouseEnter={() => setExpandido(true)}
+      onMouseLeave={talvezRecolher}
+    >
+      {expandido ? (
+        <>
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/70" />
+          <input
+            ref={inputRef}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onFocus={() => setOpen(true)}
+            onBlur={talvezRecolher}
+            onKeyDown={onKeyDown}
+            placeholder="Buscar em tudo…"
+            className="h-9 w-72 rounded-lg border border-foreground/25 bg-foreground/10 pl-8 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+          />
+        </>
+      ) : (
+        <button
+          type="button"
+          onClick={() => abrirBarra(true)}
+          aria-label="Buscar"
+          title="Buscar"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-foreground/10 hover:text-foreground"
+        >
+          <Search className="h-[18px] w-[18px]" />
+        </button>
+      )}
 
       {showPanel &&
         rect &&
