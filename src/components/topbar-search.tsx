@@ -160,10 +160,10 @@ export function TopbarSearch() {
         onKeyDown={onKeyDown}
         placeholder="Buscar em tudo…"
         aria-label="Buscar"
-        className={`h-9 rounded-lg border bg-foreground/5 pl-9 pr-3 text-sm text-foreground outline-none transition-[width,background-color,border-color] duration-300 ease-out placeholder:text-muted-foreground ${
+        className={`h-9 rounded-lg pl-9 pr-3 text-sm text-foreground outline-none transition-[width,background-color,border-color] duration-300 ease-out placeholder:text-muted-foreground ${
           expandido
-            ? "w-72 cursor-text border-foreground/25 bg-foreground/10"
-            : "w-9 cursor-pointer border-transparent bg-transparent"
+            ? "w-72 cursor-text border border-foreground/25 bg-foreground/10"
+            : "w-9 cursor-pointer border-0 bg-transparent"
         }`}
       />
 
