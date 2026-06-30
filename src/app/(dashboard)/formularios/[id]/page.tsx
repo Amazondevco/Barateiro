@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Layers, ClipboardCheck, BarChart3 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { PillTabs } from "@/components/ui/pill-tabs";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { FormBuilder } from "../form-builder";
@@ -11,9 +12,9 @@ import { carregarBase, computar, type Kind } from "@/lib/relatorios";
 import type { ItemTipo, UnidadeTipo } from "@/lib/types";
 
 const TABS = [
-  { key: "modelo", label: "Modelo" },
-  { key: "respostas", label: "Respostas" },
-  { key: "painel", label: "Painel" },
+  { key: "modelo", label: "Modelo", icon: Layers },
+  { key: "respostas", label: "Respostas", icon: ClipboardCheck },
+  { key: "painel", label: "Painel", icon: BarChart3 },
 ];
 
 type Periodo = "dia" | "semana" | "mes";
@@ -55,21 +56,15 @@ export default async function FormularioDetailPage({
       </Link>
       <PageHeader title={form.nome} crumb={form.nome} />
 
-      <div className="flex gap-1 border-b border-border">
-        {TABS.map((t) => (
-          <Link
-            key={t.key}
-            href={`/formularios/${id}?tab=${t.key}`}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-              tab === t.key
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </div>
+      <PillTabs
+        tabs={TABS.map((t) => ({
+          key: t.key,
+          label: t.label,
+          icon: t.icon,
+          href: `/formularios/${id}?tab=${t.key}`,
+          active: tab === t.key,
+        }))}
+      />
 
       {tab === "respostas" ? (
         <RespostasTab

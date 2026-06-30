@@ -117,6 +117,14 @@ dentro de um cartão com `overflow-hidden`.
 **lucide-react**, tamanho `h-4 w-4` (inline) ou `h-5 w-5` (ações). Nunca emoji em
 UI de produto.
 
+### Tabs — `src/components/ui/pill-tabs.tsx`
+**Controle segmentado** (não sublinhado): pílulas dentro de um cartão branco
+(`rounded-xl border bg-card p-1.5 shadow-sm`). A aba **ativa** é uma pílula
+**neutra escura** (`bg-foreground text-background`) — o accent/cor da rede fica
+nos botões, não nas abas. Cada aba: ícone lucide + label, navegação por `href`
+(`?tab=`). Usado no detalhe do checklist (Modelo/Respostas/Painel) e em
+Configurações. Substitui o padrão antigo de abas sublinhadas (`border-b-2`).
+
 ### Toast — `src/components/toast.tsx`
 **Feedback de AÇÃO do usuário** (salvar/editar/excluir/carregar) — não confundir
 com o sino (`NotificationBell`), que é evento do sistema. Balão no **topo-direito**

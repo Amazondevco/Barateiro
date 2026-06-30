@@ -1,5 +1,18 @@
 import Link from "next/link";
+import {
+  Smartphone,
+  Box,
+  Shield,
+  FileText,
+  Palette,
+  SlidersHorizontal,
+  FolderTree,
+  Store,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { PillTabs } from "@/components/ui/pill-tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
 import { createClient } from "@/lib/supabase/server";
@@ -26,12 +39,12 @@ import { AplicativoForm } from "./aplicativo-form";
 export const metadata = { title: "Configurações — Check.AI" };
 
 // Unidades, Departamentos e Usuários viraram páginas próprias (Gestão de Rede).
-const TABS = [
-  { key: "equipe", label: "Equipe do app", adminOnly: true },
-  { key: "aplicativo", label: "Aplicativo", adminOnly: true },
-  { key: "permissoes", label: "Permissões", adminOnly: false },
-  { key: "auditoria", label: "Auditoria", adminOnly: true },
-  { key: "aparencia", label: "Aparência", adminOnly: true },
+const TABS: { key: string; label: string; adminOnly: boolean; icon: LucideIcon }[] = [
+  { key: "equipe", label: "Equipe do app", adminOnly: true, icon: Smartphone },
+  { key: "aplicativo", label: "Aplicativo", adminOnly: true, icon: Box },
+  { key: "permissoes", label: "Permissões", adminOnly: false, icon: Shield },
+  { key: "auditoria", label: "Auditoria", adminOnly: true, icon: FileText },
+  { key: "aparencia", label: "Aparência", adminOnly: true, icon: Palette },
 ];
 
 export default async function ConfiguracoesPage({
@@ -59,15 +72,15 @@ export default async function ConfiguracoesPage({
       .select("*")
       .eq("id", true)
       .single();
-    const PLAT_TABS = [
-      { key: "aparencia", label: "Aparência" },
-      { key: "padroes", label: "Padrões gerais" },
-      { key: "departamentos", label: "Departamentos" },
-      { key: "unidades", label: "Unidades" },
-      { key: "usuarios", label: "Usuários" },
-      { key: "permissoes", label: "Permissões" },
-      { key: "aplicativo", label: "Aplicativo" },
-      { key: "auditoria", label: "Auditoria" },
+    const PLAT_TABS: { key: string; label: string; icon: LucideIcon }[] = [
+      { key: "aparencia", label: "Aparência", icon: Palette },
+      { key: "padroes", label: "Padrões gerais", icon: SlidersHorizontal },
+      { key: "departamentos", label: "Departamentos", icon: FolderTree },
+      { key: "unidades", label: "Unidades", icon: Store },
+      { key: "usuarios", label: "Usuários", icon: Users },
+      { key: "permissoes", label: "Permissões", icon: Shield },
+      { key: "aplicativo", label: "Aplicativo", icon: Box },
+      { key: "auditoria", label: "Auditoria", icon: FileText },
     ];
     const ptab = PLAT_TABS.some((t) => t.key === tab) ? tab : "aparencia";
 
@@ -77,21 +90,16 @@ export default async function ConfiguracoesPage({
           title="Configurações"
           subtitle="Plataforma — Check.AI"
         />
-        <div className="mb-6 flex gap-1 overflow-x-auto border-b border-border">
-          {PLAT_TABS.map((t) => (
-            <Link
-              key={t.key}
-              href={`/configuracoes?tab=${t.key}`}
-              className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-                ptab === t.key
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </div>
+        <PillTabs
+          className="mb-6"
+          tabs={PLAT_TABS.map((t) => ({
+            key: t.key,
+            label: t.label,
+            icon: t.icon,
+            href: `/configuracoes?tab=${t.key}`,
+            active: ptab === t.key,
+          }))}
+        />
 
         {ptab === "aparencia" && plat && (
           <AparenciaForm
@@ -170,22 +178,17 @@ export default async function ConfiguracoesPage({
         }
       />
 
-      {/* Abas horizontais */}
-      <div className="mb-6 flex gap-1 overflow-x-auto border-b border-border">
-        {visibleTabs.map((t) => (
-          <Link
-            key={t.key}
-            href={`/configuracoes?tab=${t.key}`}
-            className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === t.key
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </div>
+      {/* Abas (controle segmentado) */}
+      <PillTabs
+        className="mb-6"
+        tabs={visibleTabs.map((t) => ({
+          key: t.key,
+          label: t.label,
+          icon: t.icon,
+          href: `/configuracoes?tab=${t.key}`,
+          active: activeTab === t.key,
+        }))}
+      />
 
       {!redeId ? (
         <Card>

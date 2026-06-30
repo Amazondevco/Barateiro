@@ -22,7 +22,7 @@ sempre a **cor da rede** (`--primary`).
 - [ ] **Fase 1 — Sidebar.** Grupos **recolhíveis** (estado salvo); rail polida
   (ícones centralizados, ativo realçado); caixa do usuário com avatar circular
   (foto se houver; recolhida = só o avatar).
-- [ ] **Fase 2 — Tabs (segmented pill).** Componente reutilizável (cartão branco +
+- [x] **Fase 2 — Tabs (segmented pill).** Componente reutilizável (cartão branco +
   pílula ativa). Aplicar no detalhe do checklist e em Configurações.
 - [ ] **Fase 3 — Tabelas/listas.** Evoluir `Table` (chip de ícone, célula de 2
   linhas, headers uppercase, badge pill, ações, respiro, sombra). Aplicar em
