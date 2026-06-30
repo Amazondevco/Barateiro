@@ -15,7 +15,7 @@ export type FormState = { error?: string; ok?: boolean };
 // marca Check.AI via Resend (não usa o e-mail do Supabase → sem rate limit).
 export async function convidarResponsavel(
   redeId: string,
-): Promise<{ ok?: boolean; error?: string; email?: string }> {
+): Promise<{ ok?: boolean; error?: string; email?: string; link?: string; emailEnviado?: boolean }> {
   const { profile } = await getSessionContext();
   if (profile?.papel !== "super_admin") {
     return { error: "Apenas super admin pode convidar responsáveis." };
@@ -72,19 +72,34 @@ export async function convidarResponsavel(
 
   if (!link) return { error: "Não foi possível gerar o link do convite.", email };
 
-  const html = await emailConviteHtml({
-    redeNome: rede?.nome ?? "sua rede",
-    contatoNome: rede?.contato_nome ?? "",
-    link,
-  });
-  const sent = await enviarEmail({
-    to: email,
-    subject: `Convite — administrar ${rede?.nome ?? "sua rede"} no Check.AI`,
-    html,
-  });
-  if (sent.error) return { error: sent.error, email };
+  // Guarda o link no cadastro da rede (best-effort: se a coluna ainda não existir,
+  // o erro é ignorado e o link continua disponível pelo botão de gerar/copiar).
+  await admin
+    .from("redes")
+    .update({ convite_link: link, convite_em: new Date().toISOString() })
+    .eq("id", redeId);
 
-  return { ok: true, email };
+  // E-mail é best-effort (enquanto o envio não está garantido). O link sempre volta
+  // para o super admin copiar e enviar manualmente.
+  let emailEnviado = false;
+  try {
+    const html = await emailConviteHtml({
+      redeNome: rede?.nome ?? "sua rede",
+      contatoNome: rede?.contato_nome ?? "",
+      link,
+    });
+    const sent = await enviarEmail({
+      to: email,
+      subject: `Convite — administrar ${rede?.nome ?? "sua rede"} no Check.AI`,
+      html,
+    });
+    emailEnviado = !sent.error;
+  } catch {
+    emailEnviado = false;
+  }
+
+  revalidatePath(`/clientes/${redeId}`);
+  return { ok: true, email, link, emailEnviado };
 }
 
 function parseRede(formData: FormData) {

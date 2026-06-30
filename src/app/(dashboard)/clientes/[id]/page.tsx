@@ -192,8 +192,12 @@ export default async function RedeDetailPage({
 
       {tab === "usuarios" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <ConviteResponsavelButton redeId={id} email={rede.contato_email} />
+          <ConviteResponsavelButton
+            redeId={id}
+            email={rede.contato_email}
+            linkInicial={(rede as { convite_link?: string | null }).convite_link ?? null}
+          />
+          <div className="flex items-center justify-end gap-3">
             <AddUsuarioForm
               action={createUsuario}
               redeId={id}
