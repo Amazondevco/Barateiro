@@ -5,7 +5,7 @@ export function Table({
   ...props
 }: React.HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-card">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
       <table className={cn("w-full text-sm", className)} {...props} />
     </div>
   );
@@ -59,7 +59,7 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card px-6 py-14 text-center">
+    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card px-6 py-14 text-center">
       <p className="font-medium">{title}</p>
       {description && (
         <p className="max-w-sm text-sm text-muted-foreground">{description}</p>

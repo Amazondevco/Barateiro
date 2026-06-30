@@ -117,6 +117,14 @@ dentro de um cartão com `overflow-hidden`.
 **lucide-react**, tamanho `h-4 w-4` (inline) ou `h-5 w-5` (ações). Nunca emoji em
 UI de produto.
 
+### Tabelas — `src/components/ui/table.tsx`
+**Toda tabela do sistema usa esse componente** (`Table/THead/TH/TR/TD/EmptyState`)
+— não criar `<table>` cru. Contêiner: `rounded-2xl border border-border bg-card
+shadow-sm` (mesmo molde dos cartões do reskin); header `bg-muted/50` com `TH`
+uppercase; `TD` com respiro (`px-5 py-3.5`); `EmptyState` em cartão tracejado
+`rounded-2xl`. Exceção: visualizações em matriz/heatmap (ex.: respostas por dia ×
+unidade) são um padrão à parte, não tabela de listagem.
+
 ### Linha de tabela — `src/components/ui/icon-chip.tsx`
 Tabelas "ricas" usam uma **célula-líder** (`LeadCell`): **chip de ícone colorido**
 (`IconChip`, quadrado `rounded-xl h-10`) + título e subtítulo em 2 linhas. A cor do
