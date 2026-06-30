@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Camera,
@@ -110,6 +111,25 @@ export function FillFormPage() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [photos, setPhotos] = useState<Record<string, string>>({});
+  // Validação por etapa: itemId → mensagem de erro; e toast transitório no topo.
+  const [invalid, setInvalid] = useState<Record<string, string>>({});
+  const [flashMsg, setFlashMsg] = useState<string | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function flash(msg: string) {
+    setFlashMsg(msg);
+    if (flashTimer.current) clearTimeout(flashTimer.current);
+    flashTimer.current = setTimeout(() => setFlashMsg(null), 2800);
+  }
+
+  function clearInvalid(id: string) {
+    setInvalid((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
 
   useEffect(() => {
     async function load() {
@@ -198,6 +218,50 @@ export function FillFormPage() {
 
     if (!signature) return "Adicione a assinatura antes de enviar.";
     return null;
+  }
+
+  // Erro de UM item (ou null). Espelha as regras do validate(): tipos de escolha
+  // exigem valor; "Não/Ruptura" pode exigir observação e/ou foto.
+  function itemErro(item: FormItem): string | null {
+    const value = values[item.id] ?? "";
+    const note = notes[item.id] ?? "";
+    const photo = photos[item.id] ?? "";
+    const nonConforming = ["nao", "ruptura"].includes(value);
+    const exigeValor =
+      item.tipo !== "texto" && item.tipo !== "numero" && item.tipo !== "foto";
+    if (exigeValor && !value) return "Não preenchido";
+    if (item.obrigaObsQuandoNao && nonConforming && !note.trim())
+      return "Observação obrigatória";
+    if (item.obrigaFotoQuandoNao && nonConforming && !photo)
+      return "Foto obrigatória";
+    return null;
+  }
+
+  // Valida só os itens das seções da etapa; retorna o mapa itemId → erro.
+  function validateStep(sections: FormSection[]): Record<string, string> {
+    const errs: Record<string, string> = {};
+    for (const s of sections)
+      for (const it of s.items) {
+        const e = itemErro(it);
+        if (e) errs[it.id] = e;
+      }
+    return errs;
+  }
+
+  // Tenta avançar/avançar-para-revisão validando a etapa atual. Bloqueia e
+  // sinaliza (selo no campo + toast no topo) se faltar obrigatório.
+  function tentarAvancar(acao: () => void) {
+    const errs = validateStep(currentStep);
+    if (Object.keys(errs).length > 0) {
+      setInvalid(errs);
+      flash("Preencha os campos obrigatórios desta página.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setInvalid({});
+    setError(null);
+    acao();
+    window.scrollTo({ top: 0 });
   }
 
   async function handleSubmit() {
@@ -289,6 +353,19 @@ export function FillFormPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
+      {/* Toast transitório no topo (campos obrigatórios faltando) */}
+      {flashMsg ? (
+        <div
+          className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4"
+          style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
+        >
+          <div className="toast-in flex items-center gap-2 rounded-xl border border-danger/30 bg-card px-4 py-2.5 text-sm font-medium text-danger shadow-lg">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {flashMsg}
+          </div>
+        </div>
+      ) : null}
+
       {/* Cabeçalho */}
       <header
         className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur"
@@ -436,18 +513,22 @@ export function FillFormPage() {
                   key={item.id}
                   item={item}
                   permiteNa={section.permiteNa}
+                  erro={invalid[item.id]}
                   value={values[item.id] ?? ""}
                   note={notes[item.id] ?? ""}
                   photo={photos[item.id] ?? ""}
-                  onValue={(next) =>
-                    setValues((prev) => ({ ...prev, [item.id]: next }))
-                  }
-                  onNote={(next) =>
-                    setNotes((prev) => ({ ...prev, [item.id]: next }))
-                  }
-                  onPhoto={(next) =>
-                    setPhotos((prev) => ({ ...prev, [item.id]: next }))
-                  }
+                  onValue={(next) => {
+                    setValues((prev) => ({ ...prev, [item.id]: next }));
+                    clearInvalid(item.id);
+                  }}
+                  onNote={(next) => {
+                    setNotes((prev) => ({ ...prev, [item.id]: next }));
+                    clearInvalid(item.id);
+                  }}
+                  onPhoto={(next) => {
+                    setPhotos((prev) => ({ ...prev, [item.id]: next }));
+                    clearInvalid(item.id);
+                  }}
                 />
               ))}
             </div>
@@ -553,7 +634,7 @@ export function FillFormPage() {
             {isLastStep ? (
               <button
                 type="button"
-                onClick={() => setReviewing(true)}
+                onClick={() => tentarAvancar(() => setReviewing(true))}
                 className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
               >
                 <ClipboardCheck className="h-5 w-5" /> Revisar e enviar
@@ -561,11 +642,11 @@ export function FillFormPage() {
             ) : (
               <button
                 type="button"
-                onClick={() => {
-                  setError(null);
-                  setStepIndex((prev) => Math.min(steps.length - 1, prev + 1));
-                  window.scrollTo({ top: 0 });
-                }}
+                onClick={() =>
+                  tentarAvancar(() =>
+                    setStepIndex((prev) => Math.min(steps.length - 1, prev + 1)),
+                  )
+                }
                 className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
               >
                 Próxima <ArrowRight className="h-5 w-5" />
@@ -581,6 +662,7 @@ export function FillFormPage() {
 function FormItemCard({
   item,
   permiteNa,
+  erro,
   value,
   note,
   photo,
@@ -590,6 +672,7 @@ function FormItemCard({
 }: {
   item: FormItem;
   permiteNa: boolean;
+  erro?: string;
   value: string;
   note: string;
   photo: string;
@@ -602,7 +685,16 @@ function FormItemCard({
     nonConforming && (item.obrigaObsQuandoNao || item.obrigaFotoQuandoNao);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
+    <div
+      className={`rounded-2xl border bg-card p-5 ${
+        erro ? "border-danger" : "border-border"
+      }`}
+    >
+      {erro ? (
+        <span className="mb-2 inline-flex items-center gap-1 rounded-md bg-danger-bg px-2 py-0.5 text-[11px] font-semibold text-danger">
+          <AlertCircle className="h-3 w-3" /> {erro}
+        </span>
+      ) : null}
       <p className="text-[15px] font-semibold leading-snug text-foreground">
         {item.texto}
       </p>

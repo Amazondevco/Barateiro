@@ -3,6 +3,7 @@
 import { useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Check,
@@ -127,9 +128,28 @@ export function FillForm({
   const [etapa, setEtapa] = useState(0);
   const [revisando, setRevisando] = useState(false);
   const [assinaturaAberta, setAssinaturaAberta] = useState(false);
+  // Validação por etapa: itemId → erro; e toast transitório no topo.
+  const [invalido, setInvalido] = useState<Record<string, string>>({});
+  const [flashMsg, setFlashMsg] = useState<string | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function setVal(id: string, v: string) {
     setValores((p) => ({ ...p, [id]: v }));
+    limparInvalido(id);
+  }
+
+  function flash(msg: string) {
+    setFlashMsg(msg);
+    if (flashTimer.current) clearTimeout(flashTimer.current);
+    flashTimer.current = setTimeout(() => setFlashMsg(null), 2800);
+  }
+  function limparInvalido(id: string) {
+    setInvalido((prev) => {
+      if (!prev[id]) return prev;
+      const n = { ...prev };
+      delete n[id];
+      return n;
+    });
   }
 
   // Agrupa seções em etapas (páginas) pela quebra de página — igual à prévia.
@@ -146,30 +166,60 @@ export function FillForm({
   const idx = Math.min(etapa, Math.max(0, total - 1));
   const ultima = idx >= total - 1;
 
-  // Primeira pendência obrigatória (obs/foto exigida em não-conformidade)
-  function pendencia(): string | null {
-    for (const s of form.formulario_secoes) {
-      for (const it of s.formulario_itens) {
-        const v = valores[it.id] ?? "";
-        const naoConforme = ["nao", "ruptura"].includes(v);
-        if (it.obriga_obs_quando_nao && naoConforme && !(obs[it.id] ?? "").trim())
-          return `Observação obrigatória em "${it.texto}".`;
-        if (it.obriga_foto_quando_nao && naoConforme && !(fotos[it.id] ?? ""))
-          return `Foto obrigatória em "${it.texto}".`;
-      }
-    }
+  // Erro de UM item (ou null): tipos de escolha exigem valor; "Não/Ruptura"
+  // pode exigir observação e/ou foto.
+  function itemErro(it: Item): string | null {
+    const v = valores[it.id] ?? "";
+    const ob = obs[it.id] ?? "";
+    const fo = fotos[it.id] ?? "";
+    const naoConforme = ["nao", "ruptura"].includes(v);
+    const exigeValor =
+      it.tipo !== "texto" &&
+      it.tipo !== "numero" &&
+      it.tipo !== "data" &&
+      it.tipo !== "foto";
+    if (exigeValor && !v) return "Não preenchido";
+    if (it.obriga_obs_quando_nao && naoConforme && !ob.trim())
+      return "Observação obrigatória";
+    if (it.obriga_foto_quando_nao && naoConforme && !fo)
+      return "Foto obrigatória";
     return null;
   }
 
-  function irRevisar() {
-    const p = pendencia();
-    if (p) return setErro(p);
+  function validarSecoes(secoes: Secao[]): Record<string, string> {
+    const errs: Record<string, string> = {};
+    for (const s of secoes)
+      for (const it of s.formulario_itens) {
+        const e = itemErro(it);
+        if (e) errs[it.id] = e;
+      }
+    return errs;
+  }
+
+  // Avança/revisa validando a etapa atual; bloqueia e sinaliza (selo no campo +
+  // toast no topo) se faltar obrigatório.
+  function tentarAvancar(acao: () => void) {
+    const errs = validarSecoes(etapas[idx] ?? []);
+    if (Object.keys(errs).length > 0) {
+      setInvalido(errs);
+      flash("Preencha os campos obrigatórios desta página.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setInvalido({});
     setErro(null);
-    setRevisando(true);
+    acao();
     window.scrollTo({ top: 0 });
   }
 
   async function enviar() {
+    // Segurança: revalida tudo antes de enviar (além do bloqueio por etapa).
+    const errs = validarSecoes(form.formulario_secoes);
+    if (Object.keys(errs).length > 0) {
+      setInvalido(errs);
+      flash("Há campos obrigatórios não preenchidos.");
+      return setErro("Há campos obrigatórios não preenchidos.");
+    }
     if (!assinada) return setErro("Assine para enviar o checklist.");
     setErro(null);
     setEnviando(true);
@@ -233,6 +283,19 @@ export function FillForm({
 
   return (
     <div className="flex flex-1 flex-col">
+      {/* Toast transitório no topo (campos obrigatórios faltando) */}
+      {flashMsg ? (
+        <div
+          className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4"
+          style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
+        >
+          <div className="flex items-center gap-2 rounded-xl border border-danger/30 bg-card px-4 py-2.5 text-sm font-medium text-danger shadow-lg">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {flashMsg}
+          </div>
+        </div>
+      ) : null}
+
       <header
         className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-card/95 p-4 backdrop-blur"
         style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}
@@ -288,8 +351,15 @@ export function FillForm({
               {s.formulario_itens.map((it) => (
                 <div
                   key={it.id}
-                  className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+                  className={`rounded-2xl border bg-card p-5 shadow-sm ${
+                    invalido[it.id] ? "border-danger" : "border-border"
+                  }`}
                 >
+                  {invalido[it.id] ? (
+                    <span className="mb-2 inline-flex items-center gap-1 rounded-md bg-danger-bg px-2 py-0.5 text-[11px] font-semibold text-danger">
+                      <AlertCircle className="h-3 w-3" /> {invalido[it.id]}
+                    </span>
+                  ) : null}
                   <p className="text-[15px] font-semibold leading-snug text-foreground">
                     {it.texto}
                   </p>
@@ -324,18 +394,20 @@ export function FillForm({
                         {mostraFoto && (
                           <FotoCampo
                             value={fotos[it.id] ?? ""}
-                            onChange={(url) =>
-                              setFotos((p) => ({ ...p, [it.id]: url }))
-                            }
+                            onChange={(url) => {
+                              setFotos((p) => ({ ...p, [it.id]: url }));
+                              limparInvalido(it.id);
+                            }}
                             danger={contextual}
                           />
                         )}
                         {mostraObs && (
                           <input
                             value={obs[it.id] ?? ""}
-                            onChange={(e) =>
-                              setObs((p) => ({ ...p, [it.id]: e.target.value }))
-                            }
+                            onChange={(e) => {
+                              setObs((p) => ({ ...p, [it.id]: e.target.value }));
+                              limparInvalido(it.id);
+                            }}
                             placeholder="Adicionar observação…"
                             className="h-9 w-full rounded-lg border border-danger/20 bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
                           />
@@ -460,18 +532,14 @@ export function FillForm({
             )}
             {ultima ? (
               <Button
-                onClick={irRevisar}
+                onClick={() => tentarAvancar(() => setRevisando(true))}
                 className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
               >
                 <ClipboardCheck className="h-5 w-5" /> Revisar e enviar
               </Button>
             ) : (
               <Button
-                onClick={() => {
-                  setErro(null);
-                  setEtapa(idx + 1);
-                  window.scrollTo({ top: 0 });
-                }}
+                onClick={() => tentarAvancar(() => setEtapa(idx + 1))}
                 className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
               >
                 Próxima <ArrowRight className="h-5 w-5" />
