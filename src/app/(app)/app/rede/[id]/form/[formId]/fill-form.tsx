@@ -12,6 +12,17 @@ import {
   Camera,
   Trash2,
   ClipboardCheck,
+  ChevronDown,
+  ShoppingBasket,
+  Snowflake,
+  Apple,
+  Beef,
+  Croissant,
+  Wine,
+  Fish,
+  Milk,
+  Package,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { enqueueSubmission } from "@/lib/offline-db";
@@ -49,6 +60,20 @@ const PARES: Record<string, [string, string][]> = {
   sim_nao: [["sim", "Sim"], ["nao", "Não"]],
   abastecido_ruptura: [["abastecido", "Abastecido"], ["ruptura", "Ruptura"]],
 };
+
+// Ícone da seção a partir do título (texto livre). Sem match → ícone padrão.
+function secaoIcon(titulo: string): LucideIcon {
+  const t = titulo.toLowerCase();
+  if (/(frio|latic|resfri|congel)/.test(t)) return Snowflake;
+  if (/(mercearia|seco)/.test(t)) return ShoppingBasket;
+  if (/(horti|fruta|verdura|flv|legume)/.test(t)) return Apple;
+  if (/(açougue|acougue|carne)/.test(t)) return Beef;
+  if (/(padaria|pão|pães|confeit)/.test(t)) return Croissant;
+  if (/(bebida|adega|vinho)/.test(t)) return Wine;
+  if (/(peixe|pescado|frutos do mar)/.test(t)) return Fish;
+  if (/(leite|iogurte)/.test(t)) return Milk;
+  return Package;
+}
 
 // label legível de um valor (para a revisão)
 function rotuloValor(item: Item, valor: string): string {
@@ -101,6 +126,7 @@ export function FillForm({
   const [erro, setErro] = useState<string | null>(null);
   const [etapa, setEtapa] = useState(0);
   const [revisando, setRevisando] = useState(false);
+  const [assinaturaAberta, setAssinaturaAberta] = useState(false);
 
   function setVal(id: string, v: string) {
     setValores((p) => ({ ...p, [id]: v }));
@@ -247,7 +273,7 @@ export function FillForm({
         </div>
       )}
 
-      <div className="flex-1 space-y-4 p-5 pb-[120px]">
+      <div className={`flex-1 space-y-4 p-5 ${revisando ? "pb-[200px]" : "pb-[120px]"}`}>
         {revisando ? (
           <RevisaoBody form={form} valores={valores} obs={obs} fotos={fotos} />
         ) : (
@@ -320,68 +346,99 @@ export function FillForm({
           ))
         )}
 
-        {/* Assinatura — só na revisão final */}
-        {revisando && (
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <p className="mb-3 flex items-center gap-2 text-[15px] font-semibold text-foreground">
-              <PenLine className="h-4 w-4 text-primary" /> Assinatura
-            </p>
-            {assinada ? (
-              <div className="flex flex-col items-center gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={assinada} alt="Assinatura" className="h-20 rounded-xl border border-border bg-white object-contain" />
-                <button
-                  type="button"
-                  onClick={() => setAssinada(null)}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Refazer
-                </button>
-              </div>
-            ) : assinatura ? (
-              <Button onClick={() => setAssinada(assinatura)} className="w-full">
-                <PenLine className="h-4 w-4" /> Assinar
-              </Button>
-            ) : (
-              <SignaturePad label="Assine aqui" onChange={setAssinada} />
-            )}
-          </div>
-        )}
-
         {erro && (
           <p className="rounded-xl bg-danger-bg px-3 py-2 text-sm text-danger">{erro}</p>
         )}
       </div>
 
-      {/* rodapé fixo: navegação por etapas / confirmação final */}
-      <div className="sticky bottom-0 flex gap-3 border-t border-border bg-card/95 p-5 pb-8 backdrop-blur">
+      {/* rodapé fixo: navegação por etapas / (na revisão) assinatura + confirmação */}
+      <div className="sticky bottom-0 border-t border-border bg-card/95 backdrop-blur">
         {revisando ? (
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => setRevisando(false)}
-              className="h-14 flex-none rounded-2xl px-5"
-            >
-              <ArrowLeft className="h-4 w-4" /> Editar
-            </Button>
-            <Button
-              onClick={enviar}
-              disabled={enviando}
-              className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
-            >
-              {enviando ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" /> Enviando…
-                </>
-              ) : (
-                <>
-                  <Check className="h-5 w-5" /> Confirmar e enviar
-                </>
+          <div className="space-y-3 p-5 pb-8">
+            {/* Assinatura recolhível — fixa na base, igual ao mockup */}
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+              <button
+                type="button"
+                onClick={() => setAssinaturaAberta((v) => !v)}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
+              >
+                <span
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
+                    assinada
+                      ? "border-success bg-success text-white"
+                      : "border-input bg-card"
+                  }`}
+                >
+                  {assinada && <Check className="h-4 w-4" />}
+                </span>
+                <span className="flex-1 text-[15px] font-semibold text-foreground">
+                  {assinada ? "Assinatura anexada" : "Anexar minha assinatura"}
+                </span>
+                <ChevronDown
+                  className={`h-5 w-5 text-muted-foreground transition-transform ${
+                    assinaturaAberta ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {assinaturaAberta && (
+                <div className="border-t border-border p-4">
+                  {assinada ? (
+                    <div className="flex flex-col items-center gap-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={assinada}
+                        alt="Assinatura"
+                        className="h-20 rounded-xl border border-border bg-white object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setAssinada(null)}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Refazer
+                      </button>
+                    </div>
+                  ) : assinatura ? (
+                    <Button
+                      onClick={() => setAssinada(assinatura)}
+                      className="w-full"
+                    >
+                      <PenLine className="h-4 w-4" /> Usar assinatura salva
+                    </Button>
+                  ) : (
+                    <SignaturePad label="Assine aqui" onChange={setAssinada} />
+                  )}
+                </div>
               )}
-            </Button>
-          </>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => setRevisando(false)}
+                className="h-14 flex-none rounded-2xl px-5"
+              >
+                <ArrowLeft className="h-4 w-4" /> Editar
+              </Button>
+              <Button
+                onClick={enviar}
+                disabled={enviando || !assinada}
+                className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
+              >
+                {enviando ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" /> Enviando…
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-5 w-5" /> Confirmar
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         ) : (
-          <>
+          <div className="flex gap-3 p-5 pb-8">
             {idx > 0 && (
               <Button
                 variant="secondary"
@@ -414,7 +471,7 @@ export function FillForm({
                 Próxima <ArrowRight className="h-5 w-5" />
               </Button>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -448,12 +505,19 @@ function RevisaoBody({
         </div>
       </div>
 
-      {form.formulario_secoes.map((s) => (
+      {form.formulario_secoes.map((s) => {
+        const Icon = secaoIcon(s.titulo ?? "");
+        return (
         <div key={s.id} className="space-y-3">
           {s.titulo && (
-            <h2 className="px-1 text-[15px] font-bold uppercase tracking-wide text-foreground">
-              {s.titulo}
-            </h2>
+            <div className="flex items-center gap-2.5 px-1">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Icon className="h-4 w-4" />
+              </span>
+              <h2 className="text-[15px] font-bold uppercase tracking-wide text-foreground">
+                {s.titulo}
+              </h2>
+            </div>
           )}
           <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             {s.formulario_itens.map((it) => {
@@ -493,7 +557,8 @@ function RevisaoBody({
             })}
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

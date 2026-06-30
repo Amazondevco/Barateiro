@@ -45,6 +45,9 @@
   --danger: #dc2626;
   --danger-bg: #fee2e2;
 
+  /* Elevação sutil dos cartões do painel (sombra suave, tom slate). */
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.05), 0 2px 5px -1px rgb(15 23 42 / 0.07);
+
   /* Acento de IA (violeta) — constante do produto, igual ao verde da logo.
      Só em superfícies de funcionalidades de IA (ex.: "Resumir com IA"). */
   --ia: #7c3aed;
@@ -84,6 +87,8 @@
   --warning-bg: #422006;
   --danger: #ef4444;
   --danger-bg: #450a0a;
+
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.35), 0 2px 5px -1px rgb(0 0 0 / 0.25);
 
   --ia: #8b5cf6;
   --ia-strong: #7c3aed;
@@ -137,6 +142,13 @@
 
 * {
   border-color: var(--border);
+}
+
+/* Elevação sutil em "todos os acessos" do painel: cartões claros ganham uma
+   sombra suave para não ficarem chapados. Exclui controles de formulário,
+   botões e células de tabela. Use `.no-elev` para optar por sair. */
+.dash-main :where(.bg-card):not(input):not(select):not(textarea):not(button):not(td):not(th):not(.no-elev) {
+  box-shadow: var(--shadow-card);
 }
 
 /* App (mobile): bordas um pouco mais visíveis para separar os blocos. */

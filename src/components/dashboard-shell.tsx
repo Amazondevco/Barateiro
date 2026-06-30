@@ -209,7 +209,7 @@ export function DashboardShell({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
+        <main className="dash-main flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
       </div>
       {/* Chat IA (super admin + admin da rede). Sugestão (só admin, acima do chat). */}
       {(profile.papel === "super_admin" || profile.papel === "admin_supermercado") && (

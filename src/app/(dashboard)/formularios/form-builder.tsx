@@ -183,9 +183,9 @@ export function FormBuilder({
   const [tipoUnidade, setTipoUnidade] = useState<UnidadeTipo>(
     initial?.tipo_unidade ?? "loja",
   );
-  const [status, setStatus] = useState<"ativo" | "inativo">(
-    initial?.status ?? "ativo",
-  );
+  // Status não é editável na criação/edição do formulário — novos formulários
+  // nascem "ativo"; ativar/desativar é feito pelo toggle na lista.
+  const [status] = useState<"ativo" | "inativo">(initial?.status ?? "ativo");
   const [dispDe, setDispDe] = useState(initial?.disponivel_de ?? "");
   const [dispAte, setDispAte] = useState(initial?.disponivel_ate ?? "");
   const [diasSemana, setDiasSemana] = useState<number[]>(
@@ -436,33 +436,18 @@ export function FormBuilder({
               onChange={(e) => setDescricao(e.target.value)}
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="tipo">Tipo de unidade</Label>
-              <Select
-                id="tipo"
-                value={tipoUnidade}
-                onChange={(e) => setTipoUnidade(e.target.value as UnidadeTipo)}
-              >
-                <option value="loja">Loja</option>
-                <option value="cd">CD / Galpão</option>
-                <option value="escritorio">Escritório</option>
-                <option value="outro">Outro</option>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select
-                id="status"
-                value={status}
-                onChange={(e) =>
-                  setStatus(e.target.value as "ativo" | "inativo")
-                }
-              >
-                <option value="ativo">Ativo</option>
-                <option value="inativo">Inativo</option>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="tipo">Tipo de unidade</Label>
+            <Select
+              id="tipo"
+              value={tipoUnidade}
+              onChange={(e) => setTipoUnidade(e.target.value as UnidadeTipo)}
+            >
+              <option value="loja">Loja</option>
+              <option value="cd">CD / Galpão</option>
+              <option value="escritorio">Escritório</option>
+              <option value="outro">Outro</option>
+            </Select>
           </div>
           {/* Quando preencher (janela de horário + dias da semana) */}
           <div className="space-y-3 border-t border-border pt-4">
