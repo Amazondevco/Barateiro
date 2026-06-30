@@ -313,11 +313,15 @@ export function fetchFormDefinition(memberId: string, formId: string) {
 
 async function _fetchFormDefinition(memberId: string, formId: string) {
   const [{ data: member, error: memberError }, { data: form, error: formError }] = await Promise.all([
-    supabase.from("rede_membros").select("assinatura_svg").eq("id", memberId).maybeSingle(),
+    supabase
+      .from("rede_membros")
+      .select("assinatura_svg, unidades(geo_lat, geo_lng)")
+      .eq("id", memberId)
+      .maybeSingle(),
     supabase
       .from("formularios")
       .select(
-        "id, nome, descricao, formulario_secoes(id, titulo, ordem, permite_na, quebra_pagina, formulario_itens(id, texto, tipo, ordem, opcoes, ajuda, obriga_obs_quando_nao, obriga_foto_quando_nao))",
+        "id, nome, descricao, exige_localizacao, geofence_raio_m, formulario_secoes(id, titulo, ordem, permite_na, quebra_pagina, formulario_itens(id, texto, tipo, ordem, opcoes, ajuda, obriga_obs_quando_nao, obriga_foto_quando_nao))",
       )
       .eq("id", formId)
       .single(),
@@ -348,12 +352,21 @@ async function _fetchFormDefinition(memberId: string, formId: string) {
         })),
     }));
 
+  const uni =
+    typeof member?.unidades === "object" && member.unidades
+      ? (member.unidades as { geo_lat?: number | null; geo_lng?: number | null })
+      : null;
+
   return {
     form: {
       id: String(form.id),
       nome: String(form.nome),
       descricao: (form.descricao as string | null) ?? null,
       sections,
+      exigeLocalizacao: Boolean((form as { exige_localizacao?: boolean }).exige_localizacao),
+      geofenceRaioM: ((form as { geofence_raio_m?: number | null }).geofence_raio_m as number | null) ?? null,
+      unidadeLat: uni?.geo_lat ?? null,
+      unidadeLng: uni?.geo_lng ?? null,
     } satisfies FormDefinition,
     signature: ((member as { assinatura_svg?: string | null } | null)?.assinatura_svg ?? null) as string | null,
   };

@@ -63,6 +63,8 @@ async function syncFormResponse(record: Extract<QueueRecord, { kind: "form_respo
     p_itens: items,
     p_assinatura: record.payload.signature,
     p_data: record.payload.submittedAt.slice(0, 10),
+    p_lat: record.payload.lat ?? undefined,
+    p_lng: record.payload.lng ?? undefined,
   });
 
   if (error) throw error;

@@ -10,6 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Geolocation } from "@capacitor/geolocation";
 import { fetchFormDefinition } from "../lib/operator-api";
 import type {
   FormDefinition,
@@ -37,6 +38,37 @@ const OPTIONS: Record<string, Array<[string, string]>> = {
     ["ruptura", "Ruptura"],
   ],
 };
+
+// Distância em metros entre dois pontos (Haversine) — para o geofence.
+function distanciaM(la1: number, lo1: number, la2: number, lo2: number) {
+  const R = 6371000;
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const dLat = rad(la2 - la1);
+  const dLon = rad(lo2 - lo1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(la1)) * Math.cos(rad(la2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Captura a posição atual (GPS nativo via Capacitor). Retorna null se o usuário
+// negar a permissão ou o GPS falhar.
+async function pegarLocalizacao(): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const perm = await Geolocation.checkPermissions();
+    if (perm.location !== "granted") {
+      const req = await Geolocation.requestPermissions();
+      if (req.location !== "granted") return null;
+    }
+    const pos = await Geolocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 15000,
+    });
+    return { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  } catch {
+    return null;
+  }
+}
 
 export function FillFormPage() {
   const navigate = useNavigate();
@@ -152,6 +184,42 @@ export function FillFormPage() {
     setSubmitting(true);
     setError(null);
 
+    // Localização: se o formulário exige, captura o GPS. Se houver geofence e o
+    // operador estiver FORA do raio, avisa — mas deixa enviar mesmo assim
+    // (a presença fica "acusada" no servidor via presenca_ok=false).
+    let lat: number | null = null;
+    let lng: number | null = null;
+    if (form.exigeLocalizacao) {
+      const loc = await pegarLocalizacao();
+      if (!loc) {
+        setError(
+          "Não foi possível obter a localização. Ative o GPS e a permissão de localização para enviar este formulário.",
+        );
+        setSubmitting(false);
+        return;
+      }
+      lat = loc.lat;
+      lng = loc.lng;
+
+      if (
+        form.geofenceRaioM != null &&
+        form.unidadeLat != null &&
+        form.unidadeLng != null
+      ) {
+        const dist = distanciaM(loc.lat, loc.lng, form.unidadeLat, form.unidadeLng);
+        if (dist > form.geofenceRaioM) {
+          const ok = window.confirm(
+            `Você está FORA do local da unidade (a ~${Math.round(dist)} m, ` +
+              `o limite é ${form.geofenceRaioM} m).\n\nO envio será marcado como fora do local. Enviar mesmo assim?`,
+          );
+          if (!ok) {
+            setSubmitting(false);
+            return;
+          }
+        }
+      }
+    }
+
     try {
       const payload: FormResponseItemPayload[] = form.sections.flatMap(
         (section) =>
@@ -170,6 +238,8 @@ export function FillFormPage() {
         submittedAt: new Date().toISOString(),
         signature: signature!,
         items: payload,
+        lat,
+        lng,
       });
 
       if (typeof navigator === "undefined" || navigator.onLine) {

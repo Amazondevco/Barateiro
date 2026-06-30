@@ -25,6 +25,12 @@ export type FormDefinition = {
   nome: string;
   descricao: string | null;
   sections: FormSection[];
+  // Geofence: se o formulário exige localização, em qual raio (metros) e quais
+  // são as coordenadas da unidade do operador para validar a presença.
+  exigeLocalizacao: boolean;
+  geofenceRaioM: number | null;
+  unidadeLat: number | null;
+  unidadeLng: number | null;
 };
 
 export type ProfileData = {
@@ -59,6 +65,9 @@ export type FormResponsePayload = {
   submittedAt: string;
   signature: string;
   items: FormResponseItemPayload[];
+  // GPS capturado no envio (quando o formulário exige localização).
+  lat?: number | null;
+  lng?: number | null;
 };
 
 export type QueueRecord =
