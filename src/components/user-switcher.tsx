@@ -24,20 +24,27 @@ export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
   function trocar(email: string) {
     setErro(null);
     setInfo(null);
+    setInfo("Trocando…");
     start(async () => {
-      const r = await quickSwitch(email);
-      if (r.error) {
-        setErro(r.error);
-        return;
-      }
-      // Mostra o diagnóstico por ~2s e então recarrega de verdade (usa o cookie
-      // novo e ignora o cache do Next).
-      if (r.info) setInfo(r.info);
-      if (r.to) {
-        const dest = r.to;
-        setTimeout(() => {
-          window.location.href = dest;
-        }, 2000);
+      try {
+        const r = await quickSwitch(email);
+        if (r.error) {
+          setInfo(null);
+          setErro(r.error);
+          return;
+        }
+        // Mostra o diagnóstico por ~2s e então recarrega de verdade.
+        if (r.info) setInfo(r.info);
+        if (r.to) {
+          const dest = r.to;
+          setTimeout(() => {
+            window.location.href = dest;
+          }, 2000);
+        }
+      } catch (e) {
+        // Exceção lançada no servidor (o await rejeita) — agora fica visível.
+        setInfo(null);
+        setErro(`Exceção: ${e instanceof Error ? e.message : String(e)}`);
       }
     });
   }
