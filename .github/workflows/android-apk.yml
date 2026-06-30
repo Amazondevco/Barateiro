@@ -73,6 +73,16 @@ jobs:
           path: native-poc/android/app/build/outputs/apk/debug/check-ai-v${{ steps.ver.outputs.version }}.apk
           if-no-files-found: error
 
+      - name: Publicar APK em link público estável (Supabase)
+        working-directory: native-poc
+        run: |
+          curl -fsS -X POST "${{ secrets.VITE_SUPABASE_URL }}/storage/v1/object/native-bundles/check-ai.apk" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "x-upsert: true" -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary @android/app/build/outputs/apk/debug/check-ai-v${{ steps.ver.outputs.version }}.apk
+          echo "APK publicado em /storage/v1/object/public/native-bundles/check-ai.apk"
+
       - name: Publish rolling release
         uses: softprops/action-gh-release@v2
         with:

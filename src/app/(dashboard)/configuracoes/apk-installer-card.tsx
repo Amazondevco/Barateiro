@@ -1,8 +1,10 @@
 import { Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+// Link público ESTÁVEL (não muda entre versões). O CID do APK no GitHub é
+// versionado (check-ai-vX.Y.Z.apk) e quebra o link; por isso servimos do bucket.
 const APK_URL =
-  "https://github.com/Amazondevco/Barateiro/releases/download/apk-latest/app-debug.apk";
+  "https://vwmtimbztdvwwbtihhoa.supabase.co/storage/v1/object/public/native-bundles/check-ai.apk";
 
 type ApkInstallerCardProps = {
   apkUrl: string | null;
