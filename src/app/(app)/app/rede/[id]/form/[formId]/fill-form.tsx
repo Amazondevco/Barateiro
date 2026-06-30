@@ -128,10 +128,8 @@ export function FillForm({
   const [etapa, setEtapa] = useState(0);
   const [revisando, setRevisando] = useState(false);
   const [assinaturaAberta, setAssinaturaAberta] = useState(false);
-  // Validação por etapa: itemId → erro; e toast transitório no topo.
+  // Validação por etapa: itemId → erro (selo no campo).
   const [invalido, setInvalido] = useState<Record<string, string>>({});
-  const [flashMsg, setFlashMsg] = useState<string | null>(null);
-  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Rascunho automático: salva cada mudança e restaura ao reabrir.
   const draftKey = `checkai-draft:${redeMembroId}:${form.id}`;
   const draftFirst = useRef(true);
@@ -190,11 +188,6 @@ export function FillForm({
     limparInvalido(id);
   }
 
-  function flash(msg: string) {
-    setFlashMsg(msg);
-    if (flashTimer.current) clearTimeout(flashTimer.current);
-    flashTimer.current = setTimeout(() => setFlashMsg(null), 2800);
-  }
   function limparInvalido(id: string) {
     setInvalido((prev) => {
       if (!prev[id]) return prev;
@@ -254,7 +247,6 @@ export function FillForm({
     const errs = validarSecoes(etapas[idx] ?? []);
     if (Object.keys(errs).length > 0) {
       setInvalido(errs);
-      flash("Preencha os campos obrigatórios desta página.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -269,7 +261,6 @@ export function FillForm({
     const errs = validarSecoes(form.formulario_secoes);
     if (Object.keys(errs).length > 0) {
       setInvalido(errs);
-      flash("Há campos obrigatórios não preenchidos.");
       return setErro("Há campos obrigatórios não preenchidos.");
     }
     if (!assinada) return setErro("Assine para enviar o checklist.");
@@ -341,19 +332,6 @@ export function FillForm({
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Toast transitório no topo (campos obrigatórios faltando) */}
-      {flashMsg ? (
-        <div
-          className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4"
-          style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
-        >
-          <div className="flex items-center gap-2 rounded-xl border border-danger/30 bg-card px-4 py-2.5 text-sm font-medium text-danger shadow-lg">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            {flashMsg}
-          </div>
-        </div>
-      ) : null}
-
       <header
         className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-card/95 p-4 backdrop-blur"
         style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}

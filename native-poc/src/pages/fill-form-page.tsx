@@ -111,19 +111,11 @@ export function FillFormPage() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [photos, setPhotos] = useState<Record<string, string>>({});
-  // Validação por etapa: itemId → mensagem de erro; e toast transitório no topo.
+  // Validação por etapa: itemId → mensagem de erro (selo no campo).
   const [invalid, setInvalid] = useState<Record<string, string>>({});
-  const [flashMsg, setFlashMsg] = useState<string | null>(null);
-  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Rascunho automático: salva cada mudança localmente e restaura ao reabrir.
   const draftKey = `checkai-draft:${memberId}:${formId}`;
   const draftFirst = useRef(true);
-
-  function flash(msg: string) {
-    setFlashMsg(msg);
-    if (flashTimer.current) clearTimeout(flashTimer.current);
-    flashTimer.current = setTimeout(() => setFlashMsg(null), 2800);
-  }
 
   function clearInvalid(id: string) {
     setInvalid((prev) => {
@@ -306,7 +298,6 @@ export function FillFormPage() {
     const errs = validateStep(currentStep);
     if (Object.keys(errs).length > 0) {
       setInvalid(errs);
-      flash("Preencha os campos obrigatórios desta página.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -412,19 +403,6 @@ export function FillFormPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
-      {/* Toast transitório no topo (campos obrigatórios faltando) */}
-      {flashMsg ? (
-        <div
-          className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4"
-          style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
-        >
-          <div className="toast-in flex items-center gap-2 rounded-xl border border-danger/30 bg-card px-4 py-2.5 text-sm font-medium text-danger shadow-lg">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            {flashMsg}
-          </div>
-        </div>
-      ) : null}
-
       {/* Cabeçalho */}
       <header
         className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur"
