@@ -44,6 +44,8 @@ export default function RedefinirSenhaPage() {
     hashRef.current = window.location.hash;
   }
   const tokensRef = useRef<{ access_token: string; refresh_token: string } | null>(null);
+  // Fluxo novo (Opção A): token_hash na query, consumido só no submit.
+  const tokenHashRef = useRef<string | null>(null);
 
   const [ready, setReady] = useState(false);
   const [ctx, setCtx] = useState<Ctx | null>(null);
@@ -55,9 +57,21 @@ export default function RedefinirSenhaPage() {
 
   useEffect(() => {
     const hash = (hashRef.current ?? "").replace(/^#/, "");
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    const q = new URLSearchParams(search);
     const p = new URLSearchParams(hash);
-    // remove o token da URL (sem estabelecer sessão)
-    if (hash) window.history.replaceState(null, "", window.location.pathname);
+    // remove o token da URL (hash e query) sem estabelecer sessão
+    if (hash || search) window.history.replaceState(null, "", window.location.pathname);
+
+    // Fluxo novo (Opção A): token_hash na query. NÃO consome aqui — só no submit
+    // (verifyOtp), de modo que prévias de link (WhatsApp/antivírus) não queimem.
+    const token_hash = q.get("token_hash");
+    if (token_hash) {
+      tokenHashRef.current = token_hash;
+      setCtx({ email: q.get("email") ?? "", nome: q.get("nome") ?? "" });
+      setReady(true);
+      return;
+    }
 
     if (p.get("error_description")) {
       setReady(true);
@@ -92,15 +106,30 @@ export default function RedefinirSenhaPage() {
     const erroSenha = validarSenha(senha);
     if (erroSenha) return setError(erroSenha);
     if (senha !== confirma) return setError("As senhas não conferem.");
-    if (!tokensRef.current) return setError("Link inválido — peça um novo.");
+    if (!tokenHashRef.current && !tokensRef.current) {
+      return setError("Link inválido — peça um novo.");
+    }
 
     setLoading(true);
     const supabase = makeClient();
-    // Só AGORA estabelecemos a sessão desta pessoa e trocamos a senha.
-    const set = await supabase.auth.setSession(tokensRef.current);
-    if (set.error) {
-      setLoading(false);
-      return setError("O link pode ter expirado — peça um novo.");
+    // Só AGORA consumimos o link e estabelecemos a sessão desta pessoa.
+    if (tokenHashRef.current) {
+      // Fluxo novo: verifyOtp consome o token de uso único neste momento.
+      const v = await supabase.auth.verifyOtp({
+        type: "recovery",
+        token_hash: tokenHashRef.current,
+      });
+      if (v.error) {
+        setLoading(false);
+        return setError("O link pode ter expirado — peça um novo.");
+      }
+    } else if (tokensRef.current) {
+      // Fluxo antigo (compat): tokens vindos do # do redirect do Supabase.
+      const set = await supabase.auth.setSession(tokensRef.current);
+      if (set.error) {
+        setLoading(false);
+        return setError("O link pode ter expirado — peça um novo.");
+      }
     }
     const { error } = await supabase.auth.updateUser({ password: senha });
     setLoading(false);

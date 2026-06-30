@@ -40,8 +40,18 @@ export async function gerarLinkUsuario(
     options: { redirectTo },
   });
   if (rec.error) return { error: rec.error.message, email: u.email };
-  const link = rec.data.properties?.action_link;
-  if (!link) return { error: "Não foi possível gerar o link.", email: u.email };
+  // IMPORTANTE: NÃO compartilhar o action_link do Supabase (/auth/v1/verify) —
+  // é uso único e o robô de preview do WhatsApp/antivírus o consome antes da
+  // pessoa abrir. Em vez disso, apontamos para a NOSSA página com o token_hash;
+  // o token só é consumido no submit (verifyOtp), à prova de prefetch.
+  const tokenHash = rec.data.properties?.hashed_token;
+  if (!tokenHash || !host) {
+    return { error: "Não foi possível gerar o link.", email: u.email };
+  }
+  const params = new URLSearchParams({ token_hash: tokenHash, type: "recovery" });
+  params.set("email", u.email);
+  if (u.nome) params.set("nome", u.nome);
+  const link = `${proto}://${host}/auth/redefinir?${params.toString()}`;
 
   await admin
     .from("profiles")
