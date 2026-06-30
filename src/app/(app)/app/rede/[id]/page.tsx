@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { Store } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getRedeMarcaById } from "@/lib/rede-branding";
-import { AddToHome } from "@/components/add-to-home";
 import { FormsBoard, type FormItem } from "./forms-board";
 
 export const metadata = { title: "Meu app — Check.AI" };
@@ -162,7 +161,6 @@ export default async function AppRedePage({
       </div>
 
       <div className="mx-auto w-full max-w-md flex-1 px-4">
-        <AddToHome compact />
         <FormsBoard membroId={id} forms={lista} />
       </div>
     </div>
