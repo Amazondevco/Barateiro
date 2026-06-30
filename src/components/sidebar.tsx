@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, LifeBuoy, LogOut, ChevronUp } from "lucide-react";
+import { Settings, LifeBuoy, LogOut, ChevronUp, ChevronDown } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { gruposPara } from "@/lib/nav";
 import { PAPEL_LABEL, type Papel } from "@/lib/types";
@@ -45,6 +45,27 @@ export function Sidebar({
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
+  // Grupos recolhidos (persistido). Vale só com a barra expandida — na rail
+  // (recolhida) os itens aparecem sempre como ícones.
+  const [recolhidos, setRecolhidos] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("sidebar-grupos-recolhidos");
+      if (raw) setRecolhidos(new Set(JSON.parse(raw) as string[]));
+    } catch {}
+  }, []);
+  function toggleGrupo(label: string) {
+    setRecolhidos((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      try {
+        localStorage.setItem("sidebar-grupos-recolhidos", JSON.stringify([...next]));
+      } catch {}
+      return next;
+    });
+  }
+
   const nome = userName || userEmail || "Usuário";
   const iniciais = nome
     .split(" ")
@@ -76,14 +97,26 @@ export function Sidebar({
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3">
-        {grupos.map((grupo, gi) => (
-          <div key={grupo.label} className={cn(gi > 0 && (collapsed ? "mt-2 border-t border-sidebar-border pt-2" : "mt-5"))}>
+        {grupos.map((grupo, gi) => {
+          const fechado = !collapsed && recolhidos.has(grupo.label);
+          return (
+          <div key={grupo.label} className={cn(gi > 0 && (collapsed ? "mt-2 border-t border-sidebar-border pt-2" : "mt-4"))}>
             {!collapsed && (
-              <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted">
+              <button
+                type="button"
+                onClick={() => toggleGrupo(grupo.label)}
+                className="flex w-full items-center justify-between rounded-md px-3 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted transition-colors hover:text-[color:var(--sidebar-strong)]"
+              >
                 {grupo.label}
-              </p>
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 transition-transform",
+                    fechado && "-rotate-90",
+                  )}
+                />
+              </button>
             )}
-            <div className="space-y-1">
+            <div className={cn("space-y-1", fechado && "hidden")}>
               {grupo.items.map((item) => {
                 const active =
                   item.href === "/"
@@ -111,7 +144,8 @@ export function Sidebar({
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Rodapé: caixa do usuário + menu (Configurações / Suporte / Sair) */}

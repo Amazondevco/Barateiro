@@ -92,7 +92,9 @@
   --radius-md: calc(var(--radius) - 0.25rem);
   --radius-sm: calc(var(--radius) - 0.4rem);
 
-  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Fonte do sistema (San Francisco na Apple) — paridade com o painel/PWA. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, monospace;
 }
 

@@ -74,7 +74,8 @@ Texto sobre cor de marca: calcule a luminância e use texto escuro em cor clara
 
 ## 4. Tipografia
 
-- Fonte: **Geist Sans** (`--font-sans`), mono = Geist Mono.
+- Fonte: **stack do sistema** (`--font-sans` = San Francisco na Apple, Segoe no
+  Windows, Roboto no Android) — visual do mockup de referência. Mono = Geist Mono.
 - Títulos de página: `text-lg`/`text-xl font-semibold`.
 - Corpo: `text-sm` (padrão), `text-xs` para secundário.
 - Rótulos de seção: `text-xs font-medium uppercase tracking-wide text-muted-foreground`.

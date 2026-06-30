@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
 import { initOta } from "./lib/ota";
-import "@fontsource-variable/geist";
 import "./styles.css";
 
 // Tema: preferência salva ("checkai-theme") tem prioridade; senão segue o sistema.
