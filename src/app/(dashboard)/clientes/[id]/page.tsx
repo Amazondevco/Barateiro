@@ -13,7 +13,7 @@ import { createUnidade, setUnidadeStatus } from "./unidade-actions";
 import { AddUnidadeForm } from "./add-unidade-form";
 import { AddUsuarioForm } from "@/components/add-usuario-form";
 import { createUsuario } from "../../usuarios/actions";
-import { ConviteResponsavelButton } from "./convite-button";
+import { UsuarioLinkButton } from "./usuario-link-button";
 
 const TABS = [
   { key: "dados", label: "Dados" },
@@ -56,7 +56,7 @@ export default async function RedeDetailPage({
         .order("nome"),
       supabase
         .from("profiles")
-        .select("id,nome,email,papel,status")
+        .select("id,nome,email,papel,status,convite_link")
         .eq("rede_id", id)
         .order("nome"),
       supabase
@@ -192,12 +192,11 @@ export default async function RedeDetailPage({
 
       {tab === "usuarios" && (
         <div className="space-y-4">
-          <ConviteResponsavelButton
-            redeId={id}
-            email={rede.contato_email}
-            linkInicial={(rede as { convite_link?: string | null }).convite_link ?? null}
-          />
-          <div className="flex items-center justify-end gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              Gere o link de acesso de cada usuário e envie a ele (WhatsApp, etc.)
+              para definir a senha. Links expiram — gere um novo antes de enviar.
+            </p>
             <AddUsuarioForm
               action={createUsuario}
               redeId={id}
@@ -218,6 +217,7 @@ export default async function RedeDetailPage({
                   <TH>E-mail</TH>
                   <TH>Papel</TH>
                   <TH>Status</TH>
+                  <TH>Acesso</TH>
                 </TR>
               </THead>
               <tbody>
@@ -230,6 +230,12 @@ export default async function RedeDetailPage({
                       <Badge tone={u.status === "ativo" ? "success" : "neutral"}>
                         {u.status}
                       </Badge>
+                    </TD>
+                    <TD>
+                      <UsuarioLinkButton
+                        userId={u.id}
+                        linkInicial={(u as { convite_link?: string | null }).convite_link ?? null}
+                      />
                     </TD>
                   </TR>
                 ))}

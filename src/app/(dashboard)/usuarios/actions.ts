@@ -1,11 +1,55 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
 import type { Papel } from "@/lib/types";
 
 export type FormState = { error?: string; ok?: boolean };
+
+// Gera um link de acesso (recuperação → o usuário define a própria senha) para
+// UM usuário, guarda em profiles.convite_link e devolve para copiar/enviar.
+export async function gerarLinkUsuario(
+  userId: string,
+): Promise<{ ok?: boolean; error?: string; link?: string; email?: string }> {
+  const caller = await getSessionProfile();
+  if (!caller || (caller.papel !== "super_admin" && caller.papel !== "admin_supermercado")) {
+    return { error: "Sem permissão." };
+  }
+  const admin = createAdminClient();
+  const { data: u } = await admin
+    .from("profiles")
+    .select("email, rede_id, nome")
+    .eq("id", userId)
+    .single();
+  if (!u?.email) return { error: "Usuário sem e-mail." };
+  if (caller.papel === "admin_supermercado" && u.rede_id !== caller.rede_id) {
+    return { error: "Sem permissão." };
+  }
+
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const redirectTo = host ? `${proto}://${host}/auth/redefinir` : undefined;
+
+  const rec = await admin.auth.admin.generateLink({
+    type: "recovery",
+    email: u.email,
+    options: { redirectTo },
+  });
+  if (rec.error) return { error: rec.error.message, email: u.email };
+  const link = rec.data.properties?.action_link;
+  if (!link) return { error: "Não foi possível gerar o link.", email: u.email };
+
+  await admin
+    .from("profiles")
+    .update({ convite_link: link, convite_em: new Date().toISOString() })
+    .eq("id", userId);
+
+  if (u.rede_id) revalidatePath(`/clientes/${u.rede_id}`);
+  return { ok: true, link, email: u.email };
+}
 
 export async function createUsuario(
   _prev: FormState,
