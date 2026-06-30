@@ -151,7 +151,7 @@ export function Sidebar({
       {/* Rodapé: caixa do usuário + menu (Configurações / Suporte / Sair).
           Fundo um pouco mais escuro + divisória para destacar do resto. */}
       <div
-        className="border-t border-sidebar-border bg-black/5 p-3"
+        className="border-t border-sidebar-border bg-black/5 p-3 transition-colors hover:bg-black/10"
         ref={menuRef}
       >
         <div className="relative">
@@ -160,7 +160,7 @@ export function Sidebar({
             onClick={() => setMenuOpen((v) => !v)}
             title={collapsed ? nome : undefined}
             className={cn(
-              "flex w-full items-center rounded-xl py-2 transition-colors hover:bg-sidebar-hover",
+              "flex w-full items-center rounded-xl py-2",
               collapsed ? "justify-center px-0" : "gap-3 px-2",
             )}
           >
