@@ -83,7 +83,7 @@ export function Sidebar({
     >
       <div
         className={cn(
-          "flex items-center border-b border-sidebar-border py-4",
+          "flex items-center border-b border-white/[0.06] py-4",
           collapsed ? "justify-center px-0" : "px-4",
         )}
       >
@@ -100,7 +100,7 @@ export function Sidebar({
         {grupos.map((grupo, gi) => {
           const fechado = !collapsed && recolhidos.has(grupo.label);
           return (
-          <div key={grupo.label} className={cn(gi > 0 && (collapsed ? "mt-2 border-t border-sidebar-border pt-2" : "mt-4"))}>
+          <div key={grupo.label} className={cn(gi > 0 && (collapsed ? "mt-2 border-t border-white/[0.06] pt-2" : "mt-4"))}>
             {!collapsed && (
               <button
                 type="button"
@@ -151,7 +151,7 @@ export function Sidebar({
       {/* Rodapé: caixa do usuário + menu (Configurações / Suporte / Sair).
           Fundo um pouco mais escuro + divisória para destacar do resto. */}
       <div
-        className="border-t border-sidebar-border bg-black/5 p-3 transition-colors hover:bg-black/10"
+        className="border-t border-white/[0.06] bg-black/5 p-3 transition-colors hover:bg-black/10"
         ref={menuRef}
       >
         <div className="relative">
@@ -191,7 +191,7 @@ export function Sidebar({
           {menuOpen && (
             <div
               className={cn(
-                "absolute bottom-[calc(100%+0.5rem)] z-30 overflow-hidden rounded-xl border border-sidebar-border bg-sidebar shadow-xl",
+                "absolute bottom-[calc(100%+0.5rem)] z-30 overflow-hidden rounded-xl border border-white/[0.06] bg-sidebar shadow-xl",
                 collapsed ? "left-0 w-48" : "inset-x-0",
               )}
             >
@@ -218,11 +218,11 @@ export function Sidebar({
                 <LifeBuoy className="h-[18px] w-[18px]" /> Suporte Check.AI
               </Link>
               {userEmail && DEV_EMAILS.includes(userEmail) && (
-                <div className="border-t border-sidebar-border px-3 py-2">
+                <div className="border-t border-white/[0.06] px-3 py-2">
                   <UserSwitcher currentEmail={userEmail} />
                 </div>
               )}
-              <form action={signOut} className="border-t border-sidebar-border">
+              <form action={signOut} className="border-t border-white/[0.06]">
                 <button
                   type="submit"
                   className="flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-sidebar-hover"
