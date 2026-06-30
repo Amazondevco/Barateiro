@@ -80,41 +80,37 @@ export default async function RedeDetailPage({
         <ArrowLeft className="h-4 w-4" /> Clientes
       </Link>
 
-      <PageHeader
-        title={rede.nome}
-        subtitle={rede.cnpj ?? "Sem CNPJ"}
-        action={
-          <div className="flex items-center gap-3">
-            <Badge tone={rede.status === "ativo" ? "success" : "neutral"}>
-              {rede.status}
-            </Badge>
-            <form
-              action={setRedeStatus.bind(
-                null,
-                id,
-                rede.status === "ativo" ? "inativo" : "ativo",
-              )}
-            >
-              <Button variant="outline" size="sm" type="submit">
-                <Power className="h-4 w-4" />
-                {rede.status === "ativo" ? "Desativar" : "Ativar"}
-              </Button>
-            </form>
-          </div>
-        }
-      />
+      <PageHeader title={rede.nome} subtitle={rede.cnpj ?? "Sem CNPJ"} />
 
-      {/* Abas — mesmo molde das outras páginas (PillTabs) */}
-      <PillTabs
-        className="mb-6"
-        tabs={TABS.map((t) => ({
-          key: t.key,
-          label: t.label,
-          icon: t.icon,
-          href: `/clientes/${id}?tab=${t.key}`,
-          active: tab === t.key,
-        }))}
-      />
+      {/* Abas e ação (badge + Desativar) no mesmo nível */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <PillTabs
+          tabs={TABS.map((t) => ({
+            key: t.key,
+            label: t.label,
+            icon: t.icon,
+            href: `/clientes/${id}?tab=${t.key}`,
+            active: tab === t.key,
+          }))}
+        />
+        <div className="flex items-center gap-3">
+          <Badge tone={rede.status === "ativo" ? "success" : "neutral"}>
+            {rede.status}
+          </Badge>
+          <form
+            action={setRedeStatus.bind(
+              null,
+              id,
+              rede.status === "ativo" ? "inativo" : "ativo",
+            )}
+          >
+            <Button variant="outline" size="sm" type="submit">
+              <Power className="h-4 w-4" />
+              {rede.status === "ativo" ? "Desativar" : "Ativar"}
+            </Button>
+          </form>
+        </div>
+      </div>
 
       {/* Conteúdo */}
       {tab === "dados" && (
