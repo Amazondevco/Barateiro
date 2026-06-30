@@ -22,7 +22,7 @@ export type SecaoDraft = {
 export type FormularioPayload = {
   nome: string;
   descricao: string;
-  tipo_unidade: UnidadeTipo;
+  tipo_unidade: UnidadeTipo | null;
   status: "ativo" | "inativo";
   disponivel_de: string | null; // "HH:MM" ou null = sem restrição
   disponivel_ate: string | null; // "HH:MM" ou null = sem restrição

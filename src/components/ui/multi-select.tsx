@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,16 +19,34 @@ export function MultiSelect({
   emptyHint?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
 
+  function updateRect() {
+    if (wrapRef.current) setRect(wrapRef.current.getBoundingClientRect());
+  }
+
+  // Abre ancorado ao botão via portal (no body) → imune a overflow/transform de
+  // ancestrais (ex.: cartões arrastáveis do builder cortavam o dropdown).
   useEffect(() => {
+    if (!open) return;
+    updateRect();
     function onDoc(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node))
+      const t = e.target as Node;
+      if (!wrapRef.current?.contains(t) && !popRef.current?.contains(t)) {
         setOpen(false);
+      }
     }
+    window.addEventListener("resize", updateRect);
+    window.addEventListener("scroll", updateRect, true);
     document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
+    return () => {
+      window.removeEventListener("resize", updateRect);
+      window.removeEventListener("scroll", updateRect, true);
+      document.removeEventListener("mousedown", onDoc);
+    };
+  }, [open]);
 
   const summary =
     selected.length === 0
@@ -43,7 +62,7 @@ export function MultiSelect({
   }
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={wrapRef} className="relative">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -56,31 +75,40 @@ export function MultiSelect({
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
-      {open && (
-        <div className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-border bg-card p-1 shadow-lg">
-          {options.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-muted-foreground">{emptyHint}</p>
-          ) : (
-            options.map((o) => {
-              const on = selected.includes(o.id);
-              return (
-                <button
-                  key={o.id}
-                  type="button"
-                  onClick={() => toggle(o.id)}
-                  className={cn(
-                    "flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-muted",
-                    on && "font-medium text-primary",
-                  )}
-                >
-                  {o.nome}
-                  {on && <Check className="h-4 w-4 shrink-0" />}
-                </button>
-              );
-            })
-          )}
-        </div>
-      )}
+
+      {open &&
+        rect &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={popRef}
+            className="fixed z-50 max-h-64 overflow-auto rounded-lg border border-border bg-card p-1 shadow-lg"
+            style={{ top: rect.bottom + 4, left: rect.left, width: rect.width }}
+          >
+            {options.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-muted-foreground">{emptyHint}</p>
+            ) : (
+              options.map((o) => {
+                const on = selected.includes(o.id);
+                return (
+                  <button
+                    key={o.id}
+                    type="button"
+                    onClick={() => toggle(o.id)}
+                    className={cn(
+                      "flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-muted",
+                      on && "font-medium text-primary",
+                    )}
+                  >
+                    {o.nome}
+                    {on && <Check className="h-4 w-4 shrink-0" />}
+                  </button>
+                );
+              })
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

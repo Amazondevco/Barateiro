@@ -102,7 +102,7 @@ const novoItem = (id: string): BItem => ({
 type Initial = {
   nome: string;
   descricao: string;
-  tipo_unidade: UnidadeTipo;
+  tipo_unidade?: UnidadeTipo | null;
   status: "ativo" | "inativo";
   disponivel_de?: string | null;
   disponivel_ate?: string | null;
@@ -182,9 +182,7 @@ export function FormBuilder({
 
   const [nome, setNome] = useState(initial?.nome ?? "");
   const [descricao, setDescricao] = useState(initial?.descricao ?? "");
-  const [tipoUnidade, setTipoUnidade] = useState<UnidadeTipo>(
-    initial?.tipo_unidade ?? "loja",
-  );
+  // Tipo de unidade saiu do builder: a segmentação é feita em "Quem preenche".
   // Status não é editável na criação/edição do formulário — novos formulários
   // nascem "ativo"; ativar/desativar é feito pelo toggle na lista.
   const [status] = useState<"ativo" | "inativo">(initial?.status ?? "ativo");
@@ -317,7 +315,6 @@ export function FormBuilder({
   function applyAi(data: AiForm) {
     setNome(data.nome);
     setDescricao(data.descricao);
-    setTipoUnidade(data.tipo_unidade);
     if (data.secoes.length)
       setSecoes(
         data.secoes.map((s, i) => ({
@@ -343,7 +340,7 @@ export function FormBuilder({
     const payload: FormularioPayload = {
       nome,
       descricao,
-      tipo_unidade: tipoUnidade,
+      tipo_unidade: null, // sem filtro por tipo — segmentação via "Quem preenche"
       status,
       disponivel_de: dispDe || null,
       disponivel_ate: dispAte || null,
@@ -447,19 +444,6 @@ export function FormBuilder({
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
             />
-          </div>
-          <div>
-            <Label htmlFor="tipo">Tipo de unidade</Label>
-            <Select
-              id="tipo"
-              value={tipoUnidade}
-              onChange={(e) => setTipoUnidade(e.target.value as UnidadeTipo)}
-            >
-              <option value="loja">Loja</option>
-              <option value="cd">CD / Galpão</option>
-              <option value="escritorio">Escritório</option>
-              <option value="outro">Outro</option>
-            </Select>
           </div>
           {/* Quando preencher (janela de horário + dias da semana) */}
           <div className="space-y-3 border-t border-border pt-4">
