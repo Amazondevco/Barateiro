@@ -7,6 +7,7 @@ import { NetworkHomePage } from "./pages/network-home-page";
 import { NoticesPage } from "./pages/notices-page";
 import { FormsPage } from "./pages/forms-page";
 import { FillFormPage } from "./pages/fill-form-page";
+import { RevisaoPage } from "./pages/revisao-page";
 import { ProfilePage } from "./pages/profile-page";
 import { ConfigPage } from "./pages/config-page";
 import { LoadingScreen } from "./ui/loading-screen";
@@ -32,6 +33,7 @@ export default function App() {
           <Route index element={<MembershipsPage />} />
           <Route path="rede/:memberId" element={<NetworkHomePage />} />
           <Route path="rede/:memberId/form/:formId" element={<FillFormPage />} />
+          <Route path="revisao/:origem/:id" element={<RevisaoPage />} />
           <Route path="avisos" element={<NoticesPage />} />
           <Route path="formularios" element={<FormsPage />} />
           <Route path="perfil" element={<ProfilePage />} />

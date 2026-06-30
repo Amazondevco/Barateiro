@@ -34,7 +34,8 @@ export function AppShell() {
   }, []);
   const compact =
     /\/formularios\/teste-offline$/.test(location.pathname) ||
-    /\/rede\/[^/]+\/form\/[^/]+$/.test(location.pathname);
+    /\/rede\/[^/]+\/form\/[^/]+$/.test(location.pathname) ||
+    /\/revisao\/[^/]+\/[^/]+$/.test(location.pathname);
   // Home da rede (com o banner colorido) vai edge-to-edge no topo: o banner passa
   // por baixo da barra de status. O respiro do conteúdo é tratado no banner.
   const immersiveTop = /\/rede\/[^/]+$/.test(location.pathname);

@@ -308,6 +308,82 @@ async function _fetchEnviados(): Promise<Enviado[]> {
   }));
 }
 
+export type RevisaoItem = {
+  texto: string;
+  tipo: string;
+  valor: string;
+  observacao: string | null;
+  fotoUrl: string | null;
+};
+export type RevisaoSecao = { titulo: string | null; itens: RevisaoItem[] };
+export type RespostaDetalhe = {
+  nome: string;
+  dataReferencia: string;
+  enviadoEm: string | null;
+  assinatura: string | null;
+  secoes: RevisaoSecao[];
+};
+
+// Detalhe de um envio JÁ no servidor — para o operador REVISAR (só leitura) o que
+// mandou. RLS garante que só vêm as respostas dele.
+export async function fetchRespostaDetalhe(respostaId: string): Promise<RespostaDetalhe> {
+  const { data: resp, error } = await supabase
+    .from("respostas")
+    .select("formulario_id, assinatura_svg, enviado_em, data_referencia, formularios(nome)")
+    .eq("id", respostaId)
+    .single();
+  if (error) throw error;
+  const r = resp as unknown as {
+    formulario_id: string;
+    assinatura_svg: string | null;
+    enviado_em: string | null;
+    data_referencia: string;
+    formularios: { nome: string | null } | null;
+  };
+
+  const [{ data: itens }, { data: secoes }] = await Promise.all([
+    supabase
+      .from("resposta_itens")
+      .select("item_id, valor, observacao, foto_url")
+      .eq("resposta_id", respostaId),
+    supabase
+      .from("formulario_secoes")
+      .select("id, titulo, ordem, formulario_itens(id, texto, tipo, ordem)")
+      .eq("formulario_id", r.formulario_id)
+      .order("ordem"),
+  ]);
+
+  type IR = { item_id: string; valor: string | null; observacao: string | null; foto_url: string | null };
+  const ans = new Map(((itens ?? []) as IR[]).map((a) => [String(a.item_id), a]));
+
+  type Sec = { titulo: string | null; ordem: number; formulario_itens: Array<Record<string, unknown>> };
+  const secoesDetalhe: RevisaoSecao[] = ((secoes ?? []) as unknown as Sec[])
+    .sort((a, b) => Number(a.ordem) - Number(b.ordem))
+    .map((s) => ({
+      titulo: s.titulo ?? null,
+      itens: (s.formulario_itens ?? [])
+        .sort((a, b) => Number(a.ordem) - Number(b.ordem))
+        .map((it) => {
+          const a = ans.get(String(it.id));
+          return {
+            texto: String(it.texto),
+            tipo: String(it.tipo),
+            valor: a ? String(a.valor ?? "") : "",
+            observacao: a?.observacao ?? null,
+            fotoUrl: a?.foto_url ?? null,
+          };
+        }),
+    }));
+
+  return {
+    nome: r.formularios?.nome ?? "Checklist",
+    dataReferencia: r.data_referencia,
+    enviadoEm: r.enviado_em,
+    assinatura: r.assinatura_svg,
+    secoes: secoesDetalhe,
+  };
+}
+
 export function applyPrimaryColor(color: string | null) {
   if (!color || typeof document === "undefined") return;
   // Cor da rede vale para barra, botões e banner (igual ao app PWA):

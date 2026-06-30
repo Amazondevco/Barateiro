@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, Clock, Inbox } from "lucide-react";
+import { Link } from "react-router-dom";
+import { AlertTriangle, CheckCircle2, Clock, Inbox, ChevronRight } from "lucide-react";
 import { getQueueItems } from "../lib/queue-store";
 import type { QueueRecord } from "../lib/operator-types";
 import { runSync } from "../lib/auto-sync";
@@ -127,9 +128,10 @@ function EnviadosList({
   return (
     <div className="space-y-3">
       {enviados.map((e) => (
-        <article
+        <Link
           key={e.id}
-          className="flex items-start gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-sm"
+          to={`/app/revisao/enviado/${e.id}`}
+          className="flex items-start gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors active:bg-muted/40"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-success-bg text-success">
             <CheckCircle2 className="h-6 w-6" />
@@ -151,7 +153,8 @@ function EnviadosList({
               {new Date(e.enviadoEm).toLocaleString("pt-BR")}
             </p>
           </div>
-        </article>
+          <ChevronRight className="mt-1 h-5 w-5 shrink-0 self-center text-muted-foreground/60" />
+        </Link>
       ))}
     </div>
   );
@@ -172,9 +175,10 @@ function PendentesList({ pendentes }: { pendentes: QueueRecord[] }) {
       {pendentes.map((item) => {
         const erro = item.status === "error";
         return (
-          <article
+          <Link
             key={item.id}
-            className="flex items-start gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-sm"
+            to={`/app/revisao/pendente/${item.id}`}
+            className="flex items-start gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors active:bg-muted/40"
           >
             <span
               className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
@@ -212,7 +216,8 @@ function PendentesList({ pendentes }: { pendentes: QueueRecord[] }) {
                 {new Date(item.createdAt).toLocaleString("pt-BR")}
               </p>
             </div>
-          </article>
+            <ChevronRight className="mt-1 h-5 w-5 shrink-0 self-center text-muted-foreground/60" />
+          </Link>
         );
       })}
     </div>
