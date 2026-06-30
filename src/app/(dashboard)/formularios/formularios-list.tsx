@@ -120,7 +120,7 @@ export function FormulariosList({
         description="Crie o primeiro modelo de checklist para suas unidades."
         action={
           <Link href="/formularios/novo">
-            <Button>
+            <Button size="lg" className="font-semibold">
               <Plus className="h-4 w-4" /> Novo checklist
             </Button>
           </Link>
@@ -183,7 +183,7 @@ export function FormulariosList({
         </Campo>
 
         <Link href="/formularios/novo" className="ml-auto">
-          <Button>
+          <Button size="lg" className="font-semibold">
             <Plus className="h-4 w-4" /> Novo checklist
           </Button>
         </Link>

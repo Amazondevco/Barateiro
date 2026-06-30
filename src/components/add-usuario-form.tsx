@@ -35,7 +35,7 @@ export function AddUsuarioForm({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>
+      <Button size="lg" className="font-semibold" onClick={() => setOpen(true)}>
         <Plus className="h-4 w-4" /> Novo usuário
       </Button>
 

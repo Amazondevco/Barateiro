@@ -27,7 +27,7 @@ sempre a **cor da rede** (`--primary`).
 - [x] **Fase 3 — Tabelas/listas.** Evoluir `Table` (chip de ícone, célula de 2
   linhas, headers uppercase, badge pill, ações, respiro, sombra). Aplicar em
   Unidades, Departamentos, Usuários, Equipe, lista de Checklists.
-- [ ] **Fase 4 — Header de página + botões.** `PageHeader` maior; botão "Novo X"
+- [x] **Fase 4 — Header de página + botões.** `PageHeader` maior; botão "Novo X"
   padronizado (arredondado, ícone +, cor da rede).
 - [ ] **Fase 5 — App: checklist fora do horário.** No PWA e no nativo, checklist
   fora do dia/horário aparece **cinza/inativo com ícone de relógio**, mas ainda

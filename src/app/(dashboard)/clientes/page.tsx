@@ -37,7 +37,7 @@ export default async function ClientesPage() {
         subtitle="Supermercados-clientes da plataforma."
         action={
           <Link href="/clientes/nova">
-            <Button>
+            <Button size="lg" className="font-semibold">
               <Plus className="h-4 w-4" /> Nova rede
             </Button>
           </Link>
@@ -50,7 +50,7 @@ export default async function ClientesPage() {
           description="Cadastre o primeiro supermercado-cliente para começar."
           action={
             <Link href="/clientes/nova">
-              <Button>
+              <Button size="lg" className="font-semibold">
                 <Plus className="h-4 w-4" /> Nova rede
               </Button>
             </Link>
