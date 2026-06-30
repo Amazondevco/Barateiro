@@ -142,9 +142,8 @@ export function DashboardShell({
         </div>
       )}
 
-      {/* Coluna principal — linha divisória adaptável (claro/escuro) separando
-          a sidebar da barra de navegação/conteúdo. */}
-      <div className="flex flex-1 flex-col overflow-hidden border-l border-border">
+      {/* Coluna principal */}
+      <div className="flex flex-1 flex-col overflow-hidden">
         <header
           className="relative z-10 flex h-16 shrink-0 items-center justify-between px-4 shadow-[0_6px_20px_-8px_rgba(2,6,23,0.18)] lg:px-6"
           style={headerStyle}
