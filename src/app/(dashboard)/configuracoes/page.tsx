@@ -362,7 +362,7 @@ async function EquipeAppTab({ supabase, redeId }: { supabase: SB; redeId: string
 async function UnidadesTab({ supabase, redeId }: { supabase: SB; redeId: string }) {
   const { data: unidades } = await supabase
     .from("unidades")
-    .select("id,nome,codigo,tipo,endereco,cidade,uf,geo_lat,geo_lng,status")
+    .select("id,nome,codigo,tipo,endereco,cep,bairro,numero,complemento,cidade,uf,geo_lat,geo_lng,status")
     .eq("rede_id", redeId)
     .order("nome");
 

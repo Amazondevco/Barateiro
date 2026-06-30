@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { EnderecoFields } from "./endereco-fields";
 import { updateUnidade } from "./unidade-actions";
 
 type U = {
@@ -15,6 +16,10 @@ type U = {
   codigo: string | null;
   tipo: string;
   endereco: string | null;
+  cep: string | null;
+  bairro: string | null;
+  numero: string | null;
+  complemento: string | null;
   cidade: string | null;
   uf: string | null;
   geo_lat: number | null;
@@ -74,26 +79,19 @@ export function EditUnidadeButton({
                   <option value="outro">Outro</option>
                 </Select>
               </div>
-              <div className="sm:col-span-2">
-                <Label htmlFor="eu_endereco">Endereço</Label>
-                <Input id="eu_endereco" name="endereco" defaultValue={unidade.endereco ?? ""} />
-              </div>
-              <div>
-                <Label htmlFor="eu_cidade">Cidade</Label>
-                <Input id="eu_cidade" name="cidade" defaultValue={unidade.cidade ?? ""} />
-              </div>
-              <div>
-                <Label htmlFor="eu_uf">UF</Label>
-                <Input id="eu_uf" name="uf" maxLength={2} defaultValue={unidade.uf ?? ""} />
-              </div>
-              <div>
-                <Label htmlFor="eu_lat">Latitude (GPS)</Label>
-                <Input id="eu_lat" name="geo_lat" defaultValue={unidade.geo_lat ?? ""} />
-              </div>
-              <div>
-                <Label htmlFor="eu_lng">Longitude (GPS)</Label>
-                <Input id="eu_lng" name="geo_lng" defaultValue={unidade.geo_lng ?? ""} />
-              </div>
+              <EnderecoFields
+                initial={{
+                  cep: unidade.cep,
+                  endereco: unidade.endereco,
+                  bairro: unidade.bairro,
+                  numero: unidade.numero,
+                  complemento: unidade.complemento,
+                  cidade: unidade.cidade,
+                  uf: unidade.uf,
+                  geo_lat: unidade.geo_lat,
+                  geo_lng: unidade.geo_lng,
+                }}
+              />
             </div>
 
             {state.error && (

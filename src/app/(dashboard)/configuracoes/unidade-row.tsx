@@ -24,6 +24,10 @@ type U = {
   uf: string | null;
   status: string;
   endereco: string | null;
+  cep: string | null;
+  bairro: string | null;
+  numero: string | null;
+  complemento: string | null;
   geo_lat: number | null;
   geo_lng: number | null;
 };

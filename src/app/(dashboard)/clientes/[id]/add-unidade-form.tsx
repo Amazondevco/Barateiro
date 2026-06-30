@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { EnderecoFields } from "./endereco-fields";
 import type { FormState } from "./unidade-actions";
 
 export function AddUnidadeForm({
@@ -45,26 +46,7 @@ export function AddUnidadeForm({
                   <option value="outro">Outro</option>
                 </Select>
               </div>
-              <div className="sm:col-span-2">
-                <Label htmlFor="u_endereco">Endereço</Label>
-                <Input id="u_endereco" name="endereco" />
-              </div>
-              <div>
-                <Label htmlFor="u_cidade">Cidade</Label>
-                <Input id="u_cidade" name="cidade" />
-              </div>
-              <div>
-                <Label htmlFor="u_uf">UF</Label>
-                <Input id="u_uf" name="uf" maxLength={2} />
-              </div>
-              <div>
-                <Label htmlFor="u_lat">Latitude (GPS)</Label>
-                <Input id="u_lat" name="geo_lat" placeholder="-23.55" />
-              </div>
-              <div>
-                <Label htmlFor="u_lng">Longitude (GPS)</Label>
-                <Input id="u_lng" name="geo_lng" placeholder="-46.63" />
-              </div>
+              <EnderecoFields />
             </div>
 
             {state.error && (
