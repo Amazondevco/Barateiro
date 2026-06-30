@@ -23,6 +23,8 @@ export type OutboxSubmission = {
   criadoEm: string;
   tentativas: number;
   erro?: string;
+  lat?: number | null;
+  lng?: number | null;
 };
 
 function openDB(): Promise<IDBDatabase> {

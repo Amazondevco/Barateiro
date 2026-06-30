@@ -59,14 +59,38 @@ function rotuloValor(item: Item, valor: string): string {
   return valor;
 }
 
+// GPS do navegador (null se indisponível/negado) e distância em metros (Haversine).
+function pegarLocalizacao(): Promise<{ lat: number; lng: number } | null> {
+  return new Promise((res) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return res(null);
+    navigator.geolocation.getCurrentPosition(
+      (p) => res({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => res(null),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  });
+}
+function distanciaM(la1: number, lo1: number, la2: number, lo2: number): number {
+  const R = 6371000;
+  const r = (d: number) => (d * Math.PI) / 180;
+  const a =
+    Math.sin(r(la2 - la1) / 2) ** 2 +
+    Math.cos(r(la1)) * Math.cos(r(la2)) * Math.sin(r(lo2 - lo1) / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
 export function FillForm({
   redeMembroId,
   form,
   assinatura,
+  exigeLocalizacao = false,
+  geofence = null,
 }: {
   redeMembroId: string;
   form: FormData;
   assinatura: string | null;
+  exigeLocalizacao?: boolean;
+  geofence?: { raio: number; uniLat: number | null; uniLng: number | null } | null;
 }) {
   const router = useRouter();
   const [valores, setValores] = useState<Record<string, string>>({});
@@ -123,6 +147,31 @@ export function FillForm({
     if (!assinada) return setErro("Assine para enviar o formulário.");
     setErro(null);
     setEnviando(true);
+
+    // Localização: captura o GPS quando o formulário exige.
+    let lat: number | null = null;
+    let lng: number | null = null;
+    if (exigeLocalizacao) {
+      const pos = await pegarLocalizacao();
+      if (pos) {
+        lat = pos.lat;
+        lng = pos.lng;
+        if (
+          geofence?.raio &&
+          geofence.uniLat != null &&
+          geofence.uniLng != null
+        ) {
+          const d = distanciaM(pos.lat, pos.lng, geofence.uniLat, geofence.uniLng);
+          if (d > geofence.raio) {
+            const ok = window.confirm(
+              `Você está a ~${Math.round(d)} m da unidade (limite ${geofence.raio} m). O envio será registrado como FORA DO LOCAL. Enviar mesmo assim?`,
+            );
+            if (!ok) return setEnviando(false);
+          }
+        }
+      }
+    }
+
     const itens = form.formulario_secoes.flatMap((s) =>
       s.formulario_itens.map((it) => ({
         item_id: it.id,
@@ -142,6 +191,8 @@ export function FillForm({
         assinatura: assinada,
         criadoEm: new Date().toISOString(),
         tentativas: 0,
+        lat,
+        lng,
       });
       await sincronizar();
       const restante = await pendingCount();
