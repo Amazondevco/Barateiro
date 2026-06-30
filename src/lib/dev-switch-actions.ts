@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { DEV_ACCOUNTS, DEV_EMAILS } from "@/lib/dev-accounts";
 
@@ -36,6 +37,11 @@ export async function quickSwitch(email: string) {
   if (verifyErr || !verify?.session) {
     throw new Error(`Troca falhou (verifyOtp): ${verifyErr?.message ?? "sem sessão"}`);
   }
+
+  // A sessão (cookie) já trocou. Sem isto, o Next serviria a página já
+  // renderizada (Router Cache) com a conta antiga → "não muda". Invalida tudo
+  // sob o layout raiz para forçar a re-renderização com a nova conta.
+  revalidatePath("/", "layout");
 
   redirect(target.view === "app" ? "/app" : "/");
 }
