@@ -71,17 +71,22 @@ export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
               className="fixed inset-0 z-[60]"
               onClick={() => setOpen(false)}
             />
-            {/* Abre à DIREITA do botão e ancorado para cima — visível mesmo na
-                sidebar (que fica colada na borda esquerda).
-                data-userswitcher: o menu do usuário ignora cliques aqui — sem
-                isto, o handler de "clique fora" (no mousedown) fechava/desmontava
-                este portal ANTES do click disparar, e a troca nunca rodava. */}
+            {/* Posição ADAPTATIVA: na sidebar do painel (botão à esquerda, em
+                baixo) abre à direita e pra cima; no PWA (botão no topo direito)
+                abre à esquerda e pra baixo. Antes era fixo à direita → no PWA o
+                dropdown saía da tela.
+                data-userswitcher: o menu do usuário ignora cliques aqui (senão o
+                clique-fora no mousedown desmontava o portal antes do clique). */}
             <div
               data-userswitcher=""
               className="fixed z-[61] max-h-[70vh] w-64 overflow-auto rounded-xl border border-border bg-card text-foreground shadow-xl"
               style={{
-                left: rect.right + 8,
-                bottom: Math.max(8, window.innerHeight - rect.bottom),
+                ...(rect.right + 8 + 256 <= window.innerWidth
+                  ? { left: rect.right + 8 }
+                  : { right: Math.max(8, window.innerWidth - rect.right) }),
+                ...(rect.top > window.innerHeight / 2
+                  ? { bottom: Math.max(8, window.innerHeight - rect.bottom) }
+                  : { top: rect.bottom + 8 }),
               }}
             >
               <p className="border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
