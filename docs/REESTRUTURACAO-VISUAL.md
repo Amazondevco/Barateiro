@@ -16,15 +16,15 @@ sempre a **cor da rede** (`--primary`).
 
 ## Fases
 
-- [ ] **Fase 0 — Tipografia & fundação.** Trocar `--font-sans` para a stack do
+- [x] **Fase 0 — Tipografia & fundação.** Trocar `--font-sans` para a stack do
   sistema (SF na Apple); helper de "icon chip" (cor derivada do nome). Ajuste de
   escala tipográfica acontece dentro de cada fase de componente.
-- [ ] **Fase 1 — Sidebar.** Grupos **recolhíveis** (estado salvo); rail polida
+- [x] **Fase 1 — Sidebar.** Grupos **recolhíveis** (estado salvo); rail polida
   (ícones centralizados, ativo realçado); caixa do usuário com avatar circular
   (foto se houver; recolhida = só o avatar).
 - [x] **Fase 2 — Tabs (segmented pill).** Componente reutilizável (cartão branco +
   pílula ativa). Aplicar no detalhe do checklist e em Configurações.
-- [ ] **Fase 3 — Tabelas/listas.** Evoluir `Table` (chip de ícone, célula de 2
+- [x] **Fase 3 — Tabelas/listas.** Evoluir `Table` (chip de ícone, célula de 2
   linhas, headers uppercase, badge pill, ações, respiro, sombra). Aplicar em
   Unidades, Departamentos, Usuários, Equipe, lista de Checklists.
 - [ ] **Fase 4 — Header de página + botões.** `PageHeader` maior; botão "Novo X"

@@ -117,6 +117,14 @@ dentro de um cartão com `overflow-hidden`.
 **lucide-react**, tamanho `h-4 w-4` (inline) ou `h-5 w-5` (ações). Nunca emoji em
 UI de produto.
 
+### Linha de tabela — `src/components/ui/icon-chip.tsx`
+Tabelas "ricas" usam uma **célula-líder** (`LeadCell`): **chip de ícone colorido**
+(`IconChip`, quadrado `rounded-xl h-10`) + título e subtítulo em 2 linhas. A cor do
+chip sai de um **seed** (nome do item) numa paleta decorativa fixa (violet/amber/
+sky/emerald/rose/indigo/teal) — estável por item, **não** é a cor da rede. O chip
+aceita **ícone** lucide ou **iniciais** (texto). `TH` uppercase, `TD` com respiro
+(`px-5 py-3.5`), status em badge pill, coluna de ações com ícones.
+
 ### Tabs — `src/components/ui/pill-tabs.tsx`
 **Controle segmentado** (não sublinhado): pílulas dentro de um cartão branco
 (`rounded-xl border bg-card p-1.5 shadow-sm`). A aba **ativa** é uma pílula

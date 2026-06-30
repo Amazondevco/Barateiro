@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
-import { Power } from "lucide-react";
+import { Power, Layers } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
+import { LeadCell } from "@/components/ui/icon-chip";
 import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
@@ -24,7 +25,7 @@ export default async function DepartamentosPage() {
   const [{ data: deptos }, { data: unidades }] = await Promise.all([
     supabase
       .from("departamentos")
-      .select("id,nome,escopo,status,unidade_id,unidades(nome)")
+      .select("id,nome,escopo,status,unidade_id,created_at,unidades(nome)")
       .eq("rede_id", redeId)
       .order("nome"),
     supabase.from("unidades").select("id,nome").eq("rede_id", redeId).order("nome"),
@@ -65,7 +66,18 @@ export default async function DepartamentosPage() {
               const uni = d.unidades as unknown as { nome: string } | null;
               return (
                 <TR key={d.id}>
-                  <TD className="font-medium">{d.nome}</TD>
+                  <TD>
+                    <LeadCell
+                      icon={Layers}
+                      seed={d.nome}
+                      title={d.nome}
+                      subtitle={
+                        d.created_at
+                          ? `Criado em ${new Date(d.created_at as string).toLocaleDateString("pt-BR")}`
+                          : undefined
+                      }
+                    />
+                  </TD>
                   <TD>
                     {d.escopo === "rede" ? "Geral da rede" : `Unidade: ${uni?.nome ?? "—"}`}
                   </TD>

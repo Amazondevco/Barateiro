@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Power } from "lucide-react";
+import { Power, Store, Warehouse, Building2, MapPin, type LucideIcon } from "lucide-react";
 import { TR, TD } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { LeadCell } from "@/components/ui/icon-chip";
 import { Tooltip, iconBtnClass } from "@/components/ui/tooltip";
 import { EditUnidadeButton } from "@/app/(dashboard)/clientes/[id]/edit-unidade-button";
 import { setUnidadeStatus } from "@/app/(dashboard)/clientes/[id]/unidade-actions";
@@ -13,6 +14,13 @@ const TIPO_LABEL: Record<string, string> = {
   cd: "CD / Galpão",
   escritorio: "Escritório / Sede",
   outro: "Outro",
+};
+
+const TIPO_ICON: Record<string, LucideIcon> = {
+  loja: Store,
+  cd: Warehouse,
+  escritorio: Building2,
+  outro: MapPin,
 };
 
 type U = {
@@ -44,10 +52,12 @@ export function UnidadeRow({ unidade, redeId }: { unidade: U; redeId: string }) 
       className="cursor-pointer transition-colors hover:bg-muted/40"
     >
       <TD>
-        <span className="font-medium">{unidade.nome}</span>
-        {unidade.codigo && (
-          <span className="ml-2 text-xs text-muted-foreground">#{unidade.codigo}</span>
-        )}
+        <LeadCell
+          icon={TIPO_ICON[unidade.tipo] ?? Store}
+          seed={unidade.nome}
+          title={unidade.nome}
+          subtitle={unidade.codigo ? `#${unidade.codigo}` : undefined}
+        />
       </TD>
       <TD>{TIPO_LABEL[unidade.tipo] ?? unidade.tipo}</TD>
       <TD>

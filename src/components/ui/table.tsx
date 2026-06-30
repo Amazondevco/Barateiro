@@ -22,7 +22,7 @@ export function TH({
   return (
     <th
       className={cn(
-        "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground",
+        "px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground",
         className,
       )}
       {...props}
@@ -46,7 +46,7 @@ export function TD({
   className,
   ...props
 }: React.TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={cn("px-4 py-3", className)} {...props} />;
+  return <td className={cn("px-5 py-3.5 align-middle", className)} {...props} />;
 }
 
 export function EmptyState({

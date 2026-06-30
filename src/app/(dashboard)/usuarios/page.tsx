@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
+import { LeadCell } from "@/components/ui/icon-chip";
 import { AddUsuarioForm } from "@/components/add-usuario-form";
 import { EditUsuarioButton } from "@/components/edit-usuario-button";
 import { createClient } from "@/lib/supabase/server";
@@ -101,7 +102,13 @@ export default async function UsuariosPage() {
           <tbody>
             {usuarios.map((u) => (
               <TR key={u.id}>
-                <TD className="font-medium">{u.nome || "—"}</TD>
+                <TD>
+                  <LeadCell
+                    text={u.nome || u.email}
+                    seed={u.nome || u.email}
+                    title={u.nome || "—"}
+                  />
+                </TD>
                 <TD>{u.email}</TD>
                 <TD>{PAPEL_LABEL[u.papel]}</TD>
                 {isSuper ? (

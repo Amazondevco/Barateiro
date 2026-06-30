@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Trash2, Lock } from "lucide-react";
 import { TR, TD } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { IconChip } from "@/components/ui/icon-chip";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -65,14 +66,17 @@ export function RosterRow({
         }
       >
         <TD>
-          <span className="flex items-center gap-1.5">
-            <span className="font-medium">{pessoa.nome}</span>
-            {pessoa.protegido && (
-              <Tooltip label="Cadastro padrão da Check.AI — não editável">
-                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-              </Tooltip>
-            )}
-          </span>
+          <div className="flex items-center gap-3">
+            <IconChip text={pessoa.nome} seed={pessoa.nome} />
+            <span className="flex items-center gap-1.5">
+              <span className="font-medium">{pessoa.nome}</span>
+              {pessoa.protegido && (
+                <Tooltip label="Cadastro padrão da Check.AI — não editável">
+                  <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                </Tooltip>
+              )}
+            </span>
+          </div>
         </TD>
         <TD>{pessoa.cpfFmt}</TD>
         <TD>{pessoa.cargoNome ?? "—"}</TD>
