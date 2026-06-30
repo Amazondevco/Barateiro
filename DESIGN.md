@@ -125,6 +125,15 @@ uppercase; `TD` com respiro (`px-5 py-3.5`); `EmptyState` em cartão tracejado
 `rounded-2xl`. Exceção: visualizações em matriz/heatmap (ex.: respostas por dia ×
 unidade) são um padrão à parte, não tabela de listagem.
 
+### Toast / feedback de ação — `src/components/toast.tsx`
+Notificação de ação (salvo/concluído/excluído/removido/erro) no **topo-direito**.
+Cartão **neutro branco** (`bg-card border border-border rounded-xl`, sombra suave
+`shadow-[0_8px_24px_-6px_rgba(2,6,23,0.18)]`, hug-content `w-fit`), **texto escuro**
+(`text-foreground`); **só o ícone carrega a cor** num chip circular: sucesso =
+verde `CheckCircle2` (inclui exclusão/remoção — ação bem-sucedida), erro =
+vermelho `AlertCircle`, info = `bg-primary`, loading = spinner. Fechar (X) no
+canto superior-direito. Disparo via `toast.success/error/...` e `useActionToast`.
+
 ### Linha de tabela — `src/components/ui/icon-chip.tsx`
 Tabelas "ricas" usam uma **célula-líder** (`LeadCell`): **chip de ícone colorido**
 (`IconChip`, quadrado `rounded-xl h-10`) + título e subtítulo em 2 linhas. A cor do

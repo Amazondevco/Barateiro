@@ -106,7 +106,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       {mounted &&
         createPortal(
-          <div className="pointer-events-none fixed right-4 top-4 z-[100] flex w-[min(92vw,24rem)] flex-col gap-2.5">
+          <div className="pointer-events-none fixed right-4 top-4 z-[100] flex max-w-[min(92vw,26rem)] flex-col items-end gap-2.5">
             {toasts.map((t) => (
               <ToastCard key={t.id} toast={t} onClose={() => dismiss(t.id)} />
             ))}
@@ -117,34 +117,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-const ESTILO: Record<
-  ToastType,
-  { card: string; icon: string; texto: string; Icon: typeof CheckCircle2 }
-> = {
-  success: {
-    card: "border-success/30 bg-success-bg",
-    icon: "bg-success text-white",
-    texto: "text-success",
-    Icon: CheckCircle2,
-  },
-  error: {
-    card: "border-danger/30 bg-danger-bg",
-    icon: "bg-danger text-white",
-    texto: "text-danger",
-    Icon: AlertCircle,
-  },
-  info: {
-    card: "border-primary/30 bg-primary/10",
-    icon: "bg-primary text-primary-foreground",
-    texto: "text-foreground",
-    Icon: Info,
-  },
-  loading: {
-    card: "border-border bg-card",
-    icon: "bg-muted text-muted-foreground",
-    texto: "text-foreground",
-    Icon: Loader2,
-  },
+// Cartão neutro (branco) para todos os tipos; só o ícone carrega a cor.
+const ESTILO: Record<ToastType, { icon: string; Icon: typeof CheckCircle2 }> = {
+  success: { icon: "bg-success text-white", Icon: CheckCircle2 },
+  error: { icon: "bg-danger text-white", Icon: AlertCircle },
+  info: { icon: "bg-primary text-primary-foreground", Icon: Info },
+  loading: { icon: "bg-muted text-muted-foreground", Icon: Loader2 },
 };
 
 function ToastCard({ toast, onClose }: { toast: Toast; onClose: () => void }) {
@@ -153,21 +131,21 @@ function ToastCard({ toast, onClose }: { toast: Toast; onClose: () => void }) {
   return (
     <div
       role="status"
-      className={`toast-in pointer-events-auto relative flex items-center gap-3 rounded-2xl border ${s.card} px-4 py-3.5 pr-5 shadow-md`}
+      className="toast-in pointer-events-auto relative flex w-fit max-w-full items-center gap-3 rounded-xl border border-border bg-card py-3 pl-4 pr-10 shadow-[0_8px_24px_-6px_rgba(2,6,23,0.18)]"
     >
       <span
         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${s.icon}`}
       >
         <Icon className={`h-4 w-4 ${toast.type === "loading" ? "animate-spin" : ""}`} />
       </span>
-      <p className={`min-w-0 flex-1 text-sm font-medium ${s.texto}`}>
+      <p className="min-w-0 flex-1 text-sm font-medium text-foreground">
         {toast.message}
       </p>
       <button
         type="button"
         onClick={onClose}
         aria-label="Fechar"
-        className="absolute -left-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:text-foreground"
+        className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
       >
         <X className="h-3.5 w-3.5" />
       </button>
