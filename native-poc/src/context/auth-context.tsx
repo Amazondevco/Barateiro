@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getSession, signIn, signOut, subscribeToAuthChanges, type SessionUser } from "../lib/auth";
 import { registerPush, unregisterPush } from "../lib/push";
+import { requestLocationPermission } from "../lib/permissions";
 import { startAutoSync, stopAutoSync } from "../lib/auto-sync";
 import { clearCache } from "../lib/offline-cache";
 
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       if (sessionUser) {
         void registerPush();
+        void requestLocationPermission();
         void startAutoSync();
       }
     }
@@ -38,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       if (nextUser) {
         void registerPush();
+        void requestLocationPermission();
         void startAutoSync();
       }
     });
