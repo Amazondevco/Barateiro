@@ -3,7 +3,7 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { DEV_ACCOUNTS, DEV_EMAILS } from "@/lib/dev-accounts";
 
-export type SwitchResult = { to?: string; error?: string };
+export type SwitchResult = { to?: string; error?: string; info?: string };
 
 // Troca a sessão para a conta de teste alvo. RETORNA o resultado (não
 // redireciona/throw) para o cliente fazer um recarregamento REAL — assim o
@@ -45,5 +45,19 @@ export async function quickSwitch(email: string): Promise<SwitchResult> {
     return { error: `verifyOtp: ${verifyErr?.message ?? "sem sessão"}` };
   }
 
-  return { to: target.view === "app" ? "/app" : "/" };
+  // Reforça a gravação do cookie (alguns ambientes não persistem só com o verifyOtp).
+  await supabase.auth.setSession({
+    access_token: verify.session.access_token,
+    refresh_token: verify.session.refresh_token,
+  });
+
+  // Diagnóstico: confirma quem é a sessão no SERVIDOR após a troca.
+  const {
+    data: { user: novo },
+  } = await supabase.auth.getUser();
+
+  return {
+    to: target.view === "app" ? "/app" : "/",
+    info: `sessão no servidor: ${novo?.email ?? "?"}`,
+  };
 }

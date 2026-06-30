@@ -12,6 +12,7 @@ export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
   const [open, setOpen] = useState(false);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -22,14 +23,22 @@ export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
 
   function trocar(email: string) {
     setErro(null);
+    setInfo(null);
     start(async () => {
       const r = await quickSwitch(email);
       if (r.error) {
         setErro(r.error);
         return;
       }
-      // Recarregamento REAL: usa o cookie novo e ignora o cache do Next.
-      if (r.to) window.location.href = r.to;
+      // Mostra o diagnóstico por ~2s e então recarrega de verdade (usa o cookie
+      // novo e ignora o cache do Next).
+      if (r.info) setInfo(r.info);
+      if (r.to) {
+        const dest = r.to;
+        setTimeout(() => {
+          window.location.href = dest;
+        }, 2000);
+      }
     });
   }
 
@@ -90,6 +99,11 @@ export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
               {erro && (
                 <p className="border-t border-border bg-danger-bg px-3 py-2 text-xs text-danger">
                   {erro}
+                </p>
+              )}
+              {info && (
+                <p className="border-t border-border bg-success-bg px-3 py-2 text-xs text-success">
+                  {info} — recarregando…
                 </p>
               )}
             </div>
