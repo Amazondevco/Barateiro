@@ -194,8 +194,8 @@ export function Sidebar({
           {menuOpen && (
             <div
               className={cn(
-                "absolute bottom-[calc(100%+0.5rem)] z-30 overflow-hidden rounded-xl border border-white/[0.06] bg-sidebar shadow-xl",
-                collapsed ? "left-0 w-48" : "inset-x-0",
+                "absolute bottom-[calc(100%+0.5rem)] z-30 rounded-2xl border border-white/10 bg-sidebar p-1.5 shadow-2xl",
+                collapsed ? "left-0 w-52" : "inset-x-0",
               )}
             >
               {podeConfig && (
@@ -205,9 +205,9 @@ export function Sidebar({
                     setMenuOpen(false);
                     onNavigate?.();
                   }}
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-[color:var(--sidebar-strong)]"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-[color:var(--sidebar-strong)]"
                 >
-                  <Settings className="h-[18px] w-[18px]" /> Configurações
+                  <Settings className="h-[18px] w-[18px] shrink-0" /> Configurações
                 </Link>
               )}
               <Link
@@ -216,21 +216,20 @@ export function Sidebar({
                   setMenuOpen(false);
                   onNavigate?.();
                 }}
-                className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-[color:var(--sidebar-strong)]"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-[color:var(--sidebar-strong)]"
               >
-                <LifeBuoy className="h-[18px] w-[18px]" /> Suporte Check.AI
+                <LifeBuoy className="h-[18px] w-[18px] shrink-0" /> Suporte Check.AI
               </Link>
               {userEmail && DEV_EMAILS.includes(userEmail) && (
-                <div className="border-t border-white/[0.06] px-3 py-2">
-                  <UserSwitcher currentEmail={userEmail} />
-                </div>
+                <UserSwitcher currentEmail={userEmail} />
               )}
-              <form action={signOut} className="border-t border-white/[0.06]">
+              <div className="mx-1 my-1 h-px bg-white/10" />
+              <form action={signOut}>
                 <button
                   type="submit"
-                  className="flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-sidebar-hover"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10"
                 >
-                  <LogOut className="h-[18px] w-[18px]" /> Sair
+                  <LogOut className="h-[18px] w-[18px] shrink-0" /> Sair
                 </button>
               </form>
             </div>
