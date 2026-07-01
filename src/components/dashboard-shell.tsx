@@ -148,6 +148,13 @@ export function DashboardShell({
           className="relative z-10 flex h-16 shrink-0 items-center justify-between px-4 shadow-[0_6px_20px_-8px_rgba(2,6,23,0.18)] lg:px-6"
           style={headerStyle}
         >
+          {/* Separação sidebar ↔ topbar: traço vertical curto (menor que a
+              topbar), centralizado, sutil (cor da borda do sidebar) e com sombra.
+              Mesmo conceito do divisor botão-recolher ↔ título. */}
+          <span
+            aria-hidden
+            className="absolute left-0 top-1/2 hidden h-8 w-px -translate-y-1/2 bg-border shadow-[1.5px_0_4px_-1px_rgba(0,0,0,0.3)] lg:block"
+          />
           <div className="flex min-w-0 flex-1 items-center gap-2">
             {/* Recolher/expandir sidebar (desktop) */}
             <button

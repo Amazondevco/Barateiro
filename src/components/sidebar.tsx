@@ -86,12 +86,6 @@ export function Sidebar({
         collapsed ? "w-16" : "w-64",
       )}
     >
-      {/* Divisor sutil na borda direita: fino (1px), recuado (altura menor) e
-          levemente mais visível. */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-y-4 right-0 w-px bg-foreground/15"
-      />
       <div
         className={cn(
           "flex items-center py-4",
