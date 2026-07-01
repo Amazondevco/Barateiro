@@ -11,6 +11,10 @@ const PUBLIC_PATHS = [
   "/termo",
   "/api/manifest",
   "/api/app-icon",
+  "/api/definir-senha-convite",
+  // Verificação de deep link (App Links / Universal Links) — precisa responder
+  // 200 direto, sem redirect de auth, senão a verificação do domínio falha.
+  "/.well-known",
 ];
 
 export async function updateSession(request: NextRequest) {
