@@ -779,8 +779,11 @@ function FormItemCard({
       }`}
     >
       {erro ? (
-        <span className="mb-2 inline-flex items-center gap-1 rounded-md bg-danger-bg px-2 py-0.5 text-[11px] font-semibold text-danger">
-          <AlertCircle className="h-3 w-3" /> {erro}
+        <span
+          role="alert"
+          className="mb-2 inline-flex items-center gap-1 rounded-md bg-danger-bg px-2 py-0.5 text-[11px] font-semibold text-danger"
+        >
+          <AlertCircle aria-hidden="true" className="h-3 w-3" /> {erro}
         </span>
       ) : null}
       <p className="text-[15px] font-semibold leading-snug text-foreground">
@@ -809,6 +812,7 @@ function FormItemCard({
               value={note}
               onChange={(event) => onNote(event.target.value)}
               placeholder="Adicionar observação..."
+              aria-label="Observação"
               className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           ) : null}
@@ -833,7 +837,11 @@ function ItemInput({
 
   if (item.tipo === "multipla_escolha") {
     return (
-      <div className="flex flex-col gap-1.5">
+      <div
+        role="radiogroup"
+        aria-label={item.texto}
+        className="flex flex-col gap-1.5"
+      >
         {(item.opcoes ?? []).map((option) => (
           <label
             key={option}
@@ -858,7 +866,7 @@ function ItemInput({
       "flex h-11 flex-1 items-center justify-center rounded-xl border text-sm font-medium transition-colors";
     const idle = "border-border bg-card text-muted-foreground hover:bg-muted";
     return (
-      <div className="flex gap-2">
+      <div role="group" aria-label={item.texto} className="flex gap-2">
         {options.map(([candidate, label]) => {
           const selected = value === candidate;
           const negative = ["nao", "ruptura"].includes(candidate);
@@ -870,6 +878,7 @@ function ItemInput({
               key={candidate}
               type="button"
               onClick={() => onValue(candidate)}
+              aria-pressed={selected}
               className={`${segmentBase} ${selected ? selectedClass : idle}`}
             >
               {label}
@@ -880,6 +889,7 @@ function ItemInput({
           <button
             type="button"
             onClick={() => onValue("na")}
+            aria-pressed={value === "na"}
             className={`${segmentBase} ${
               value === "na"
                 ? "border-primary bg-primary/10 text-primary font-semibold"
@@ -900,6 +910,7 @@ function ItemInput({
         value={value}
         onChange={(event) => onValue(event.target.value)}
         placeholder="Resposta"
+        aria-label={item.texto}
         className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
     );
@@ -912,6 +923,7 @@ function ItemInput({
       value={value}
       onChange={(event) => onValue(event.target.value)}
       placeholder="Resposta"
+      aria-label={item.texto}
       className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     />
   );
@@ -944,7 +956,7 @@ function PhotoField({
         <div className="relative h-10 w-10">
           <img
             src={value}
-            alt=""
+            alt="Foto anexada"
             className="h-10 w-10 rounded-lg border border-border object-cover"
           />
           <button
@@ -957,17 +969,21 @@ function PhotoField({
           </button>
         </div>
       ) : (
-        <label className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-danger/30 bg-card text-danger shadow-sm transition-colors hover:bg-danger-bg">
+        <label
+          aria-label="Adicionar foto"
+          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-danger/30 bg-card text-danger shadow-sm transition-colors hover:bg-danger-bg"
+        >
           {uploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
           ) : (
-            <Camera className="h-4 w-4" />
+            <Camera aria-hidden="true" className="h-4 w-4" />
           )}
           <input
             type="file"
             accept="image/*"
             capture="environment"
             onChange={onFile}
+            aria-label="Adicionar foto"
             hidden
           />
         </label>

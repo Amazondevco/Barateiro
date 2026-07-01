@@ -499,6 +499,7 @@ export function FillForm({
                               limparInvalido(it.id);
                             }}
                             placeholder="Adicionar observação…"
+                            aria-label="Observação"
                             className="h-9 w-full rounded-lg border border-danger/20 bg-card px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
                           />
                         )}
@@ -741,7 +742,7 @@ function ItemInput({
   const pares = PARES[item.tipo];
   if (pares) {
     return (
-      <div className="mt-4 flex gap-2">
+      <div role="group" aria-label={item.texto} className="mt-4 flex gap-2">
         {pares.map(([v, label]) => {
           const selecionado = valor === v;
           // Conforme → verde; não-conforme → vermelho.
@@ -754,6 +755,7 @@ function ItemInput({
               key={v}
               type="button"
               onClick={() => onValor(v)}
+              aria-pressed={selecionado}
               className={`flex h-11 flex-1 items-center justify-center rounded-xl border text-sm font-medium transition-colors ${
                 selecionado
                   ? `${selClasse} font-semibold`
@@ -762,9 +764,9 @@ function ItemInput({
             >
               {selecionado &&
                 (conforme ? (
-                  <Check className="mr-1.5 h-4 w-4 opacity-70" />
+                  <Check aria-hidden="true" className="mr-1.5 h-4 w-4 opacity-70" />
                 ) : (
-                  <X className="mr-1.5 h-4 w-4 opacity-70" />
+                  <X aria-hidden="true" className="mr-1.5 h-4 w-4 opacity-70" />
                 ))}
               {label}
             </button>
@@ -774,6 +776,7 @@ function ItemInput({
           <button
             type="button"
             onClick={() => onValor("na")}
+            aria-pressed={valor === "na"}
             className={`flex h-11 flex-1 items-center justify-center rounded-xl border text-sm font-medium transition-colors ${
               valor === "na"
                 ? "border-primary bg-primary/10 font-semibold text-primary"
@@ -789,7 +792,11 @@ function ItemInput({
 
   if (item.tipo === "multipla_escolha") {
     return (
-      <div className="mt-4 flex flex-col gap-1.5">
+      <div
+        role="radiogroup"
+        aria-label={item.texto}
+        className="mt-4 flex flex-col gap-1.5"
+      >
         {(item.opcoes ?? []).map((op) => (
           <label key={op} className="flex cursor-pointer items-center gap-2 text-sm">
             <input
@@ -817,6 +824,7 @@ function ItemInput({
       value={valor}
       onChange={(e) => onValor(e.target.value)}
       placeholder="Resposta"
+      aria-label={item.texto}
       className="mt-4 h-11 w-full rounded-xl border border-input bg-card px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     />
   );
@@ -855,7 +863,7 @@ function FotoCampo({
       {value ? (
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="" className="h-16 w-16 rounded-xl border border-border object-cover" />
+          <img src={value} alt="Foto anexada" className="h-16 w-16 rounded-xl border border-border object-cover" />
           <button type="button" onClick={() => onChange("")} className="flex items-center gap-1 text-xs text-danger">
             <Trash2 className="h-3.5 w-3.5" /> Remover
           </button>
