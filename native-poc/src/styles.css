@@ -212,6 +212,7 @@ button {
 /* VLibras: botão de acesso no canto inferior ESQUERDO, acima da navegação,
    para não colidir com o FAB de sugestão (à direita). */
 [vw-access-button] {
+  position: fixed !important;
   left: 12px !important;
   right: auto !important;
   bottom: calc(124px + env(safe-area-inset-bottom)) !important;

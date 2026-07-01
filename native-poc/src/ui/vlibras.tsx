@@ -1,9 +1,13 @@
 import { useEffect, useRef } from "react";
 
 // Widget VLibras (Governo Federal): tradutor de texto para Libras com avatar 3D.
-// Injeta a marcação `[vw]` que o script oficial procura e inicializa o Widget.
-// Carrega uma vez; se o script externo falhar (offline), some silenciosamente.
-const SRC = "https://vlibras.gov.br/app/vlibras-plugin.js";
+// IMPORTANTE: a URL oficial vlibras.gov.br/app REDIRECIONA (302) para o jsdelivr,
+// e redirect de <script>/assets quebra dentro do WebView do Capacitor (servido
+// de https://localhost). Por isso apontamos DIRETO para o destino final (jsdelivr),
+// sem redirect — assim funciona no app nativo, não só no navegador.
+const BASE =
+  "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@sgd/app";
+const SRC = `${BASE}/vlibras-plugin.js`;
 
 export function VLibras() {
   const ref = useRef<HTMLDivElement>(null);
@@ -22,7 +26,7 @@ export function VLibras() {
         const w = window as unknown as {
           VLibras?: { Widget: new (url: string) => unknown };
         };
-        if (w.VLibras) new w.VLibras.Widget("https://vlibras.gov.br/app");
+        if (w.VLibras) new w.VLibras.Widget(BASE);
       } catch {
         /* ignora */
       }
