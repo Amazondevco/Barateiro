@@ -7,6 +7,7 @@ import { PullToRefresh } from "./pull-to-refresh";
 import { SuggestionFab } from "./suggestion-fab";
 import { VLibras } from "./vlibras";
 import { isNativePlatform } from "../lib/platform";
+import { aplicarStatusBar, temaEscuro } from "../lib/status-bar";
 
 // Pede a permissão de localização logo ao entrar (uma vez), para que o envio de
 // checklist com geolocalização não falhe na hora por falta de permissão.
@@ -40,6 +41,20 @@ export function AppShell() {
   // Home da rede (com o banner colorido) vai edge-to-edge no topo: o banner passa
   // por baixo da barra de status. O respiro do conteúdo é tratado no banner.
   const immersiveTop = /\/rede\/[^/]+$/.test(location.pathname);
+
+  // Barra de status do sistema: sólida (fundo do tema) nas telas normais e
+  // overlay na Início. Reaplica ao trocar de tela e quando o tema muda.
+  useEffect(() => {
+    void aplicarStatusBar(immersiveTop, temaEscuro());
+    const obs = new MutationObserver(() =>
+      void aplicarStatusBar(immersiveTop, temaEscuro()),
+    );
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => obs.disconnect();
+  }, [immersiveTop]);
 
   return (
     // Safe areas do Android/iOS (edge-to-edge): no topo, empurra o conteúdo das

@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
 import { initOta } from "./lib/ota";
+import { aplicarStatusBar } from "./lib/status-bar";
 import "./styles.css";
 
 // Tema: preferência salva ("checkai-theme") tem prioridade; senão segue o sistema.
@@ -32,6 +33,9 @@ createRoot(document.getElementById("root")!).render(
     </HashRouter>
   </StrictMode>,
 );
+
+// Barra de status sólida já no boot (login/pré-shell), seguindo o tema.
+void aplicarStatusBar(false, Boolean(prefersDark));
 
 // OTA: confirma o bundle e checa atualização (só em nativo).
 void initOta();
