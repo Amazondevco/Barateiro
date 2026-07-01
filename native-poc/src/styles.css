@@ -177,6 +177,12 @@ body {
     checkai-fade 220ms ease-out,
     checkai-pulse 600ms ease-in-out 2;
 }
+/* 1º quadro (Check.AI): aparece e pulsa 1× antes de virar a logo da rede */
+.checkai-loader-once {
+  animation:
+    checkai-fade 220ms ease-out,
+    checkai-pulse 600ms ease-in-out 1;
+}
 /* último quadro (logo da rede): pulsa infinito até carregar */
 .checkai-loader-hold {
   animation:
