@@ -5,7 +5,6 @@ import { BottomNav } from "./bottom-nav";
 import { NativeStatusBanner } from "./native-status-banner";
 import { PullToRefresh } from "./pull-to-refresh";
 import { isNativePlatform } from "../lib/platform";
-import { checkForUpdate } from "../lib/ota";
 
 // Pede a permissão de localização logo ao entrar (uma vez), para que o envio de
 // checklist com geolocalização não falhe na hora por falta de permissão.
@@ -21,10 +20,10 @@ async function pedirPermissaoLocalizacao() {
   }
 }
 
-// Puxar pra baixo: checa atualização (OTA) e recarrega o app.
+// Puxar pra baixo: recarrega o app (sem OTA — o app abre sempre pelo bundle
+// embarcado, confiável; a cor da rede é reaplicada no boot).
 async function aoRecarregar() {
-  const r = await checkForUpdate();
-  if (r !== "updated") window.location.reload();
+  window.location.reload();
 }
 
 export function AppShell() {

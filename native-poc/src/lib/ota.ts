@@ -1,5 +1,4 @@
 import { CapacitorUpdater } from "@capgo/capacitor-updater";
-import { App } from "@capacitor/app";
 import { Preferences } from "@capacitor/preferences";
 import { isNativePlatform } from "./platform";
 
@@ -17,18 +16,22 @@ let rodando = false;
 
 export async function initOta(): Promise<void> {
   if (!isNativePlatform()) return;
-  // Confirma que ESTE bundle carregou bem (senão o Capgo reverte no próximo start).
+  // Confirma que ESTE bundle carregou bem (evita o Capgo reverter um bundle bom).
   try {
     await CapacitorUpdater.notifyAppReady();
   } catch {
     /* ignore */
   }
-  void checkForUpdate();
-  // Re-checa quando o app volta ao primeiro plano → atualização "automática".
+  // SEGURANÇA: o auto-apply de OTA no boot estava bricando o app (aplicava um
+  // bundle remoto que não montava). Agora o app SEMPRE abre pelo bundle embarcado
+  // do APK (confiável). Se por acaso estiver rodando um bundle OTA aplicado antes,
+  // volta pro embarcado. Só reseta quando NÃO é o embarcado (evita loop de reload).
   try {
-    await App.addListener("appStateChange", ({ isActive }) => {
-      if (isActive) void checkForUpdate();
-    });
+    const cur = await CapacitorUpdater.current();
+    const id = cur?.bundle?.id;
+    if (id && id !== "builtin") {
+      await CapacitorUpdater.reset(); // volta ao bundle embarcado
+    }
   } catch {
     /* ignore */
   }

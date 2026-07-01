@@ -5,13 +5,10 @@ name: Publicar OTA (bundle web)
 # version.json e baixa/aplica sem reinstalar (Capgo, modo manual).
 
 on:
+  # PAUSADO: o auto-apply do OTA estava bricando o app (aplicava um bundle que
+  # não montava). O app agora abre sempre pelo bundle embarcado do APK. Só publica
+  # OTA manualmente (workflow_dispatch) quando o pipeline for validado ponta a ponta.
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "native-poc/src/**"
-      - "native-poc/index.html"
-      - "native-poc/package.json"
 
 concurrency:
   group: ota-publish
