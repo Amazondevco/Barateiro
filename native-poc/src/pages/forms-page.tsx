@@ -137,14 +137,9 @@ function EnviadosList({
             <CheckCircle2 className="h-6 w-6" />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="mb-1 flex items-start justify-between gap-2">
-              <strong className="truncate text-[15px] font-semibold">
-                {e.formNome}
-              </strong>
-              <span className="shrink-0 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
-                Enviado
-              </span>
-            </div>
+            <strong className="mb-1 block truncate text-[15px] font-semibold">
+              {e.formNome}
+            </strong>
             <p className="mb-2 truncate text-[13px] font-medium text-muted-foreground">
               {e.totalItens} item(ns) · ref. {fmtData(e.dataReferencia)}
             </p>
@@ -192,20 +187,9 @@ function PendentesList({ pendentes }: { pendentes: QueueRecord[] }) {
               )}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="mb-1 flex items-start justify-between gap-2">
-                <strong className="truncate text-[15px] font-semibold">
-                  {item.title}
-                </strong>
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                    erro
-                      ? "bg-danger-bg text-danger"
-                      : "bg-warning-bg text-warning"
-                  }`}
-                >
-                  {erro ? "Erro" : "Na fila"}
-                </span>
-              </div>
+              <strong className="mb-1 block truncate text-[15px] font-semibold">
+                {item.title}
+              </strong>
               <p className="mb-2 truncate text-[13px] font-medium text-muted-foreground">
                 {item.kind === "form_response"
                   ? `${item.payload.items.length} resposta(s) coletada(s)`

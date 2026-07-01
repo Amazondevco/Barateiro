@@ -78,12 +78,7 @@ export function FormulariosTabs({ enviados }: { enviados: EnviadoItem[] }) {
                   <CheckCircle2 className="h-6 w-6" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-start justify-between gap-2">
-                    <h2 className="truncate text-[15px] font-bold">{r.formNome}</h2>
-                    <span className="shrink-0 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
-                      Enviado
-                    </span>
-                  </div>
+                  <h2 className="mb-1 truncate text-[15px] font-bold">{r.formNome}</h2>
                   <p className="mb-2 truncate text-[13px] font-medium text-muted-foreground">
                     {r.data}
                     {r.unidade ? ` • ${r.unidade}` : ""}
@@ -123,12 +118,7 @@ export function FormulariosTabs({ enviados }: { enviados: EnviadoItem[] }) {
                   <Clock className="h-6 w-6" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-start justify-between gap-2">
-                    <h2 className="truncate text-[15px] font-bold">{s.formNome}</h2>
-                    <span className="shrink-0 rounded-full bg-warning-bg px-2 py-0.5 text-xs font-semibold text-warning">
-                      Pendente
-                    </span>
-                  </div>
+                  <h2 className="mb-1 truncate text-[15px] font-bold">{s.formNome}</h2>
                   <p className="truncate text-[13px] font-medium text-muted-foreground">
                     {d} • {falhou ? "tentando reenviar…" : "será enviado ao reconectar"}
                   </p>
