@@ -250,4 +250,6 @@ export const en: Record<string, string> = {
   "Abra o link mais recente ou peça um novo ao administrador.":
     "Open the most recent link or ask the administrator for a new one.",
   "Ir para o login": "Go to login",
+  "Cadastro concluído! Faça login para entrar.":
+    "Registration complete! Log in to enter.",
 };

@@ -27,6 +27,33 @@ function normalizePath(path: string) {
 // Domínio do PWA — os App Links (https) do convite chegam por aqui.
 const WEB_HOST = "check-ai-br.vercel.app";
 
+// Destino do convite (concluir cadastro) guardado de forma DURÁVEL. Sobrevive a
+// reloads do webview (ex.: quando o OTA aplica um bundle no boot) — sem isso, a
+// navegação em memória some e o app cai no login. Limpo ao concluir/descartar.
+export const PENDING_CADASTRO_KEY = "checkai-pending-cadastro";
+
+export function setPendingCadastro(route: string) {
+  try {
+    localStorage.setItem(PENDING_CADASTRO_KEY, route);
+  } catch {
+    /* ignore */
+  }
+}
+export function getPendingCadastro(): string | null {
+  try {
+    return localStorage.getItem(PENDING_CADASTRO_KEY);
+  } catch {
+    return null;
+  }
+}
+export function clearPendingCadastro() {
+  try {
+    localStorage.removeItem(PENDING_CADASTRO_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function getRouteFromDeepLink(url: string) {
   try {
     const parsedUrl = new URL(url);

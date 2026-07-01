@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import { Check, X } from "lucide-react";
 import { useAuth } from "../context/auth-context";
 import { useI18n } from "../lib/i18n/i18n";
+import { clearPendingCadastro } from "../lib/deep-links";
 import { Button } from "../ui/button";
 import { Input, Label } from "../ui/input";
 import logoUrl from "../assets/checkai-logo.svg";
@@ -25,13 +26,23 @@ function senhaValida(senha: string) {
 // define a senha pelo endpoint público e entra — tudo dentro do app nativo.
 export function DefinirSenhaPage() {
   const { t } = useI18n();
-  const { user, signInWithPassword } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
   const token = params.get("convite") ?? "";
   const email = params.get("email") ?? "";
   const nome = params.get("nome") ?? "";
+
+  // Sem token → link malformado: descarta o pendente para liberar o login.
+  useEffect(() => {
+    if (!token) clearPendingCadastro();
+  }, [token]);
+
+  // Já logado nesta sessão → não conclui cadastro de outra pessoa; libera o app.
+  useEffect(() => {
+    if (user) clearPendingCadastro();
+  }, [user]);
 
   const [senha, setSenha] = useState("");
   const [confirma, setConfirma] = useState("");
@@ -81,11 +92,15 @@ export function DefinirSenhaPage() {
       };
       if (!res.ok || !json.ok) {
         setLoading(false);
+        // Link morto (usado/inválido) → descarta o pendente p/ liberar o login.
+        if (res.status === 404 || res.status === 409) clearPendingCadastro();
         return setError(json.error ?? t("Não foi possível concluir. Tente novamente."));
       }
-      // Senha definida → entra no app.
-      await signInWithPassword(json.email ?? email, senha);
-      navigate("/app", { replace: true });
+      // Concluído (conta associada à rede) → limpa o pendente e vai pro LOGIN,
+      // com o e-mail já preenchido, para o usuário entrar.
+      clearPendingCadastro();
+      const alvo = `/login?email=${encodeURIComponent(json.email ?? email)}&cadastro=ok`;
+      navigate(alvo, { replace: true });
     } catch {
       setLoading(false);
       setError(t("Não foi possível concluir. Tente novamente."));

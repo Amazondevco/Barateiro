@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/auth-context";
 import { Button } from "../ui/button";
 import { Input, Label } from "../ui/input";
@@ -10,7 +10,10 @@ import logoUrl from "../assets/checkai-logo.svg";
 export function LoginPage() {
   const { t } = useI18n();
   const { user, signInWithPassword } = useAuth();
-  const [email, setEmail] = useState("");
+  const [params] = useSearchParams();
+  // Vindo da conclusão do cadastro (deep link): e-mail já preenchido + aviso.
+  const [email, setEmail] = useState(params.get("email") ?? "");
+  const cadastroOk = params.get("cadastro") === "ok";
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +57,12 @@ export function LoginPage() {
         <p className="mt-1.5 text-sm text-muted-foreground">
           {t("Acesse o app da sua rede.")}
         </p>
+
+        {cadastroOk ? (
+          <p className="mt-4 rounded-lg bg-success-bg px-3 py-2 text-sm text-success">
+            {t("Cadastro concluído! Faça login para entrar.")}
+          </p>
+        ) : null}
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           <div>

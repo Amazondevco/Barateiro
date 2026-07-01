@@ -1,10 +1,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
+import { App as CapacitorApp } from "@capacitor/app";
 import App from "./App";
 import { initOta } from "./lib/ota";
 import { aplicarStatusBar } from "./lib/status-bar";
 import { I18nProvider, readLang } from "./lib/i18n/i18n";
+import { getRouteFromDeepLink, setPendingCadastro } from "./lib/deep-links";
 import "./styles.css";
 
 // Tema: preferência salva ("checkai-theme") tem prioridade; senão segue o sistema.
@@ -32,18 +34,40 @@ const lang0 = readLang();
 document.documentElement.lang =
   lang0 === "pt" ? "pt-BR" : lang0 === "es" ? "es" : "en";
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <I18nProvider>
-      <HashRouter>
-        <App />
-      </HashRouter>
-    </I18nProvider>
-  </StrictMode>,
-);
+function montar() {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <I18nProvider>
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </I18nProvider>
+    </StrictMode>,
+  );
 
-// Barra de status sólida já no boot (login/pré-shell), seguindo o tema.
-void aplicarStatusBar(false, Boolean(prefersDark));
+  // Barra de status sólida já no boot (login/pré-shell), seguindo o tema.
+  void aplicarStatusBar(false, Boolean(prefersDark));
 
-// OTA: confirma o bundle e checa atualização (só em nativo).
-void initOta();
+  // OTA: confirma o bundle e checa atualização (só em nativo). Roda DEPOIS de
+  // marcar o cadastro pendente, para o OTA se adiar e não recarregar por cima.
+  void initOta();
+}
+
+// Deep link de COLD START (app aberto pelo link do convite): captura a URL de
+// lançamento ANTES de renderizar e posiciona a rota inicial (+ marca pendente,
+// de forma durável). Isso evita a corrida com o reload do OTA no boot.
+async function bootstrap() {
+  try {
+    const launch = await CapacitorApp.getLaunchUrl();
+    const route = launch?.url ? getRouteFromDeepLink(launch.url) : null;
+    if (route) {
+      setPendingCadastro(route);
+      window.location.hash = route;
+    }
+  } catch {
+    /* web / plugin ausente → boot normal */
+  }
+  montar();
+}
+
+void bootstrap();

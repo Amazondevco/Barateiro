@@ -2,6 +2,7 @@ import { CapacitorUpdater } from "@capgo/capacitor-updater";
 import { App } from "@capacitor/app";
 import { Preferences } from "@capacitor/preferences";
 import { isNativePlatform } from "./platform";
+import { getPendingCadastro } from "./deep-links";
 
 // OTA (atualização sem reinstalar) — modo manual, com ROLLBACK SEGURO.
 // Checa na abertura E sempre que o app volta ao primeiro plano (resume).
@@ -43,6 +44,10 @@ export async function initOta(): Promise<void> {
 
 export async function checkForUpdate(): Promise<OtaResult> {
   if (!isNativePlatform()) return "error";
+  // Não recarregar por cima de um cadastro em andamento (deep link do convite):
+  // um reload do OTA jogaria o usuário fora da tela de conclusão. Adia até
+  // concluir/descartar (quando o pendente é limpo).
+  if (getPendingCadastro()) return "uptodate";
   if (typeof navigator !== "undefined" && navigator.onLine === false) return "offline";
   if (rodando) return "uptodate";
   rodando = true;

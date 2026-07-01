@@ -250,4 +250,6 @@ export const es: Record<string, string> = {
   "Abra o link mais recente ou peça um novo ao administrador.":
     "Abre el enlace más reciente o pide uno nuevo al administrador.",
   "Ir para o login": "Ir al inicio de sesión",
+  "Cadastro concluído! Faça login para entrar.":
+    "¡Registro completado! Inicia sesión para entrar.",
 };
