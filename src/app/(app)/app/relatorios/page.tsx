@@ -1,7 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, XCircle, Clock, TrendingUp, ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  TrendingUp,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Periodo = "hoje" | "semana" | "mes" | "dia";
@@ -377,30 +385,89 @@ export default function RelatoriosPage() {
   );
 }
 
+// Dropdown customizado on-brand (não usa o <select> feio do sistema). Abre via
+// portal (não é cortado), item selecionado em destaque na cor da rede.
 function SelectPill({
   value,
   onChange,
   options,
+  placeholder = "Selecionar",
 }: {
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
+  placeholder?: string;
 }) {
+  const [open, setOpen] = useState(false);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const atual = options.find((o) => o.value === value);
+
+  function abrir() {
+    if (btnRef.current) setRect(btnRef.current.getBoundingClientRect());
+    setOpen((v) => !v);
+  }
+
   return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none rounded-xl border border-border bg-background py-2.5 pl-3 pr-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={abrir}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-border bg-card px-3.5 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-    </div>
+        <span className="truncate font-medium text-foreground">
+          {atual?.label ?? placeholder}
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {open &&
+        rect &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-[60]" onClick={() => setOpen(false)} />
+            <div
+              role="listbox"
+              className="fixed z-[61] max-h-[50vh] overflow-y-auto rounded-2xl border border-border bg-card p-1.5 shadow-xl"
+              style={{ top: rect.bottom + 6, left: rect.left, width: rect.width }}
+            >
+              {options.map((o) => {
+                const sel = o.value === value;
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    role="option"
+                    aria-selected={sel}
+                    onClick={() => {
+                      onChange(o.value);
+                      setOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${
+                      sel
+                        ? "bg-primary/10 font-semibold text-primary"
+                        : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span className="truncate">{o.label}</span>
+                    {sel ? <Check aria-hidden="true" className="h-4 w-4 shrink-0" /> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </>,
+          document.body,
+        )}
+    </>
   );
 }
 
