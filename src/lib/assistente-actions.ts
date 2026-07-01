@@ -2,6 +2,7 @@
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
+import { descritorNegocio } from "@/lib/tipos-negocio";
 
 export type Msg = { role: "user" | "assistant"; content: string };
 export type Resposta = { resposta: string; source: "groq" | "local" | "policy" };
@@ -10,11 +11,14 @@ export type Resposta = { resposta: string; source: "groq" | "local" | "policy" }
 const PROIBIDOS =
   /\b(token|senha|password|hash|secret|api[\s_-]?key|service[\s_-]?role|\.env|chave\s+(de\s+)?(api|servi))/i;
 
-const REDE_PROMPT = `Você é o assistente do Check.AI para o ADMIN de UMA rede de supermercado.
+// Prompt da rede adaptado ao SEGMENTO do cliente (genérico por padrão).
+function buildRedePrompt(descritor: string): string {
+  return `Você é o assistente do Check.AI para o ADMIN de UMA rede — ${descritor}.
 Responda SOMENTE com base no CONTEXTO fornecido (dados da rede dele).
 NUNCA fale de outras redes, de dados internos do sistema, nem de credenciais.
 Não invente números fora do contexto. Se não souber, diga que não tem o dado.
 Seja objetivo, em português do Brasil.`;
+}
 
 const SUPER_PROMPT = `Você é o assistente do Check.AI para o SUPER ADMIN (plataforma).
 Por padrão você enxerga AGREGADOS por rede (números/totais), NÃO o conteúdo dos checklists.
@@ -43,7 +47,15 @@ export async function perguntarAssistente(mensagens: Msg[]): Promise<Resposta> {
   } else {
     const supabase = await createClient();
     contexto = await buildRedeContext(supabase, profile.rede_id!);
-    system = REDE_PROMPT;
+    const admin = createAdminClient();
+    const { data: r } = await admin
+      .from("redes")
+      .select("tipo_negocio")
+      .eq("id", profile.rede_id!)
+      .maybeSingle();
+    system = buildRedePrompt(
+      descritorNegocio((r as { tipo_negocio?: string } | null)?.tipo_negocio ?? null),
+    );
   }
 
   return callGroq(system, contexto, mensagens);

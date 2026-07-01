@@ -41,7 +41,7 @@ export const TIPOS_NEGOCIO: TipoNegocio[] = [
   { slug: "telecom", label: "Telecom", descritor: "uma operação de telecom (instalações, sites/torres, equipamentos de rede, atendimento em campo)" },
   { slug: "financeiro", label: "Bancário / Financeiro", descritor: "uma agência bancária / financeira (autoatendimento, segurança, atendimento, conformidade)" },
   { slug: "laboratorio", label: "Laboratório", descritor: "um laboratório (coleta, equipamentos, insumos, biossegurança, qualidade)" },
-  { slug: "outro", label: "Outro", descritor: "as operações gerais da empresa" },
+  { slug: "outro", label: "Outro", descritor: "operações gerais da empresa" },
 ];
 
 const MAP: Record<string, TipoNegocio> = Object.fromEntries(

@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { getRedeMarcaById } from "@/lib/rede-branding";
+import { descritorNegocio } from "@/lib/tipos-negocio";
 import { sendPush } from "@/lib/fcm";
 
 const CHECKAI_GREEN = "#15803d";
@@ -143,9 +144,22 @@ export async function gerarComunicado(
   const key = process.env.GROQ_API_KEY;
   if (!key) return { error: "IA não configurada (defina GROQ_API_KEY)." };
 
+  // Segmento da rede do gestor → contexto do comunicado (genérico por padrão).
+  let descritor = descritorNegocio(null);
+  if (profile.rede_id) {
+    const admin = createAdminClient();
+    const { data: r } = await admin
+      .from("redes")
+      .select("tipo_negocio")
+      .eq("id", profile.rede_id)
+      .maybeSingle();
+    descritor = descritorNegocio((r as { tipo_negocio?: string } | null)?.tipo_negocio ?? null);
+  }
+
   const SYSTEM =
-    "Você redige comunicados internos para funcionários de uma rede de " +
-    "supermercados, em português do Brasil. A partir da intenção do gestor, " +
+    "Você redige comunicados internos para os funcionários, no contexto de " +
+    descritor +
+    ", em português do Brasil. A partir da intenção do gestor, " +
     "gere um TÍTULO objetivo (máx. ~60 caracteres, sem ponto final) e uma " +
     "MENSAGEM cordial e direta (1 a 3 frases curtas, tom profissional e " +
     "acessível). Não invente datas, números, nomes ou políticas que não " +
