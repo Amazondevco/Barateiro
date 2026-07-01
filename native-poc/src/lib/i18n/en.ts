@@ -163,4 +163,56 @@ export const en: Record<string, string> = {
   Não: "No",
   Abastecido: "Stocked",
   Ruptura: "Out of stock",
+
+  // ── Enviados / Pendentes (forms-page) ──
+  "Seus envios e o que ainda está na fila.":
+    "Your submissions and what's still in queue.",
+  Enviados: "Sent",
+  Pendentes: "Pending",
+  "Carregando envios…": "Loading submissions…",
+  "Nenhum envio ainda": "No submissions yet",
+  "Os checklists enviados aparecem aqui.": "Sent checklists appear here.",
+  "{n} item(ns) · ref. {ref}": "{n} item(s) · ref. {ref}",
+  "Nada na fila": "Nothing in queue",
+  "Tudo sincronizado. Envios offline aparecem aqui até subirem.":
+    "All synced. Offline submissions appear here until they upload.",
+  "{n} resposta(s) coletada(s)": "{n} answer(s) collected",
+
+  // ── Vínculos (memberships) ──
+  "Falha ao carregar vínculos.": "Failed to load assignments.",
+  "Carregando vínculos do operador…": "Loading operator assignments…",
+  "Escolha uma rede": "Choose a network",
+  "Selecione a rede para continuar.": "Select the network to continue.",
+  "Sem unidade definida": "No unit set",
+  "Vínculos pendentes": "Pending assignments",
+  "{n} vínculo(s) ainda não liberado(s) para acesso ao app.":
+    "{n} assignment(s) not yet enabled for app access.",
+
+  // ── Avisos ──
+  "Falha ao carregar avisos.": "Failed to load notices.",
+  "Carregando avisos…": "Loading notices…",
+  "Sem avisos por enquanto": "No notices for now",
+  "Comunicados e mensagens da sua rede vão aparecer aqui.":
+    "Announcements and messages from your network will appear here.",
+
+  // ── Perfil ──
+  "Falha ao carregar o perfil.": "Failed to load profile.",
+  "Carregando perfil…": "Loading profile…",
+  CPF: "CPF",
+  Celular: "Mobile",
+  Cidade: "City",
+  Rede: "Network",
+  Unidade: "Unit",
+  Cargo: "Role",
+  "Dados Pessoais": "Personal data",
+  Vínculo: "Assignment",
+
+  // ── Revisão ──
+  "Carregando revisão…": "Loading review…",
+  Revisão: "Review",
+  "Apenas leitura — o que você enviou": "Read-only — what you submitted",
+  "Revisão indisponível.": "Review unavailable.",
+  "Obs:": "Note:",
+  "foto anexada": "photo attached",
+  Assinatura: "Signature",
 };

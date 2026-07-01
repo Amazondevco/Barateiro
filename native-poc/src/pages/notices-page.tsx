@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { BellRing, Clock, Mail } from "lucide-react";
 import { fetchComunicados, peekComunicados, type Comunicado } from "../lib/operator-api";
 import { LoadingScreen } from "../ui/loading-screen";
+import { useI18n } from "../lib/i18n/i18n";
 
 export function NoticesPage() {
+  const { t } = useI18n();
   const initial = peekComunicados();
   const [loading, setLoading] = useState(initial === null);
   const [avisos, setAvisos] = useState<Comunicado[]>(initial ?? []);
@@ -23,7 +25,7 @@ export function NoticesPage() {
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "Falha ao carregar avisos.",
+              : t("Falha ao carregar avisos."),
           );
       } finally {
         if (mounted) setLoading(false);
@@ -36,7 +38,7 @@ export function NoticesPage() {
   }, []);
 
   if (loading) {
-    return <LoadingScreen label="Carregando avisos…" />;
+    return <LoadingScreen label={t("Carregando avisos…")} />;
   }
 
   if (avisos.length === 0) {
@@ -45,7 +47,7 @@ export function NoticesPage() {
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <Mail className="h-7 w-7" />
         </div>
-        <p className="font-medium">Sem avisos por enquanto</p>
+        <p className="font-medium">{t("Sem avisos por enquanto")}</p>
         <p className="max-w-xs text-sm text-muted-foreground">
           {error ?? "Comunicados e mensagens da sua rede vão aparecer aqui."}
         </p>
@@ -56,7 +58,7 @@ export function NoticesPage() {
   return (
     <div className="mx-auto w-full max-w-md space-y-4 p-5">
       <header className="mb-2 mt-2">
-        <h1 className="text-2xl font-bold tracking-tight">Avisos</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("Avisos")}</h1>
         <p className="mt-1 text-sm font-medium text-muted-foreground">
           Comunicados da sua rede.
         </p>

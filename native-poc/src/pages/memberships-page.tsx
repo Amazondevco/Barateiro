@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Building2, ChevronRight, Store } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { fetchMemberships, peekMemberships, type Membership } from "../lib/operator-api";
+import { useI18n } from "../lib/i18n/i18n";
 import { LoadingScreen } from "../ui/loading-screen";
 import { marcarBooted } from "../lib/boot-state";
 
 export function MembershipsPage() {
+  const { t } = useI18n();
   const initial = peekMemberships();
   const [loading, setLoading] = useState(initial === null);
   const [memberships, setMemberships] = useState<Membership[]>(initial ?? []);
@@ -25,7 +27,7 @@ export function MembershipsPage() {
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "Falha ao carregar vínculos.",
+              : t("Falha ao carregar vínculos."),
           );
       } finally {
         if (mounted) {
@@ -42,7 +44,7 @@ export function MembershipsPage() {
   }, []);
 
   if (loading) {
-    return <LoadingScreen label="Carregando vínculos do operador…" />;
+    return <LoadingScreen label={t("Carregando vínculos do operador…")} />;
   }
 
   const activeMemberships = memberships.filter((item) => item.status === "ativo");
@@ -57,9 +59,9 @@ export function MembershipsPage() {
   return (
     <div className="mx-auto w-full max-w-md p-4">
       <header className="mb-5 mt-2">
-        <h1 className="text-xl font-semibold">Escolha uma rede</h1>
+        <h1 className="text-xl font-semibold">{t("Escolha uma rede")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Selecione a rede para continuar.
+          {t("Selecione a rede para continuar.")}
         </p>
       </header>
 
@@ -82,7 +84,7 @@ export function MembershipsPage() {
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{item.redeNome}</p>
               <p className="truncate text-xs text-muted-foreground">
-                {item.unidadeNome ?? "Sem unidade definida"}
+                {item.unidadeNome ?? t("Sem unidade definida")}
               </p>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -93,12 +95,11 @@ export function MembershipsPage() {
       {inactiveMemberships.length > 0 ? (
         <div className="mt-4 rounded-xl bg-muted p-4">
           <div className="flex items-center justify-between">
-            <strong className="text-sm">Vínculos pendentes</strong>
+            <strong className="text-sm">{t("Vínculos pendentes")}</strong>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            {inactiveMemberships.length} vínculo(s) ainda não liberado(s) para
-            acesso ao app.
+            {t("{n} vínculo(s) ainda não liberado(s) para acesso ao app.", { n: inactiveMemberships.length })}
           </p>
         </div>
       ) : null}

@@ -10,6 +10,7 @@ import {
   Store,
 } from "lucide-react";
 import { useAuth } from "../context/auth-context";
+import { useI18n } from "../lib/i18n/i18n";
 import { fetchProfile, peekProfile } from "../lib/operator-api";
 import type { ProfileData } from "../lib/operator-types";
 import { LoadingScreen } from "../ui/loading-screen";
@@ -23,6 +24,7 @@ function fmtCpf(cpf: string | null | undefined) {
 
 export function ProfilePage() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const initial = user?.id ? peekProfile(user.id) : null;
   const [loading, setLoading] = useState(initial === null);
   const [profile, setProfile] = useState<ProfileData | null>(initial);
@@ -44,7 +46,7 @@ export function ProfilePage() {
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "Falha ao carregar o perfil.",
+              : t("Falha ao carregar o perfil."),
           );
       } finally {
         if (mounted) setLoading(false);
@@ -58,7 +60,7 @@ export function ProfilePage() {
   }, [user?.id]);
 
   if (loading) {
-    return <LoadingScreen label="Carregando perfil…" />;
+    return <LoadingScreen label={t("Carregando perfil…")} />;
   }
 
   const iniciais =
@@ -70,16 +72,16 @@ export function ProfilePage() {
       .toUpperCase() || "?";
 
   const linhas: [LucideIcon, string, string][] = [
-    [Mail, "E-mail", profile?.email || "—"],
-    [CreditCard, "CPF", fmtCpf(profile?.cpf)],
-    [Phone, "Celular", profile?.telefone || "—"],
-    [MapPin, "Cidade", profile?.cidade || "—"],
+    [Mail, t("E-mail"), profile?.email || "—"],
+    [CreditCard, t("CPF"), fmtCpf(profile?.cpf)],
+    [Phone, t("Celular"), profile?.telefone || "—"],
+    [MapPin, t("Cidade"), profile?.cidade || "—"],
   ];
 
   const vinculo: [LucideIcon, string, string][] = [
-    [Building2, "Rede", profile?.rede || "—"],
-    [Store, "Unidade", profile?.unidade || "—"],
-    [Briefcase, "Cargo", profile?.cargo || "—"],
+    [Building2, t("Rede"), profile?.rede || "—"],
+    [Store, t("Unidade"), profile?.unidade || "—"],
+    [Briefcase, t("Cargo"), profile?.cargo || "—"],
   ];
 
   return (
@@ -104,7 +106,7 @@ export function ProfilePage() {
         )}
         <div className="text-center">
           <p className="text-xl font-bold tracking-tight">
-            {profile?.nome ?? "Operador"}
+            {profile?.nome ?? t("Operador")}
           </p>
           {profile?.email && (
             <p className="mt-0.5 text-sm font-medium text-muted-foreground">
@@ -114,8 +116,8 @@ export function ProfilePage() {
         </div>
       </div>
 
-      <Section title="Dados Pessoais" rows={linhas} />
-      <Section title="Vínculo" rows={vinculo} className="mt-6" />
+      <Section title={t("Dados Pessoais")} rows={linhas} />
+      <Section title={t("Vínculo")} rows={vinculo} className="mt-6" />
     </div>
   );
 }

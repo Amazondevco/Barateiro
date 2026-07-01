@@ -163,4 +163,56 @@ export const es: Record<string, string> = {
   Não: "No",
   Abastecido: "Abastecido",
   Ruptura: "Rotura",
+
+  // ── Enviados / Pendientes ──
+  "Seus envios e o que ainda está na fila.":
+    "Tus envíos y lo que aún está en cola.",
+  Enviados: "Enviados",
+  Pendentes: "Pendientes",
+  "Carregando envios…": "Cargando envíos…",
+  "Nenhum envio ainda": "Aún no hay envíos",
+  "Os checklists enviados aparecem aqui.": "Los checklists enviados aparecen aquí.",
+  "{n} item(ns) · ref. {ref}": "{n} ítem(s) · ref. {ref}",
+  "Nada na fila": "Nada en cola",
+  "Tudo sincronizado. Envios offline aparecem aqui até subirem.":
+    "Todo sincronizado. Los envíos sin conexión aparecen aquí hasta que suban.",
+  "{n} resposta(s) coletada(s)": "{n} respuesta(s) recogida(s)",
+
+  // ── Vínculos ──
+  "Falha ao carregar vínculos.": "Error al cargar los vínculos.",
+  "Carregando vínculos do operador…": "Cargando los vínculos del operador…",
+  "Escolha uma rede": "Elige una red",
+  "Selecione a rede para continuar.": "Selecciona la red para continuar.",
+  "Sem unidade definida": "Sin unidad definida",
+  "Vínculos pendentes": "Vínculos pendientes",
+  "{n} vínculo(s) ainda não liberado(s) para acesso ao app.":
+    "{n} vínculo(s) aún no habilitado(s) para acceder a la app.",
+
+  // ── Avisos ──
+  "Falha ao carregar avisos.": "Error al cargar los avisos.",
+  "Carregando avisos…": "Cargando avisos…",
+  "Sem avisos por enquanto": "Sin avisos por ahora",
+  "Comunicados e mensagens da sua rede vão aparecer aqui.":
+    "Los comunicados y mensajes de tu red aparecerán aquí.",
+
+  // ── Perfil ──
+  "Falha ao carregar o perfil.": "Error al cargar el perfil.",
+  "Carregando perfil…": "Cargando el perfil…",
+  CPF: "CPF",
+  Celular: "Celular",
+  Cidade: "Ciudad",
+  Rede: "Red",
+  Unidade: "Unidad",
+  Cargo: "Cargo",
+  "Dados Pessoais": "Datos personales",
+  Vínculo: "Vínculo",
+
+  // ── Revisión ──
+  "Carregando revisão…": "Cargando revisión…",
+  Revisão: "Revisión",
+  "Apenas leitura — o que você enviou": "Solo lectura — lo que enviaste",
+  "Revisão indisponível.": "Revisión no disponible.",
+  "Obs:": "Obs.:",
+  "foto anexada": "foto adjuntada",
+  Assinatura: "Firma",
 };

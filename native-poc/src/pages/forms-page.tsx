@@ -5,10 +5,12 @@ import { getQueueItems } from "../lib/queue-store";
 import type { QueueRecord } from "../lib/operator-types";
 import { runSync } from "../lib/auto-sync";
 import { fetchEnviados, peekEnviados, type Enviado } from "../lib/operator-api";
+import { useI18n } from "../lib/i18n/i18n";
 
 type Tab = "enviados" | "pendentes";
 
 export function FormsPage() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("enviados");
 
   const enviadosInicial = peekEnviados();
@@ -50,9 +52,9 @@ export function FormsPage() {
   return (
     <div className="mx-auto w-full max-w-md space-y-4 p-4">
       <header className="mb-2 mt-2">
-        <h1 className="text-2xl font-bold tracking-tight">Checklists</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("Checklists")}</h1>
         <p className="mt-1 text-sm font-medium text-muted-foreground">
-          Seus envios e o que ainda está na fila.
+          {t("Seus envios e o que ainda está na fila.")}
         </p>
       </header>
 
@@ -60,8 +62,8 @@ export function FormsPage() {
       <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
         {(
           [
-            ["enviados", "Enviados", enviados.length],
-            ["pendentes", "Pendentes", pendentes.length],
+            ["enviados", t("Enviados"), enviados.length],
+            ["pendentes", t("Pendentes"), pendentes.length],
           ] as [Tab, string, number][]
         ).map(([v, label, count]) => {
           const ativo = tab === v;
@@ -109,10 +111,11 @@ function EnviadosList({
   enviados: Enviado[];
   loading: boolean;
 }) {
+  const { t } = useI18n();
   if (loading && enviados.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-        Carregando envios…
+        {t("Carregando envios…")}
       </div>
     );
   }
@@ -120,8 +123,8 @@ function EnviadosList({
     return (
       <EmptyState
         icon={<CheckCircle2 className="h-7 w-7" />}
-        title="Nenhum envio ainda"
-        subtitle="Os checklists enviados aparecem aqui."
+        title={t("Nenhum envio ainda")}
+        subtitle={t("Os checklists enviados aparecem aqui.")}
       />
     );
   }
@@ -141,7 +144,7 @@ function EnviadosList({
               {e.formNome}
             </strong>
             <p className="mb-2 truncate text-[13px] font-medium text-muted-foreground">
-              {e.totalItens} item(ns) · ref. {fmtData(e.dataReferencia)}
+              {t("{n} item(ns) · ref. {ref}", { n: e.totalItens, ref: fmtData(e.dataReferencia) })}
             </p>
             <p className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
               <Clock className="h-3 w-3" />
@@ -156,12 +159,13 @@ function EnviadosList({
 }
 
 function PendentesList({ pendentes }: { pendentes: QueueRecord[] }) {
+  const { t } = useI18n();
   if (pendentes.length === 0) {
     return (
       <EmptyState
         icon={<Inbox className="h-7 w-7" />}
-        title="Nada na fila"
-        subtitle="Tudo sincronizado. Envios offline aparecem aqui até subirem."
+        title={t("Nada na fila")}
+        subtitle={t("Tudo sincronizado. Envios offline aparecem aqui até subirem.")}
       />
     );
   }
@@ -192,7 +196,7 @@ function PendentesList({ pendentes }: { pendentes: QueueRecord[] }) {
               </strong>
               <p className="mb-2 truncate text-[13px] font-medium text-muted-foreground">
                 {item.kind === "form_response"
-                  ? `${item.payload.items.length} resposta(s) coletada(s)`
+                  ? t("{n} resposta(s) coletada(s)", { n: item.payload.items.length })
                   : (item.subtitle ?? "")}
               </p>
               <p className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">

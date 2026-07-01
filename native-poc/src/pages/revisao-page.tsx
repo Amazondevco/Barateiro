@@ -8,6 +8,7 @@ import {
 } from "../lib/operator-api";
 import { getQueueItems } from "../lib/queue-store";
 import { LoadingScreen } from "../ui/loading-screen";
+import { useI18n } from "../lib/i18n/i18n";
 
 const VALOR_LABEL: Record<string, string> = {
   ok: "OK",
@@ -57,6 +58,7 @@ async function detalhePendente(queueId: string): Promise<RespostaDetalhe | null>
 }
 
 export function RevisaoPage() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { origem = "", id = "" } = useParams();
   const [det, setDet] = useState<RespostaDetalhe | null>(null);
@@ -73,7 +75,7 @@ export function RevisaoPage() {
             : await fetchRespostaDetalhe(id);
         if (vivo) setDet(d);
       } catch (e) {
-        if (vivo) setErro(e instanceof Error ? e.message : "Falha ao carregar.");
+        if (vivo) setErro(e instanceof Error ? e.message : t("Falha ao carregar."));
       } finally {
         if (vivo) setLoading(false);
       }
@@ -83,7 +85,7 @@ export function RevisaoPage() {
     };
   }, [origem, id]);
 
-  if (loading) return <LoadingScreen label="Carregando revisão…" />;
+  if (loading) return <LoadingScreen label={t("Carregando revisão…")} />;
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
@@ -95,16 +97,16 @@ export function RevisaoPage() {
           type="button"
           onClick={() => navigate(-1)}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground"
-          aria-label="Voltar"
+          aria-label={t("Voltar")}
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-bold leading-tight">
-            {det?.nome ?? "Revisão"}
+            {det?.nome ?? t("Revisão")}
           </p>
           <p className="truncate text-xs font-medium text-muted-foreground">
-            Apenas leitura — o que você enviou
+            {t("Apenas leitura — o que você enviou")}
           </p>
         </div>
       </header>
@@ -115,7 +117,7 @@ export function RevisaoPage() {
       >
         {erro || !det ? (
           <p className="rounded-xl bg-danger-bg px-3 py-2 text-sm text-danger">
-            {erro ?? "Revisão indisponível."}
+            {erro ?? t("Revisão indisponível.")}
           </p>
         ) : (
           <>
@@ -128,11 +130,11 @@ export function RevisaoPage() {
                 ) : null}
                 <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
                   {s.itens.map((it, ii) => {
-                    const t = tom(it.valor);
+                    const tomVal = tom(it.valor);
                     const badge =
-                      t === "ok"
+                      tomVal === "ok"
                         ? "bg-success-bg text-success"
-                        : t === "nao"
+                        : tomVal === "nao"
                           ? "bg-danger-bg text-danger"
                           : "bg-muted text-muted-foreground";
                     return (
@@ -144,12 +146,12 @@ export function RevisaoPage() {
                           <span
                             className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold ${badge}`}
                           >
-                            {it.tipo === "foto" ? (it.fotoUrl ? "Foto" : "—") : rotulo(it.valor)}
+                            {it.tipo === "foto" ? (it.fotoUrl ? t("Foto") : "—") : t(rotulo(it.valor))}
                           </span>
                         </div>
                         {it.observacao ? (
                           <p className="mt-1.5 text-xs text-muted-foreground">
-                            Obs: {it.observacao}
+                            {t("Obs:")} {it.observacao}
                           </p>
                         ) : null}
                         {it.fotoUrl ? (
@@ -160,7 +162,7 @@ export function RevisaoPage() {
                               className="h-20 w-20 rounded-xl border border-border object-cover"
                             />
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                              <Camera className="h-3.5 w-3.5" /> foto anexada
+                              <Camera className="h-3.5 w-3.5" /> {t("foto anexada")}
                             </span>
                           </div>
                         ) : null}
@@ -174,11 +176,11 @@ export function RevisaoPage() {
             {det.assinatura ? (
               <div className="space-y-2">
                 <p className="flex items-center gap-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  <PenLine className="h-3.5 w-3.5" /> Assinatura
+                  <PenLine className="h-3.5 w-3.5" /> {t("Assinatura")}
                 </p>
                 <img
                   src={det.assinatura}
-                  alt="Assinatura"
+                  alt={t("Assinatura")}
                   className="h-20 rounded-xl border border-border bg-white object-contain"
                 />
               </div>
