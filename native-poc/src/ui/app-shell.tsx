@@ -4,6 +4,7 @@ import { Geolocation } from "@capacitor/geolocation";
 import { BottomNav } from "./bottom-nav";
 import { NativeStatusBanner } from "./native-status-banner";
 import { PullToRefresh } from "./pull-to-refresh";
+import { SuggestionFab } from "./suggestion-fab";
 import { isNativePlatform } from "../lib/platform";
 
 // Pede a permissão de localização logo ao entrar (uma vez), para que o envio de
@@ -64,6 +65,7 @@ export function AppShell() {
         </PullToRefresh>
       </main>
       {!compact ? <BottomNav /> : null}
+      {!compact ? <SuggestionFab /> : null}
     </div>
   );
 }

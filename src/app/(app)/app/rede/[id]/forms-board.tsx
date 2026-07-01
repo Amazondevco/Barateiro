@@ -102,7 +102,19 @@ export function FormsBoard({
   const [modo, setModo] = useState<Modo>("az");
   const [status, setStatus] = useState<Status>("todos");
   const [ordem, setOrdem] = useState<string[]>([]);
-  const [pastas, setPastas] = useState<Pasta[]>([]);
+  // Hidrata as pastas do cache local de forma SÍNCRONA para não "piscar" no
+  // reload (sem isso, pastas começa vazio → checklists saltam pra fora → voltam).
+  const [pastas, setPastas] = useState<Pasta[]>(() => {
+    try {
+      const s =
+        typeof localStorage !== "undefined"
+          ? localStorage.getItem(`folderscache:${membroId}`)
+          : null;
+      return s ? (JSON.parse(s) as Pasta[]) : [];
+    } catch {
+      return [];
+    }
+  });
   const [abertas, setAbertas] = useState<Record<string, boolean>>({});
   const [modalAberto, setModalAberto] = useState(false);
   const [editando, setEditando] = useState<Pasta | null>(null);
@@ -153,16 +165,20 @@ export function FormsBoard({
       .eq("rede_id", redeId)
       .order("ordem")
       .order("created_at");
-    setPastas(
-      (data ?? []).map((p) => ({
-        id: String(p.id),
-        nome: String(p.nome),
-        formularioIds: (
-          (p.pasta_formularios as { formulario_id: string }[] | null) ?? []
-        ).map((x) => String(x.formulario_id)),
-      })),
-    );
-  }, [redeId, supabase]);
+    const mapped = (data ?? []).map((p) => ({
+      id: String(p.id),
+      nome: String(p.nome),
+      formularioIds: (
+        (p.pasta_formularios as { formulario_id: string }[] | null) ?? []
+      ).map((x) => String(x.formulario_id)),
+    }));
+    setPastas(mapped);
+    try {
+      localStorage.setItem(`folderscache:${membroId}`, JSON.stringify(mapped));
+    } catch {
+      /* ignore */
+    }
+  }, [redeId, supabase, membroId]);
 
   useEffect(() => {
     void carregarPastas();

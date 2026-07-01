@@ -465,3 +465,40 @@ async function _fetchFormDefinition(memberId: string, formId: string) {
     signature: ((member as { assinatura_svg?: string | null } | null)?.assinatura_svg ?? null) as string | null,
   };
 }
+
+// Envia uma sugestão do operador para o ADMIN da rede (destino='rede').
+// Resolve rede e autor pela própria sessão — igual à server action do PWA.
+export async function enviarSugestao(
+  texto: string,
+): Promise<{ error?: string; ok?: boolean }> {
+  const t = texto.trim();
+  if (!t) return { error: "Escreva a sugestão." };
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada." };
+
+  const [{ data: ident }, { data: membro }] = await Promise.all([
+    supabase.from("identidades").select("nome").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("rede_membros")
+      .select("rede_id")
+      .eq("identidade_id", user.id)
+      .eq("status", "ativo")
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  if (!membro?.rede_id)
+    return { error: "Você precisa estar em uma rede para enviar sugestão." };
+
+  const { error } = await supabase.from("sugestoes").insert({
+    autor_id: user.id,
+    autor_nome: ident?.nome ?? "Operador",
+    rede_id: membro.rede_id,
+    destino: "rede",
+    texto: t,
+  });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
