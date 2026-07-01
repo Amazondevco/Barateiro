@@ -152,6 +152,21 @@
   border-color: var(--border);
 }
 
+/* Tema ESCURO: a sidebar/topbar viram escuro neutro (mesmo quando a rede tem uma
+   cor de sidebar clara configurada) — assim combinam com a área principal e some
+   o contraste feio de sidebar clara ao redor do conteúdo escuro. No tema claro,
+   a cor de marca da rede continua valendo (definida inline no shell).
+   `!important` vence o style inline (não-important) do dashboard-shell. */
+.dark .dash-root {
+  --sidebar: #0a0f1c !important;
+  --sidebar-foreground: #cbd5e1 !important;
+  --sidebar-muted: #64748b !important;
+  --sidebar-strong: #ffffff !important;
+  --sidebar-hover: #131c2e !important;
+  --sidebar-border: #1e293b !important;
+  --sidebar-divider: rgba(255, 255, 255, 0.06) !important;
+}
+
 /* Toast (balão de feedback): entra deslizando suavemente do topo. */
 @keyframes toast-in {
   from {

@@ -99,7 +99,7 @@ export function DashboardShell({
     <PageTitleProvider>
     <ToastProvider>
     <GlobalErrorToaster />
-    <div className="flex h-dvh overflow-hidden" style={brandStyle}>
+    <div className="dash-root flex h-dvh overflow-hidden" style={brandStyle}>
       {/* Sidebar desktop (recolhível em rail de ícones) */}
       <div className="hidden lg:block">
         <Sidebar
