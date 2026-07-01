@@ -62,23 +62,32 @@ export function VLibras() {
       } catch (err) {
         add(`Widget() LANÇOU: ${err instanceof Error ? err.message : String(err)}`);
       }
-      // Depois de um tempo: o botão de acesso foi criado e está visível?
-      window.setTimeout(() => {
+      // Depois de um tempo: o que tem DENTRO do botão e qual o fundo dele?
+      const inspecionar = (quando: string) => {
         const btn = document.querySelector(
           "[vw-access-button]",
         ) as HTMLElement | null;
         if (!btn) {
-          add("botão: NÃO existe no DOM");
+          add(`[${quando}] botão: NÃO existe`);
           return;
         }
-        const r = btn.getBoundingClientRect();
         const cs = getComputedStyle(btn);
-        add(
-          `botão: existe ${Math.round(r.width)}x${Math.round(r.height)} @${Math.round(r.left)},${Math.round(r.top)} display=${cs.display} vis=${cs.visibility}`,
-        );
-        const img = btn.querySelector("img") as HTMLImageElement | null;
-        add(`botão img: ${img ? `${img.complete ? "carregada" : "carregando"} ${img.naturalWidth}px` : "sem <img>"}`);
-      }, 3500);
+        add(`[${quando}] fundo: cor=${cs.backgroundColor} img=${cs.backgroundImage.slice(0, 40)}`);
+        add(`[${quando}] filhos: ${btn.children.length} → ${Array.from(btn.children).map((c) => c.tagName.toLowerCase()).join(",") || "nenhum"}`);
+        Array.from(btn.querySelectorAll("*"))
+          .slice(0, 4)
+          .forEach((c) => {
+            const el = c as HTMLElement;
+            const ecs = getComputedStyle(el);
+            const src = (el as HTMLImageElement).src ?? "";
+            add(`  ${el.tagName.toLowerCase()}${el.className ? "." + String(el.className).slice(0, 18) : ""} bg=${ecs.backgroundImage.slice(0, 34)} ${src ? "src=" + src.slice(-30) : ""}`);
+          });
+        add(`[${quando}] outerHTML: ${btn.outerHTML.replace(/\s+/g, " ").slice(0, 180)}`);
+        const wrap = document.querySelector("[vw-plugin-wrapper]");
+        add(`[${quando}] player wrapper: ${wrap ? wrap.innerHTML.length + " chars" : "ausente"}`);
+      };
+      window.setTimeout(() => inspecionar("3s"), 3000);
+      window.setTimeout(() => inspecionar("9s"), 9000);
     }
 
     const existente = document.querySelector<HTMLScriptElement>(
