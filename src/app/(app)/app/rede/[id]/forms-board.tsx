@@ -18,6 +18,18 @@ import {
   Folder,
   Trash2,
   Loader2,
+  MoreVertical,
+  Pencil,
+  ShoppingCart,
+  Snowflake,
+  Apple,
+  Beef,
+  Croissant,
+  Wine,
+  Fish,
+  Milk,
+  Package,
+  type LucideIcon,
 } from "lucide-react";
 import {
   DndContext,
@@ -60,6 +72,22 @@ const FILTROS: { v: Status; label: string }[] = [
   { v: "enviados", label: "Enviados hoje" },
 ];
 
+// Ícones que o usuário pode escolher para uma pasta. `folder` é o padrão.
+const ICONES: { key: string; Icon: LucideIcon }[] = [
+  { key: "folder", Icon: Folder },
+  { key: "cart", Icon: ShoppingCart },
+  { key: "snow", Icon: Snowflake },
+  { key: "apple", Icon: Apple },
+  { key: "beef", Icon: Beef },
+  { key: "bread", Icon: Croissant },
+  { key: "wine", Icon: Wine },
+  { key: "fish", Icon: Fish },
+  { key: "milk", Icon: Milk },
+  { key: "box", Icon: Package },
+];
+const iconePorKey = (k?: string): LucideIcon =>
+  ICONES.find((i) => i.key === k)?.Icon ?? Folder;
+
 export function FormsBoard({
   membroId,
   redeId,
@@ -77,6 +105,31 @@ export function FormsBoard({
   const [pastas, setPastas] = useState<Pasta[]>([]);
   const [abertas, setAbertas] = useState<Record<string, boolean>>({});
   const [modalAberto, setModalAberto] = useState(false);
+  const [editando, setEditando] = useState<Pasta | null>(null);
+  // Ícone da pasta: escolha pessoal, guardada localmente (igual à ordem). Mapa id→key.
+  const [icones, setIcones] = useState<Record<string, string>>({});
+
+  const chaveIcones = `foldericons:${membroId}`;
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem(chaveIcones);
+      if (s) setIcones(JSON.parse(s));
+    } catch {
+      /* ignore */
+    }
+  }, [chaveIcones]);
+
+  function salvarIcone(id: string, key: string) {
+    setIcones((prev) => {
+      const next = { ...prev, [id]: key };
+      try {
+        localStorage.setItem(chaveIcones, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
 
   const chave = `formorder:${membroId}`;
   useEffect(() => {
@@ -174,13 +227,18 @@ export function FormsBoard({
     if (v === "custom") salvarOrdem(ordenados.map((f) => f.id));
   }
 
-  async function criarPasta(nome: string, formularioIds: string[]) {
+  async function criarPasta(
+    nome: string,
+    icone: string,
+    formularioIds: string[],
+  ) {
     const { data: nova, error } = await supabase
       .from("pastas")
       .insert({ rede_id: redeId, nome })
       .select("id")
       .single();
     if (error || !nova) return;
+    salvarIcone(String(nova.id), icone); // ícone é local (por aparelho)
     if (formularioIds.length > 0) {
       // um checklist em 1 pasta: tira dos vínculos anteriores (RLS: só os meus)
       await supabase
@@ -195,6 +253,12 @@ export function FormsBoard({
       );
     }
     setAbertas((a) => ({ ...a, [String(nova.id)]: true }));
+    await carregarPastas();
+  }
+
+  async function editarPasta(id: string, nome: string, icone: string) {
+    salvarIcone(id, icone); // ícone é local (por aparelho)
+    await supabase.from("pastas").update({ nome }).eq("id", id);
     await carregarPastas();
   }
 
@@ -299,10 +363,12 @@ export function FormsBoard({
               key={p.id}
               pasta={p}
               membroId={membroId}
+              Icon={iconePorKey(icones[p.id])}
               aberta={abertas[p.id] ?? false}
               onToggle={() =>
                 setAbertas((a) => ({ ...a, [p.id]: !(a[p.id] ?? false) }))
               }
+              onEditar={() => setEditando(p)}
               onApagar={() => void apagarPasta(p.id)}
             />
           ))}
@@ -332,15 +398,87 @@ export function FormsBoard({
       )}
 
       {modalAberto && (
-        <CriarPastaModal
+        <PastaModal
+          modo="criar"
           forms={forms}
           emPasta={pastaDeForm}
           onClose={() => setModalAberto(false)}
-          onCriar={async (nome, ids) => {
-            await criarPasta(nome, ids);
+          onSalvar={async (nome, icone, ids) => {
+            await criarPasta(nome, icone, ids);
             setModalAberto(false);
           }}
         />
+      )}
+
+      {editando && (
+        <PastaModal
+          modo="editar"
+          inicialNome={editando.nome}
+          inicialIcone={icones[editando.id] ?? "folder"}
+          forms={forms}
+          emPasta={pastaDeForm}
+          onClose={() => setEditando(null)}
+          onSalvar={async (nome, icone) => {
+            await editarPasta(editando.id, nome, icone);
+            setEditando(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// Menu "3 pontinhos" da pasta: Editar / Apagar (fecha ao clicar fora).
+function PastaMenu({
+  onEditar,
+  onApagar,
+}: {
+  onEditar: () => void;
+  onApagar: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function onDown(e: PointerEvent) {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Opções da pasta"
+        className="rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <MoreVertical className="h-5 w-5" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-10 z-20 w-40 overflow-hidden rounded-xl border border-border bg-card p-1 shadow-lg">
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onEditar();
+            }}
+            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
+          >
+            <Pencil className="h-4 w-4 opacity-70" /> Editar
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onApagar();
+            }}
+            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-danger hover:bg-danger-bg"
+          >
+            <Trash2 className="h-4 w-4" /> Apagar
+          </button>
+        </div>
       )}
     </div>
   );
@@ -350,21 +488,25 @@ export function FormsBoard({
 function PastaCard({
   pasta,
   membroId,
+  Icon,
   aberta,
   onToggle,
+  onEditar,
   onApagar,
 }: {
   pasta: Pasta & { forms: FormItem[] };
   membroId: string;
+  Icon: LucideIcon;
   aberta: boolean;
   onToggle: () => void;
+  onEditar: () => void;
   onApagar: () => void;
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <div className="flex items-center gap-3 p-4">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Folder className="h-6 w-6" />
+          <Icon className="h-6 w-6" />
         </span>
         <button
           type="button"
@@ -385,14 +527,7 @@ function PastaCard({
             }`}
           />
         </button>
-        <button
-          type="button"
-          onClick={onApagar}
-          aria-label="Apagar pasta"
-          className="shrink-0 rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-danger-bg hover:text-danger"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <PastaMenu onEditar={onEditar} onApagar={onApagar} />
       </div>
       {aberta && (
         <div className="space-y-2 border-t border-border bg-muted/30 p-3">
@@ -411,30 +546,39 @@ function PastaCard({
   );
 }
 
-// Modal: nome da pasta + seleção múltipla de checklists.
-function CriarPastaModal({
+// Modal unificado: criar OU editar pasta (nome + ícone + checklists na criação).
+function PastaModal({
+  modo,
+  inicialNome,
+  inicialIcone,
   forms,
   emPasta,
   onClose,
-  onCriar,
+  onSalvar,
 }: {
+  modo: "criar" | "editar";
+  inicialNome?: string;
+  inicialIcone?: string;
   forms: FormItem[];
   emPasta: Map<string, string>;
   onClose: () => void;
-  onCriar: (nome: string, ids: string[]) => Promise<void>;
+  onSalvar: (nome: string, icone: string, ids: string[]) => Promise<void>;
 }) {
-  const [nome, setNome] = useState("");
+  const editar = modo === "editar";
+  const [nome, setNome] = useState(inicialNome ?? "");
+  const [icone, setIcone] = useState(inicialIcone ?? "folder");
   const [sel, setSel] = useState<Record<string, boolean>>({});
   const [salvando, setSalvando] = useState(false);
 
   const ids = forms.filter((f) => sel[f.id]).map((f) => f.id);
   const podeSalvar = nome.trim().length > 0 && !salvando;
+  const HeaderIcon = iconePorKey(icone);
 
   async function salvar() {
     if (!podeSalvar) return;
     setSalvando(true);
     try {
-      await onCriar(nome.trim(), ids);
+      await onSalvar(nome.trim(), icone, ids);
     } finally {
       setSalvando(false);
     }
@@ -445,9 +589,11 @@ function CriarPastaModal({
       <div className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-2xl sm:rounded-2xl">
         <div className="flex items-center gap-3 border-b border-border p-4">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <FolderPlus className="h-5 w-5" />
+            <HeaderIcon className="h-5 w-5" />
           </span>
-          <h2 className="flex-1 text-base font-bold">Criar pasta</h2>
+          <h2 className="flex-1 text-base font-bold">
+            {editar ? "Editar pasta" : "Criar pasta"}
+          </h2>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto p-4">
@@ -465,43 +611,66 @@ function CriarPastaModal({
           </div>
 
           <div>
-            <p className="mb-1.5 text-sm font-medium">Adicionar checklists</p>
-            <div className="space-y-1.5">
-              {forms.map((f) => {
-                const jaEm = emPasta.get(f.id);
-                return (
-                  <label
-                    key={f.id}
-                    className="flex cursor-pointer items-center gap-3 rounded-xl border border-border p-3 text-sm transition-colors hover:bg-muted"
-                  >
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 shrink-0 accent-primary"
-                      checked={!!sel[f.id]}
-                      onChange={(e) =>
-                        setSel((s) => ({ ...s, [f.id]: e.target.checked }))
-                      }
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">
-                        {f.nome}
-                      </span>
-                      {jaEm ? (
-                        <span className="block text-xs text-muted-foreground">
-                          Já está em outra pasta — será movido
-                        </span>
-                      ) : null}
-                    </span>
-                  </label>
-                );
-              })}
-              {forms.length === 0 ? (
-                <p className="py-2 text-center text-xs text-muted-foreground">
-                  Nenhum checklist disponível.
-                </p>
-              ) : null}
+            <p className="mb-1.5 text-sm font-medium">Ícone</p>
+            <div className="flex flex-wrap gap-2">
+              {ICONES.map(({ key, Icon }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setIcone(key)}
+                  aria-label={`Ícone ${key}`}
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${
+                    icone === key
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                </button>
+              ))}
             </div>
           </div>
+
+          {!editar && (
+            <div>
+              <p className="mb-1.5 text-sm font-medium">Adicionar checklists</p>
+              <div className="space-y-1.5">
+                {forms.map((f) => {
+                  const jaEm = emPasta.get(f.id);
+                  return (
+                    <label
+                      key={f.id}
+                      className="flex cursor-pointer items-center gap-3 rounded-xl border border-border p-3 text-sm transition-colors hover:bg-muted"
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 shrink-0 accent-primary"
+                        checked={!!sel[f.id]}
+                        onChange={(e) =>
+                          setSel((s) => ({ ...s, [f.id]: e.target.checked }))
+                        }
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">
+                          {f.nome}
+                        </span>
+                        {jaEm ? (
+                          <span className="block text-xs text-muted-foreground">
+                            Já está em outra pasta — será movido
+                          </span>
+                        ) : null}
+                      </span>
+                    </label>
+                  );
+                })}
+                {forms.length === 0 ? (
+                  <p className="py-2 text-center text-xs text-muted-foreground">
+                    Nenhum checklist disponível.
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          )}
         </div>
 
         <div
@@ -522,7 +691,7 @@ function CriarPastaModal({
             className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Criar pasta
+            {editar ? "Salvar" : "Criar pasta"}
           </button>
         </div>
       </div>
