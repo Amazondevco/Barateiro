@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { CheckaiMark } from "@/components/checkai-mark";
 import { SenhaCriterios } from "@/components/senha-criterios";
 
 export const metadata = { title: "Conta confirmada — Check.AI" };
@@ -7,18 +8,8 @@ export const metadata = { title: "Conta confirmada — Check.AI" };
 export default function ConfirmadoPage() {
   return (
     <div className="flex flex-1 flex-col p-8">
-      {/* Marca Check.AI — igual à tela de login */}
-      <div className="flex items-center gap-2.5">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/amazondevco-logo.png"
-          alt="Check.AI"
-          className="h-9 w-9 object-contain"
-        />
-        <span className="text-xl font-bold tracking-tight">
-          Check<span className="text-primary">.AI</span>
-        </span>
-      </div>
+      {/* Marca Check.AI — igual à tela de login do app */}
+      <CheckaiMark />
 
       {/* Conteúdo central */}
       <div className="flex flex-1 flex-col items-center justify-center text-center">

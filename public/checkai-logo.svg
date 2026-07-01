@@ -1,0 +1,11 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Check.AI">
+  <!-- Badge Check.AI — verde sólido (#15803d), check geométrico + brilho -->
+  <rect width="1024" height="1024" rx="232" fill="#15803d"/>
+  <!-- check geométrico -->
+  <path d="M286 548 L438 700 L726 372"
+        fill="none" stroke="#ffffff" stroke-width="96"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- brilho ✦ (acento de IA) -->
+  <path d="M792 230 L812 280 L862 300 L812 320 L792 370 L772 320 L722 300 L772 280 Z"
+        fill="#ffffff"/>
+</svg>

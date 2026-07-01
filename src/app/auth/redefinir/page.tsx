@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { Brand } from "@/components/brand";
+import { CheckaiMark } from "@/components/checkai-mark";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { validarSenha } from "@/lib/senha";
 import { SenhaCriterios } from "@/components/senha-criterios";
@@ -59,6 +58,23 @@ export default function RedefinirSenhaPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+
+  // Segue o tema do sistema (Android/iOS) ou do navegador via prefers-color-scheme.
+  // Aplica/retira a classe .dark no <html> só enquanto esta tela está montada.
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      document.documentElement.classList.toggle("dark", mq.matches);
+      document.documentElement.style.colorScheme = mq.matches ? "dark" : "light";
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => {
+      mq.removeEventListener("change", apply);
+      document.documentElement.classList.remove("dark");
+      document.documentElement.style.colorScheme = "";
+    };
+  }, []);
 
   useEffect(() => {
     const hash = (hashRef.current ?? "").replace(/^#/, "");
@@ -180,82 +196,71 @@ export default function RedefinirSenhaPage() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-        <div className="mb-8">
-          <Brand />
-        </div>
-        <Card>
-          <CardContent>
-            {done ? (
-              <div className="space-y-3 text-center">
-                <h2 className="text-lg font-semibold">Senha definida!</h2>
-                <p className="text-sm text-muted-foreground">Entrando…</p>
-              </div>
-            ) : !ready ? (
-              <p className="text-sm text-muted-foreground">Carregando…</p>
-            ) : !ctx ? (
-              <div className="space-y-3 text-center">
-                <h2 className="text-lg font-semibold">Link inválido ou expirado</h2>
-                <p className="text-sm text-muted-foreground">
-                  Abra o link mais recente ou peça um novo ao administrador.
-                </p>
-                <a
-                  href="/login"
-                  className="inline-block text-sm font-medium text-primary hover:underline"
-                >
-                  Ir para o login
-                </a>
-              </div>
-            ) : (
-              <form onSubmit={onSubmit} className="space-y-4">
-                <div>
-                  <h2 className="text-lg font-semibold">Defina sua senha</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {ctx.nome ? `Olá, ${ctx.nome}. ` : ""}Crie uma senha para acessar
-                    sua conta.
-                  </p>
-                </div>
+    <main className="flex h-dvh flex-col justify-center overflow-hidden bg-background p-6">
+      <div className="mx-auto w-full max-w-sm">
+        <CheckaiMark className="mb-8" />
 
-                <div>
-                  <Label>Nome</Label>
-                  <Input value={ctx.nome} readOnly disabled />
-                </div>
-                <div>
-                  <Label>E-mail</Label>
-                  <Input value={ctx.email} readOnly disabled />
-                </div>
-                <div>
-                  <Label htmlFor="senha">Crie uma senha</Label>
-                  <Input
-                    id="senha"
-                    type="password"
-                    autoComplete="new-password"
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                    required
-                  />
-                  <SenhaCriterios senha={senha} />
-                </div>
-                <div>
-                  <Label htmlFor="confirma">Confirmar senha</Label>
-                  <Input
-                    id="confirma"
-                    type="password"
-                    autoComplete="new-password"
-                    value={confirma}
-                    onChange={(e) => setConfirma(e.target.value)}
-                    required
-                  />
-                </div>
-                {error && <p className="text-sm text-danger">{error}</p>}
-                <Button type="submit" size="lg" className="w-full" disabled={loading}>
-                  {loading ? "Salvando…" : "Criar senha e entrar"}
-                </Button>
-              </form>
-            )}
-          </CardContent>
-        </Card>
+        {done ? (
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">Senha definida!</h1>
+            <p className="text-sm text-muted-foreground">Entrando…</p>
+          </div>
+        ) : !ready ? (
+          <p className="text-sm text-muted-foreground">Carregando…</p>
+        ) : !ctx ? (
+          <div className="space-y-3">
+            <h1 className="text-3xl font-bold tracking-tight">
+              Link inválido ou expirado
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Abra o link mais recente ou peça um novo ao administrador.
+            </p>
+            <a
+              href="/login"
+              className="inline-block text-sm font-medium text-primary hover:underline"
+            >
+              Ir para o login
+            </a>
+          </div>
+        ) : (
+          <>
+            <h1 className="text-3xl font-bold tracking-tight">Defina sua senha</h1>
+            <p className="mt-1.5 break-words text-sm text-muted-foreground">
+              {ctx.nome ? `Olá, ${ctx.nome.split(" ")[0]}. ` : ""}Crie uma senha
+              para acessar sua conta{ctx.email ? ` (${ctx.email})` : ""}.
+            </p>
+
+            <form onSubmit={onSubmit} className="mt-8 space-y-4">
+              <div>
+                <Label htmlFor="senha">Crie uma senha</Label>
+                <Input
+                  id="senha"
+                  type="password"
+                  autoComplete="new-password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  required
+                />
+                <SenhaCriterios senha={senha} />
+              </div>
+              <div>
+                <Label htmlFor="confirma">Confirmar senha</Label>
+                <Input
+                  id="confirma"
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirma}
+                  onChange={(e) => setConfirma(e.target.value)}
+                  required
+                />
+              </div>
+              {error && <p className="text-sm text-danger">{error}</p>}
+              <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                {loading ? "Salvando…" : "Criar senha e entrar"}
+              </Button>
+            </form>
+          </>
+        )}
       </div>
     </main>
   );
