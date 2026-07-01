@@ -3,12 +3,21 @@
 import { useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRightLeft, Check, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { DEV_ACCOUNTS } from "@/lib/dev-accounts";
 import { quickSwitch } from "@/lib/dev-switch-actions";
 
-/** DEV: alterna entre contas de teste. Só renderizado em desenvolvimento. */
-export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
+/** DEV: alterna entre contas de teste. Só renderizado em desenvolvimento.
+ *  O gatilho é estilizável por contexto: na sidebar (fundo escuro) recebe as
+ *  classes dos outros itens do menu (cor clara + rótulo); no PWA usa o ícone. */
+export function UserSwitcher({
+  currentEmail,
+  triggerClassName,
+  triggerLabel,
+}: {
+  currentEmail: string;
+  triggerClassName?: string;
+  triggerLabel?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -51,15 +60,19 @@ export function UserSwitcher({ currentEmail }: { currentEmail: string }) {
 
   return (
     <div ref={wrapRef} className="relative">
-      <Button
-        variant="ghost"
-        size="icon"
+      <button
+        type="button"
         onClick={() => (open ? setOpen(false) : abrir())}
         aria-label="Trocar visualização"
         title="Trocar visualização"
+        className={
+          triggerClassName ??
+          "inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted"
+        }
       >
-        <ArrowRightLeft className="h-[18px] w-[18px]" />
-      </Button>
+        <ArrowRightLeft className="h-[18px] w-[18px] shrink-0" />
+        {triggerLabel ? <span>{triggerLabel}</span> : null}
+      </button>
 
       {open &&
         rect &&

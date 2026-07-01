@@ -232,7 +232,11 @@ export function Sidebar({
                 <LifeBuoy className="h-[18px] w-[18px] shrink-0" /> Suporte Check.AI
               </Link>
               {userEmail && DEV_EMAILS.includes(userEmail) && (
-                <UserSwitcher currentEmail={userEmail} />
+                <UserSwitcher
+                  currentEmail={userEmail}
+                  triggerLabel="Trocar conta"
+                  triggerClassName="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-[color:var(--sidebar-strong)]"
+                />
               )}
               <div className="mx-1 my-1 h-px bg-white/10" />
               <form action={signOut}>
