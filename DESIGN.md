@@ -395,3 +395,21 @@ Botões de resposta selecionados: `border-primary bg-primary/10 text-primary`.
   (`icon-only`, `icon-foreground`/`icon-background` adaptativo, `splash`/`splash-dark`).
   Splash = fundo verde uniforme + check branco centralizado. Para regenerar:
   `npx capacitor-assets generate --android` (fontes em `native-poc/assets/`).
+
+## Acessibilidade (Libras + leitor de tela)
+
+Fase 1 implementada (espelhada PWA ↔ nativo):
+
+- **VLibras** (`vlibras.tsx` no PWA e no nativo): widget oficial do Governo
+  Federal que traduz texto para Libras via avatar 3D. Injeta a marcação `[vw]`,
+  carrega `https://vlibras.gov.br/app/vlibras-plugin.js` uma vez e inicializa o
+  Widget. Falha silenciosa se o script externo não carregar (offline). O botão
+  de acesso é reposicionado por CSS para o canto **inferior esquerdo** (acima da
+  navegação) para não colidir com o FAB de sugestão (à direita).
+- **Leitor de tela** (TalkBack/VoiceOver): botões só-de-ícone devem ter
+  `aria-label` com rótulo humano (não a rota/URL). Ícones decorativos levam
+  `aria-hidden="true"`. Abas de navegação usam `aria-current="page"` quando
+  ativas. O toast de feedback já expõe `role="status"`.
+
+Regra: ao criar um botão só-de-ícone, **sempre** dar `aria-label` descritivo e
+`aria-hidden` no ícone interno.

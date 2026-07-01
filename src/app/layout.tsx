@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PwaRegister } from "./pwa-register";
+import { VLibras } from "@/components/vlibras";
 
 // Fonte principal = stack do sistema (San Francisco na Apple) — definida em
 // globals.css (--font-sans). Só o mono continua via Next font (Geist Mono).
@@ -44,6 +45,7 @@ export default function RootLayout({
       <body className="min-h-full">
         <PwaRegister />
         {children}
+        <VLibras />
       </body>
     </html>
   );

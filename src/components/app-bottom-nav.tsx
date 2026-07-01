@@ -4,12 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Bell, ClipboardCheck, ChartColumn, Settings, type LucideIcon } from "lucide-react";
 
-const TABS: { href: string; icon: LucideIcon; match: (p: string) => boolean }[] = [
-  { href: "/app", icon: Home, match: (p) => p === "/app" || p.startsWith("/app/rede") },
-  { href: "/app/avisos", icon: Bell, match: (p) => p.startsWith("/app/avisos") },
-  { href: "/app/formularios", icon: ClipboardCheck, match: (p) => p.startsWith("/app/formularios") },
-  { href: "/app/relatorios", icon: ChartColumn, match: (p) => p.startsWith("/app/relatorios") },
-  { href: "/app/config", icon: Settings, match: (p) => p.startsWith("/app/config") },
+const TABS: {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  match: (p: string) => boolean;
+}[] = [
+  { href: "/app", icon: Home, label: "Início", match: (p) => p === "/app" || p.startsWith("/app/rede") },
+  { href: "/app/avisos", icon: Bell, label: "Avisos", match: (p) => p.startsWith("/app/avisos") },
+  { href: "/app/formularios", icon: ClipboardCheck, label: "Checklists", match: (p) => p.startsWith("/app/formularios") },
+  { href: "/app/relatorios", icon: ChartColumn, label: "Relatórios", match: (p) => p.startsWith("/app/relatorios") },
+  { href: "/app/config", icon: Settings, label: "Configurações", match: (p) => p.startsWith("/app/config") },
 ];
 
 export function AppBottomNav() {
@@ -32,7 +37,8 @@ export function AppBottomNav() {
             <Link
               key={t.href}
               href={t.href}
-              aria-label={t.href}
+              aria-label={t.label}
+              aria-current={on ? "page" : undefined}
               className="relative flex flex-1 items-center justify-center"
             >
               <span
@@ -44,6 +50,7 @@ export function AppBottomNav() {
                   <span className="absolute h-14 w-14 rounded-full border-[6px] border-background bg-primary shadow-[0_6px_14px_-2px_rgba(0,0,0,0.3)]" />
                 ) : null}
                 <Icon
+                  aria-hidden="true"
                   className={`relative h-6 w-6 transition-colors duration-300 ${
                     on ? "text-primary-foreground" : "text-muted-foreground"
                   }`}
