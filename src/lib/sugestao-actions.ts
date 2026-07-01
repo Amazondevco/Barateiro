@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { transcribeAudio } from "@/lib/transcribe";
+import { sendPush } from "@/lib/fcm";
+import { getRedeMarcaById } from "@/lib/rede-branding";
 
 export async function transcreverAudio(dataUrl: string): Promise<{ texto: string }> {
   const supabase = await createClient();
@@ -72,11 +74,53 @@ export async function enviarSugestao(input: {
   return { ok: true };
 }
 
-export async function resolverSugestao(id: string, resolvida: boolean) {
+export async function resolverSugestao(
+  id: string,
+  resolvida: boolean,
+): Promise<{ ok: boolean; notificado: boolean }> {
   const supabase = await createClient();
-  await supabase
+
+  // Pega autor/rede antes de atualizar, para poder notificar o autor.
+  const { data: sug } = await supabase
+    .from("sugestoes")
+    .select("autor_id, rede_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  const { error } = await supabase
     .from("sugestoes")
     .update({ status: resolvida ? "resolvida" : "nova" })
     .eq("id", id);
+  if (error) return { ok: false, notificado: false };
+
+  let notificado = false;
+  // Só notifica ao MARCAR como resolvida (não ao reabrir).
+  if (resolvida && sug?.autor_id) {
+    try {
+      const admin = createAdminClient();
+      const { data: tokens } = await admin
+        .from("device_tokens")
+        .select("token")
+        .eq("identidade_id", sug.autor_id);
+      const lista = (tokens ?? []).map((t) => String(t.token));
+      if (lista.length > 0) {
+        const marca = sug.rede_id ? await getRedeMarcaById(sug.rede_id) : null;
+        const { sent, invalid } = await sendPush(lista, {
+          title: "Sugestão recebida",
+          body: "Os responsáveis receberam sua sugestão e vão avaliar. Obrigado!",
+          data: { tipo: "sugestao" },
+          color: marca?.app_cor || marca?.cor_primaria || undefined,
+        });
+        notificado = sent > 0;
+        if (invalid.length > 0) {
+          await admin.from("device_tokens").delete().in("token", invalid);
+        }
+      }
+    } catch {
+      /* push é best-effort — não bloqueia a resolução */
+    }
+  }
+
   revalidatePath("/sugestoes");
+  return { ok: true, notificado };
 }
