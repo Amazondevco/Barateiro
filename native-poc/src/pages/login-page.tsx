@@ -4,9 +4,11 @@ import { useAuth } from "../context/auth-context";
 import { Button } from "../ui/button";
 import { Input, Label } from "../ui/input";
 import { ClientsCarousel } from "../ui/clients-carousel";
+import { useI18n } from "../lib/i18n/i18n";
 import logoUrl from "../assets/checkai-logo.svg";
 
 export function LoginPage() {
+  const { t } = useI18n();
   const { user, signInWithPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,7 +28,7 @@ export function LoginPage() {
       await signInWithPassword(email, password);
     } catch (authError) {
       setError(
-        authError instanceof Error ? authError.message : "Falha ao autenticar.",
+        authError instanceof Error ? authError.message : t("Falha ao autenticar."),
       );
     } finally {
       setLoading(false);
@@ -48,14 +50,14 @@ export function LoginPage() {
           </span>
         </div>
 
-        <h1 className="text-3xl font-bold tracking-tight">Entrar</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("Entrar")}</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Acesse o app da sua rede.
+          {t("Acesse o app da sua rede.")}
         </p>
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <Label htmlFor="email">E-mail</Label>
+            <Label htmlFor="email">{t("E-mail")}</Label>
             <Input
               id="email"
               type="email"
@@ -68,7 +70,7 @@ export function LoginPage() {
           </div>
 
           <div>
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password">{t("Senha")}</Label>
             <Input
               id="password"
               type="password"
@@ -87,7 +89,7 @@ export function LoginPage() {
           ) : null}
 
           <Button type="submit" size="lg" className="w-full" disabled={loading}>
-            {loading ? "Entrando…" : "Entrar"}
+            {loading ? t("Entrando…") : t("Entrar")}
           </Button>
         </form>
 

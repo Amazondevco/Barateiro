@@ -14,6 +14,7 @@ import {
   transcreverAudio,
   subirAudioSugestao,
 } from "../lib/operator-api";
+import { useI18n } from "../lib/i18n/i18n";
 
 const MAX_SEG = 120;
 
@@ -28,6 +29,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 // Botão flutuante (canto inferior direito) para o operador mandar uma sugestão
 // ao admin da rede. Fica acima da barra de navegação (raised).
 export function SuggestionFab() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [texto, setTexto] = useState("");
   const [gravando, setGravando] = useState(false);
@@ -78,13 +80,11 @@ export function SuggestionFab() {
       // Usuário negou o microfone (ou já estava negado nas permissões do app).
       const nome = e instanceof DOMException ? e.name : "";
       if (nome === "NotAllowedError" || nome === "SecurityError") {
-        setErro(
-          "Permissão de microfone negada. Libere o microfone nas configurações do app para gravar.",
-        );
+        setErro(t("Permissão de microfone negada. Libere o microfone nas configurações do app para gravar."));
       } else if (nome === "NotFoundError") {
-        setErro("Nenhum microfone encontrado no aparelho.");
+        setErro(t("Nenhum microfone encontrado no aparelho."));
       } else {
-        setErro("Não foi possível acessar o microfone.");
+        setErro(t("Não foi possível acessar o microfone."));
       }
     }
   }
@@ -102,7 +102,7 @@ export function SuggestionFab() {
 
   async function enviar() {
     if (!texto.trim() && !blobRef.current) {
-      setErro("Escreva ou grave a sugestão.");
+      setErro(t("Escreva ou grave a sugestão."));
       return;
     }
     setErro(null);
@@ -124,7 +124,7 @@ export function SuggestionFab() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Enviar sugestão"
+        aria-label={t("Enviar sugestão")}
         className="fixed right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
         style={{ bottom: "calc(124px + env(safe-area-inset-bottom))" }}
       >
@@ -137,12 +137,12 @@ export function SuggestionFab() {
           <div className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-card shadow-xl">
             <div className="flex items-center justify-between border-b border-border p-4">
               <h3 className="flex items-center gap-2 font-semibold">
-                <Lightbulb className="h-4 w-4 text-primary" /> Sugestão de melhoria
+                <Lightbulb className="h-4 w-4 text-primary" /> {t("Sugestão de melhoria")}
               </h3>
               <button
                 type="button"
                 onClick={fechar}
-                aria-label="Fechar"
+                aria-label={t("Fechar")}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <X className="h-5 w-5" />
@@ -154,7 +154,7 @@ export function SuggestionFab() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success-bg text-success">
                   <Check className="h-6 w-6" />
                 </div>
-                <p className="font-medium">Sugestão enviada. Obrigado!</p>
+                <p className="font-medium">{t("Sugestão enviada. Obrigado!")}</p>
               </div>
             ) : (
               <div className="space-y-4 p-4">
@@ -163,7 +163,7 @@ export function SuggestionFab() {
                   onChange={(e) => setTexto(e.target.value)}
                   rows={4}
                   autoFocus
-                  placeholder="Conte o que pode melhorar…"
+                  placeholder={t("Conte o que pode melhorar…")}
                   className="w-full rounded-lg border border-border bg-background p-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
 
@@ -176,7 +176,7 @@ export function SuggestionFab() {
                       disabled={transcrevendo}
                       className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50"
                     >
-                      <Mic className="h-4 w-4" /> Gravar áudio
+                      <Mic className="h-4 w-4" /> {t("Gravar áudio")}
                     </button>
                   ) : (
                     <button
@@ -184,12 +184,12 @@ export function SuggestionFab() {
                       onClick={stopRec}
                       className="flex items-center gap-1.5 rounded-lg bg-danger px-3 py-2 text-sm text-white"
                     >
-                      <Square className="h-4 w-4" /> Parar
+                      <Square className="h-4 w-4" /> {t("Parar")}
                     </button>
                   )}
                   {transcrevendo && (
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Transcrevendo…
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("Transcrevendo…")}
                     </span>
                   )}
                   {audioUrl && !gravando && (
@@ -198,7 +198,7 @@ export function SuggestionFab() {
                       <button
                         type="button"
                         onClick={removerAudio}
-                        aria-label="Remover áudio"
+                        aria-label={t("Remover áudio")}
                         className="text-muted-foreground hover:text-danger"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -221,11 +221,11 @@ export function SuggestionFab() {
                 >
                   {enviando ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> Enviando…
+                      <Loader2 className="h-4 w-4 animate-spin" /> {t("Enviando…")}
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4" /> Enviar
+                      <Send className="h-4 w-4" /> {t("Enviar")}
                     </>
                   )}
                 </button>

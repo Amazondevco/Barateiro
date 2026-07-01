@@ -1,5 +1,6 @@
 import { Bell, ChartColumn, ClipboardCheck, Home, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useI18n } from "../lib/i18n/i18n";
 
 const tabs = [
   { to: "/app", icon: Home, label: "Início", match: (p: string) => p === "/app" || p.startsWith("/app/rede") },
@@ -10,6 +11,7 @@ const tabs = [
 ];
 
 export function BottomNav() {
+  const { t } = useI18n();
   const location = useLocation();
   let active = tabs.findIndex((t) => t.match(location.pathname));
   if (active < 0) active = 0;
@@ -29,7 +31,7 @@ export function BottomNav() {
             <Link
               key={tab.to}
               to={tab.to}
-              aria-label={tab.label}
+              aria-label={t(tab.label)}
               aria-current={on ? "page" : undefined}
               className="relative flex flex-1 items-center justify-center"
             >

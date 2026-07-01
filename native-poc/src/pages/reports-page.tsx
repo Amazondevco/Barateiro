@@ -9,6 +9,7 @@ import {
   Check,
 } from "lucide-react";
 import { useAuth } from "../context/auth-context";
+import { useI18n } from "../lib/i18n/i18n";
 import {
   fetchMemberships,
   peekMemberships,
@@ -43,6 +44,7 @@ const PERIODOS: { v: Periodo; label: string }[] = [
 ];
 
 export function ReportsPage() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const [memberId, setMemberId] = useState<string | null>(null);
   const [memberships, setMemberships] = useState<Membership[]>(
@@ -85,7 +87,7 @@ export function ReportsPage() {
     fetchRelatorio(memberId, user.id, inicio, fim, checklistId || undefined)
       .then((r) => vivo && setData(r))
       .catch((e) =>
-        vivo && setErro(e instanceof Error ? e.message : "Falha ao carregar."),
+        vivo && setErro(e instanceof Error ? e.message : t("Falha ao carregar.")),
       )
       .finally(() => vivo && setCarregando(false));
     return () => {
@@ -100,9 +102,9 @@ export function ReportsPage() {
   return (
     <div className="mx-auto w-full max-w-md space-y-4 p-4">
       <header className="mt-2">
-        <h1 className="text-xl font-semibold">Relatórios</h1>
+        <h1 className="text-xl font-semibold">{t("Relatórios")}</h1>
         <p className="text-sm text-muted-foreground">
-          Seu desempenho de preenchimento.
+          {t("Seu desempenho de preenchimento.")}
         </p>
       </header>
 
@@ -121,7 +123,7 @@ export function ReportsPage() {
       <div className="space-y-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
         <div>
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Período
+            {t("Período")}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {PERIODOS.map((p) => (
@@ -135,7 +137,7 @@ export function ReportsPage() {
                     : "border-border bg-background text-muted-foreground"
                 }`}
               >
-                {p.label}
+                {t(p.label)}
               </button>
             ))}
           </div>
@@ -152,13 +154,13 @@ export function ReportsPage() {
 
         <div className="border-t border-border pt-3">
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Checklist
+            {t("Checklist")}
           </p>
           <SelectPill
             value={checklistId}
             onChange={setChecklistId}
             options={[
-              { value: "", label: "Todos os checklists" },
+              { value: "", label: t("Todos os checklists") },
               ...checklists.map((c) => ({ value: c.id, label: c.nome })),
             ]}
           />
@@ -167,7 +169,7 @@ export function ReportsPage() {
 
       {carregando ? (
         <div className="py-16">
-          <LoadingScreen label="Carregando relatório…" />
+          <LoadingScreen label={t("Carregando relatório…")} />
         </div>
       ) : erro ? (
         <p className="rounded-xl bg-danger-bg px-3 py-2 text-sm text-danger">
@@ -181,12 +183,16 @@ export function ReportsPage() {
               <TaxaRing valor={data.taxa} />
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-                  <TrendingUp className="h-4 w-4" /> Taxa de cumprimento
+                  <TrendingUp className="h-4 w-4" /> {t("Taxa de cumprimento")}
                 </p>
                 <p className="mt-0.5 text-sm text-muted-foreground">
                   {data.esperados > 0
-                    ? `${data.esperados - data.perdidos - data.pendentesHoje} de ${data.esperados} esperados foram preenchidos.`
-                    : "Nenhum checklist esperado no período."}
+                    ? t("{feitos} de {total} esperados foram preenchidos.", {
+                        feitos:
+                          data.esperados - data.perdidos - data.pendentesHoje,
+                        total: data.esperados,
+                      })
+                    : t("Nenhum checklist esperado no período.")}
                 </p>
               </div>
             </div>
@@ -194,24 +200,24 @@ export function ReportsPage() {
 
           {/* Cards de métricas */}
           <div className="grid grid-cols-2 gap-3">
-            <MetricCard icon={CheckCircle2} tom="success" valor={data.preenchidos} label="Preenchidos" />
-            <MetricCard icon={XCircle} tom="danger" valor={data.perdidos} label="Perdidos" />
+            <MetricCard icon={CheckCircle2} tom="success" valor={data.preenchidos} label={t("Preenchidos")} />
+            <MetricCard icon={XCircle} tom="danger" valor={data.perdidos} label={t("Perdidos")} />
             {incluiHoje ? (
-              <MetricCard icon={Clock} tom="warning" valor={data.pendentesHoje} label="Pendentes hoje" />
+              <MetricCard icon={Clock} tom="warning" valor={data.pendentesHoje} label={t("Pendentes hoje")} />
             ) : null}
           </div>
 
           {/* Gráfico por dia */}
           {multiDias && data.porDia.length > 1 ? (
             <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <p className="mb-3 text-sm font-semibold">Por dia</p>
+              <p className="mb-3 text-sm font-semibold">{t("Por dia")}</p>
               <BarrasPorDia dias={data.porDia} />
               <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-sm bg-primary" /> Preenchidos
+                  <span className="h-2.5 w-2.5 rounded-sm bg-primary" /> {t("Preenchidos")}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-sm bg-muted" /> Esperados
+                  <span className="h-2.5 w-2.5 rounded-sm bg-muted" /> {t("Esperados")}
                 </span>
               </div>
             </div>
@@ -220,7 +226,7 @@ export function ReportsPage() {
           {/* Checklists mais perdidos */}
           {data.maisPerdidos.length > 0 ? (
             <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <p className="mb-3 text-sm font-semibold">Checklists mais perdidos</p>
+              <p className="mb-3 text-sm font-semibold">{t("Checklists mais perdidos")}</p>
               <div className="space-y-2">
                 {data.maisPerdidos.map((f) => (
                   <div key={f.nome} className="flex items-center justify-between gap-3 text-sm">
@@ -236,7 +242,7 @@ export function ReportsPage() {
 
           {data.esperados === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              Nenhum checklist esperado neste período.
+              {t("Nenhum checklist esperado neste período.")}
             </p>
           ) : null}
         </>

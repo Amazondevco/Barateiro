@@ -4,6 +4,7 @@ import { HashRouter } from "react-router-dom";
 import App from "./App";
 import { initOta } from "./lib/ota";
 import { aplicarStatusBar } from "./lib/status-bar";
+import { I18nProvider, readLang } from "./lib/i18n/i18n";
 import "./styles.css";
 
 // Tema: preferência salva ("checkai-theme") tem prioridade; senão segue o sistema.
@@ -26,11 +27,18 @@ if (savedPrimary) {
   );
 }
 
+// Idioma salvo (só no aparelho) já no boot, para o <html lang>.
+const lang0 = readLang();
+document.documentElement.lang =
+  lang0 === "pt" ? "pt-BR" : lang0 === "es" ? "es" : "en";
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <HashRouter>
-      <App />
-    </HashRouter>
+    <I18nProvider>
+      <HashRouter>
+        <App />
+      </HashRouter>
+    </I18nProvider>
   </StrictMode>,
 );
 

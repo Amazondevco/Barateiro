@@ -5,6 +5,7 @@ import {
   Fingerprint,
   History,
   LogOut,
+  Languages,
   Monitor,
   Moon,
   Sun,
@@ -14,6 +15,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { useAuth } from "../context/auth-context";
+import { useI18n, IDIOMAS } from "../lib/i18n/i18n";
 import {
   isBiometricAvailable,
   isBiometricEnabled,
@@ -48,6 +50,7 @@ const THEME_OPTS: { v: Theme; label: string; icon: typeof Sun }[] = [
 
 export function ConfigPage() {
   const { signOutUser } = useAuth();
+  const { t, lang, setLang } = useI18n();
   const [theme, setTheme] = useState<Theme>(() => readTheme());
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioOn, setBioOn] = useState(() => isBiometricEnabled());
@@ -85,7 +88,7 @@ export function ConfigPage() {
     }
     const ok = await verifyBiometric();
     if (!ok) {
-      setBioMsg("Não foi possível confirmar a biometria.");
+      setBioMsg(t("Não foi possível confirmar a biometria."));
       return;
     }
     setBiometricEnabled(true);
@@ -100,13 +103,13 @@ export function ConfigPage() {
   return (
     <div className="mx-auto w-full max-w-md space-y-6 p-4">
       <header className="mt-2">
-        <h1 className="text-xl font-semibold">Configurações</h1>
+        <h1 className="text-xl font-semibold">{t("Configurações")}</h1>
       </header>
 
       {/* Minhas informações → página de perfil */}
       <section>
         <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Conta
+          {t("Conta")}
         </p>
         <Link
           to="/app/perfil"
@@ -117,10 +120,10 @@ export function ConfigPage() {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[15px] font-semibold">
-              Minhas informações
+              {t("Minhas informações")}
             </span>
             <span className="block text-xs text-muted-foreground">
-              Dados pessoais e vínculo
+              {t("Dados pessoais e vínculo")}
             </span>
           </span>
           <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
@@ -130,7 +133,7 @@ export function ConfigPage() {
       {/* Aparência */}
       <section>
         <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Aparência
+          {t("Aparência")}
         </p>
         <div className="rounded-xl border border-border bg-card p-2">
           <div className="grid grid-cols-3 gap-2">
@@ -149,7 +152,35 @@ export function ConfigPage() {
                   }`}
                 >
                   <Icon className="h-5 w-5" />
-                  {opt.label}
+                  {t(opt.label)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Idioma */}
+      <section>
+        <p className="mb-2 flex items-center gap-1.5 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <Languages className="h-3.5 w-3.5" /> {t("Idioma")}
+        </p>
+        <div className="rounded-xl border border-border bg-card p-2">
+          <div className="grid grid-cols-3 gap-2">
+            {IDIOMAS.map((op) => {
+              const on = lang === op.v;
+              return (
+                <button
+                  key={op.v}
+                  type="button"
+                  onClick={() => setLang(op.v)}
+                  className={`rounded-lg border px-2 py-3 text-xs font-semibold transition-colors ${
+                    on
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {op.label}
                 </button>
               );
             })}
@@ -161,7 +192,7 @@ export function ConfigPage() {
       {bioAvailable ? (
         <section>
           <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Segurança
+            {t("Segurança")}
           </p>
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center gap-3">
@@ -169,9 +200,9 @@ export function ConfigPage() {
                 <Fingerprint className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">Desbloqueio por biometria</p>
+                <p className="text-sm font-medium">{t("Desbloqueio por biometria")}</p>
                 <p className="text-xs text-muted-foreground">
-                  Pede digital/face ao abrir o app.
+                  {t("Pede digital/face ao abrir o app.")}
                 </p>
               </div>
               <button
@@ -202,7 +233,7 @@ export function ConfigPage() {
       {/* Diagnóstico Operacional — só leitura */}
       <section>
         <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Diagnóstico Operacional
+          {t("Diagnóstico Operacional")}
         </p>
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between border-b border-border py-3 first:pt-0 last:border-none last:pb-0">
@@ -212,7 +243,7 @@ export function ConfigPage() {
               ) : (
                 <WifiOff className="h-4 w-4" />
               )}
-              Status de conexão
+              {t("Status de conexão")}
             </span>
             <span className="flex items-center gap-2 text-sm font-semibold">
               <span
@@ -220,29 +251,29 @@ export function ConfigPage() {
                   net.connected ? "bg-success" : "bg-danger"
                 }`}
               />
-              {net.connected ? "Online" : "Offline"}
+              {net.connected ? t("Online") : t("Offline")}
             </span>
           </div>
           <div className="flex items-center justify-between border-b border-border py-3 last:border-none last:pb-0">
             <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <UploadCloud className="h-4 w-4" />
-              Envios pendentes
+              {t("Envios pendentes")}
             </span>
             <span
               className={`text-sm font-semibold ${
                 pendentes > 0 ? "text-warning" : "text-muted-foreground"
               }`}
             >
-              {pendentes > 0 ? pendentes : "Nenhum"}
+              {pendentes > 0 ? pendentes : t("Nenhum")}
             </span>
           </div>
           <div className="flex items-center justify-between py-3 pb-0">
             <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <History className="h-4 w-4" />
-              Sincronização
+              {t("Sincronização")}
             </span>
             <span className="text-sm font-semibold text-muted-foreground">
-              {net.connected && pendentes === 0 ? "Em dia" : "Pendente"}
+              {net.connected && pendentes === 0 ? t("Em dia") : t("Pendente")}
             </span>
           </div>
         </div>
@@ -251,7 +282,7 @@ export function ConfigPage() {
       {/* Sessão */}
       <section>
         <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Sessão
+          {t("Sessão")}
         </p>
         <button
           type="button"
@@ -262,7 +293,7 @@ export function ConfigPage() {
             <LogOut className="h-5 w-5" />
           </span>
           <span className="flex-1 text-[15px] font-semibold text-danger">
-            Sair da conta
+            {t("Sair da conta")}
           </span>
           <ChevronRight className="h-5 w-5 text-danger/40" />
         </button>
