@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
+  MapPin,
   ArrowLeft,
   ArrowRight,
   Check,
@@ -130,6 +131,24 @@ export function FillForm({
   const [assinaturaAberta, setAssinaturaAberta] = useState(false);
   // Validação por etapa: itemId → erro (selo no campo).
   const [invalido, setInvalido] = useState<Record<string, string>>({});
+  // Confirmação "fora do local" (geofence) em modal estilizado.
+  const [geoModal, setGeoModal] = useState<{ dist: number; limite: number } | null>(
+    null,
+  );
+  const geoResolver = useRef<((ok: boolean) => void) | null>(null);
+
+  function confirmarForaDoLocal(dist: number, limite: number) {
+    return new Promise<boolean>((resolve) => {
+      geoResolver.current = resolve;
+      setGeoModal({ dist, limite });
+    });
+  }
+  function responderGeo(ok: boolean) {
+    setGeoModal(null);
+    const r = geoResolver.current;
+    geoResolver.current = null;
+    r?.(ok);
+  }
   // Rascunho automático: salva cada mudança e restaura ao reabrir.
   const draftKey = `checkai-draft:${redeMembroId}:${form.id}`;
   const draftFirst = useRef(true);
@@ -282,9 +301,7 @@ export function FillForm({
         ) {
           const d = distanciaM(pos.lat, pos.lng, geofence.uniLat, geofence.uniLng);
           if (d > geofence.raio) {
-            const ok = window.confirm(
-              `Você está a ~${Math.round(d)} m da unidade (limite ${geofence.raio} m). O envio será registrado como FORA DO LOCAL. Enviar mesmo assim?`,
-            );
+            const ok = await confirmarForaDoLocal(Math.round(d), geofence.raio);
             if (!ok) return setEnviando(false);
           }
         }
@@ -332,6 +349,46 @@ export function FillForm({
 
   return (
     <div className="flex flex-1 flex-col">
+      {/* Confirmação "fora do local" (geofence) — modal com a cara do app */}
+      {geoModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <div className="flex flex-col items-center text-center">
+              <span className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-warning-bg text-warning">
+                <MapPin className="h-7 w-7" />
+              </span>
+              <h2 className="text-base font-bold text-foreground">
+                Fora do local da unidade
+              </h2>
+              <p className="mt-1.5 text-sm leading-snug text-muted-foreground">
+                Você está a ~{geoModal.dist} m da unidade (o limite é{" "}
+                {geoModal.limite} m). O envio será marcado como{" "}
+                <strong className="font-semibold text-foreground">
+                  fora do local
+                </strong>
+                . Enviar mesmo assim?
+              </p>
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => responderGeo(false)}
+                className="h-12 flex-1 rounded-xl bg-muted text-sm font-semibold text-foreground transition-colors hover:bg-border"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => responderGeo(true)}
+                className="h-12 flex-1 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Enviar assim mesmo
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <header
         className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-card/95 p-4 backdrop-blur"
         style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}
