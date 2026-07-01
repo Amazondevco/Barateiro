@@ -135,6 +135,41 @@ const LOGOS: ReactNode[] = [
       <tspan fontWeight={400}>Agro</tspan><tspan fontWeight={800}>Bem</tspan>
     </text>
   </svg>,
+
+  // ── Navegação ────────────────────────────────────────────────
+  // Navemar — rosa dos ventos + wordmark
+  <svg key="navemar" viewBox="0 0 120 24" className="h-[26px] w-auto">
+    <path d="M9 1 L10.6 7.4 L17 9 L10.6 10.6 L9 17 L7.4 10.6 L1 9 L7.4 7.4 Z" fill="currentColor" />
+    <text x="23" y="17.5" fontSize="16.5" letterSpacing="-0.2" fontFamily={FF} fill="currentColor">
+      <tspan fontWeight={400}>Nave</tspan><tspan fontWeight={800}>mar</tspan>
+    </text>
+  </svg>,
+
+  // Amazonav — navegação fluvial, wordmark forte
+  <svg key="amazonav" viewBox="0 0 120 24" className="h-[26px] w-auto">
+    <text x="1" y="16.5" fontSize="17.5" fontWeight={800} letterSpacing="-0.6" fontFamily={FF} fill="currentColor">Amazonav</text>
+    <path d="M2 20.5 q4 -3 8 0 t8 0 t8 0 t8 0 t8 0" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" opacity="0.85" />
+  </svg>,
+
+  // ── Serviços gerais ──────────────────────────────────────────
+  // Portalle — portaria/recepção: arco (porta) + wordmark
+  <svg key="portalle" viewBox="0 0 116 24" className="h-[26px] w-auto">
+    <path fillRule="evenodd" clipRule="evenodd" d="M1 19 V9 A8 8 0 0 1 17 9 V19 H12.5 V9 A3.5 3.5 0 0 0 5.5 9 V19 Z" fill="currentColor" />
+    <text x="24" y="17.5" fontSize="16.5" fontWeight={700} letterSpacing="-0.2" fontFamily={FF} fill="currentColor">Portalle</text>
+  </svg>,
+
+  // Brilhar — limpeza: brilho (sparkle) + wordmark
+  <svg key="brilhar" viewBox="0 0 104 24" className="h-[26px] w-auto">
+    <path d="M8 2 L9.4 7.6 L15 9 L9.4 10.4 L8 16 L6.6 10.4 L1 9 L6.6 7.6 Z" fill="currentColor" />
+    <path d="M15 2.5 l.7 2.3 2.3 .7 -2.3 .7 -.7 2.3 -.7-2.3 -2.3-.7 2.3-.7 Z" fill="currentColor" />
+    <text x="24" y="17.5" fontSize="16.5" fontWeight={700} letterSpacing="-0.2" fontFamily={FF} fill="currentColor">Brilhar</text>
+  </svg>,
+
+  // Facilita — serviços/facilities: wordmark limpo + pingo
+  <svg key="facilita" viewBox="0 0 96 24" className="h-[26px] w-auto">
+    <text x="1" y="18" fontSize="18.5" fontWeight={700} letterSpacing="-0.4" fontFamily={FF} fill="currentColor">Facilita</text>
+    <circle cx="86" cy="6.5" r="2.2" fill="currentColor" />
+  </svg>,
 ];
 
 // Carrossel minimalista (marquee) das logos, deslizando da esquerda p/ direita.
@@ -164,7 +199,7 @@ export function ClientsCarousel() {
       `}</style>
       <div className="clients-carousel__track">
         {dobrado.map((logo, i) => (
-          <div key={i} className="flex shrink-0 items-center px-7 text-muted-foreground opacity-60">
+          <div key={i} className="flex shrink-0 items-center px-5 text-muted-foreground opacity-60">
             {logo}
           </div>
         ))}
