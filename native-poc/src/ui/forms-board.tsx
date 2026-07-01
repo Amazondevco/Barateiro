@@ -138,6 +138,30 @@ export function FormsBoard({
     });
   }
 
+  // Ordem dos checklists DENTRO de cada pasta (arrastável na edição). Mapa
+  // pastaId → lista de formIds. Guardada localmente, por aparelho.
+  const chaveFormOrder = `folderforms:${membroId}`;
+  const [ordemPasta, setOrdemPasta] = useState<Record<string, string[]>>(() => {
+    try {
+      const s = localStorage.getItem(`folderforms:${membroId}`);
+      return s ? (JSON.parse(s) as Record<string, string[]>) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  function salvarOrdemPasta(pastaId: string, ids: string[]) {
+    setOrdemPasta((prev) => {
+      const next = { ...prev, [pastaId]: ids };
+      try {
+        localStorage.setItem(chaveFormOrder, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
+
   const chave = `formorder:${membroId}`;
   useEffect(() => {
     try {
@@ -214,10 +238,15 @@ export function FormsBoard({
   }, [pastas]);
 
   const soltos = ordenados.filter((f) => !pastaDeForm.has(f.id));
-  const pastasView = pastas.map((p) => ({
-    ...p,
-    forms: ordenados.filter((f) => pastaDeForm.get(f.id) === p.id),
-  }));
+  const pastasView = pastas.map((p) => {
+    const dentro = ordenados.filter((f) => pastaDeForm.get(f.id) === p.id);
+    const ord = ordemPasta[p.id];
+    if (ord && ord.length) {
+      const pos = new Map(ord.map((id, i) => [id, i]));
+      dentro.sort((a, b) => (pos.get(a.id) ?? 1e9) - (pos.get(b.id) ?? 1e9));
+    }
+    return { ...p, forms: dentro };
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -426,6 +455,10 @@ export function FormsBoard({
           inicialIcone={icones[editando.id] ?? "folder"}
           forms={forms}
           emPasta={pastaDeForm}
+          formsDaPasta={
+            pastasView.find((p) => p.id === editando.id)?.forms ?? []
+          }
+          onReordenar={(ids) => salvarOrdemPasta(editando.id, ids)}
           onClose={() => setEditando(null)}
           onSalvar={async (nome, icone) => {
             await editarPasta(editando.id, nome, icone);
@@ -529,9 +562,9 @@ function PastaCard({
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <div className="flex items-center gap-3 p-4">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Icon className="h-6 w-6" />
+      <div className="flex items-center gap-3 p-3.5">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Icon className="h-5 w-5" />
         </span>
         <button
           type="button"
@@ -539,10 +572,10 @@ function PastaCard({
           className="flex min-w-0 flex-1 items-center gap-2 text-left"
         >
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[15px] font-semibold">
+            <span className="block truncate text-[13.5px] font-semibold">
               {pasta.nome}
             </span>
-            <span className="block text-[13px] text-muted-foreground">
+            <span className="block text-[11.5px] text-muted-foreground">
               {pasta.forms.length} checklist(s)
             </span>
           </span>
@@ -578,6 +611,8 @@ function PastaModal({
   inicialIcone,
   forms,
   emPasta,
+  formsDaPasta,
+  onReordenar,
   onClose,
   onSalvar,
 }: {
@@ -586,18 +621,40 @@ function PastaModal({
   inicialIcone?: string;
   forms: FormItem[];
   emPasta: Map<string, string>;
+  formsDaPasta?: FormItem[];
+  onReordenar?: (ids: string[]) => void;
   onClose: () => void;
   onSalvar: (nome: string, icone: string, ids: string[]) => Promise<void>;
 }) {
   const editar = modo === "editar";
+  const [aba, setAba] = useState<"visual" | "formularios">("visual");
   const [nome, setNome] = useState(inicialNome ?? "");
   const [icone, setIcone] = useState(inicialIcone ?? "folder");
   const [sel, setSel] = useState<Record<string, boolean>>({});
   const [salvando, setSalvando] = useState(false);
+  // Ordem local dos checklists da pasta (aba Formulários).
+  const [ordemForms, setOrdemForms] = useState<FormItem[]>(formsDaPasta ?? []);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  );
 
   const ids = forms.filter((f) => sel[f.id]).map((f) => f.id);
   const podeSalvar = nome.trim().length > 0 && !salvando;
   const HeaderIcon = iconePorKey(icone);
+
+  function onDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    setOrdemForms((prev) => {
+      const oldI = prev.findIndex((f) => f.id === active.id);
+      const newI = prev.findIndex((f) => f.id === over.id);
+      if (oldI < 0 || newI < 0) return prev;
+      const next = arrayMove(prev, oldI, newI);
+      onReordenar?.(next.map((f) => f.id));
+      return next;
+    });
+  }
 
   async function salvar() {
     if (!podeSalvar) return;
@@ -621,79 +678,136 @@ function PastaModal({
           </h2>
         </div>
 
+        {/* Abas (só na edição) */}
+        {editar && (
+          <div className="flex gap-1 border-b border-border p-2">
+            {[
+              { v: "visual" as const, label: "Visual" },
+              { v: "formularios" as const, label: "Formulários" },
+            ].map((t) => (
+              <button
+                key={t.v}
+                type="button"
+                onClick={() => setAba(t.v)}
+                className={`h-9 flex-1 rounded-lg text-sm font-semibold transition-colors ${
+                  aba === t.v
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex-1 space-y-4 overflow-y-auto p-4">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">
-              Nome da pasta
-            </label>
-            <input
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              autoFocus
-              placeholder="Ex.: Manhã, Frios, Auditorias…"
-              className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </div>
-
-          <div>
-            <p className="mb-1.5 text-sm font-medium">Ícone</p>
-            <div className="flex flex-wrap gap-2">
-              {ICONES.map(({ key, Icon }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setIcone(key)}
-                  aria-label={`Ícone ${key}`}
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${
-                    icone === key
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-background text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {!editar && (
-            <div>
-              <p className="mb-1.5 text-sm font-medium">Adicionar checklists</p>
-              <div className="space-y-1.5">
-                {forms.map((f) => {
-                  const jaEm = emPasta.get(f.id);
-                  return (
-                    <label
-                      key={f.id}
-                      className="flex cursor-pointer items-center gap-3 rounded-xl border border-border p-3 text-sm transition-colors hover:bg-muted"
-                    >
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 shrink-0 accent-primary"
-                        checked={!!sel[f.id]}
-                        onChange={(e) =>
-                          setSel((s) => ({ ...s, [f.id]: e.target.checked }))
-                        }
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">
-                          {f.nome}
-                        </span>
-                        {jaEm ? (
-                          <span className="block text-xs text-muted-foreground">
-                            Já está em outra pasta — será movido
-                          </span>
-                        ) : null}
-                      </span>
-                    </label>
-                  );
-                })}
-                {forms.length === 0 ? (
-                  <p className="py-2 text-center text-xs text-muted-foreground">
-                    Nenhum checklist disponível.
-                  </p>
-                ) : null}
+          {(!editar || aba === "visual") && (
+            <>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  Nome da pasta
+                </label>
+                <input
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  autoFocus
+                  placeholder="Ex.: Manhã, Frios, Auditorias…"
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
               </div>
+
+              <div>
+                <p className="mb-1.5 text-sm font-medium">Ícone</p>
+                <div className="flex flex-wrap gap-2">
+                  {ICONES.map(({ key, Icon }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setIcone(key)}
+                      aria-label={`Ícone ${key}`}
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${
+                        icone === key
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-background text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {!editar && (
+                <div>
+                  <p className="mb-1.5 text-sm font-medium">Adicionar checklists</p>
+                  <div className="space-y-1.5">
+                    {forms.map((f) => {
+                      const jaEm = emPasta.get(f.id);
+                      return (
+                        <label
+                          key={f.id}
+                          className="flex cursor-pointer items-center gap-3 rounded-xl border border-border p-3 text-sm transition-colors hover:bg-muted"
+                        >
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 shrink-0 accent-primary"
+                            checked={!!sel[f.id]}
+                            onChange={(e) =>
+                              setSel((s) => ({ ...s, [f.id]: e.target.checked }))
+                            }
+                          />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">
+                              {f.nome}
+                            </span>
+                            {jaEm ? (
+                              <span className="block text-xs text-muted-foreground">
+                                Já está em outra pasta — será movido
+                              </span>
+                            ) : null}
+                          </span>
+                        </label>
+                      );
+                    })}
+                    {forms.length === 0 ? (
+                      <p className="py-2 text-center text-xs text-muted-foreground">
+                        Nenhum checklist disponível.
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {editar && aba === "formularios" && (
+            <div>
+              <p className="mb-2 text-xs text-muted-foreground">
+                Arraste para mudar a ordem dos checklists dentro da pasta.
+              </p>
+              {ordemForms.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Nenhum checklist nesta pasta.
+                </p>
+              ) : (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={onDragEnd}
+                >
+                  <SortableContext
+                    items={ordemForms.map((f) => f.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-1.5">
+                      {ordemForms.map((f) => (
+                        <SortableFormRow key={f.id} form={f} />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              )}
             </div>
           )}
         </div>
@@ -707,7 +821,7 @@ function PastaModal({
             onClick={onClose}
             className="h-12 flex-1 rounded-xl bg-muted text-sm font-semibold text-foreground transition-colors hover:bg-border"
           >
-            Cancelar
+            {editar ? "Fechar" : "Cancelar"}
           </button>
           <button
             type="button"
@@ -720,6 +834,37 @@ function PastaModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Linha arrastável de checklist (aba Formulários do modal de edição da pasta).
+function SortableFormRow({ form }: { form: FormItem }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: form.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 rounded-xl border border-border bg-background p-3"
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        aria-label="Arrastar"
+        className="shrink-0 cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+      >
+        <GripVertical className="h-5 w-5" />
+      </button>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium">
+        {form.nome}
+      </span>
     </div>
   );
 }
@@ -808,16 +953,16 @@ function FormCard({ form, membroId }: { form: FormItem; membroId: string }) {
   const inner = (
     <>
       <span
-        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
           fora ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
         }`}
       >
-        <ClipboardList className="h-6 w-6" />
+        <ClipboardList className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] font-semibold">{form.nome}</p>
+        <p className="truncate text-[13.5px] font-semibold">{form.nome}</p>
         {form.descricao && (
-          <p className="truncate text-[13px] text-muted-foreground">
+          <p className="truncate text-[11.5px] text-muted-foreground">
             {form.descricao}
           </p>
         )}
@@ -842,7 +987,7 @@ function FormCard({ form, membroId }: { form: FormItem; membroId: string }) {
     return (
       <div
         aria-disabled="true"
-        className="flex cursor-not-allowed items-center gap-4 rounded-2xl border border-border bg-card p-4 opacity-70 shadow-sm"
+        className="flex cursor-not-allowed items-center gap-3 rounded-2xl border border-border bg-card p-3.5 opacity-70 shadow-sm"
       >
         {inner}
       </div>
@@ -852,7 +997,7 @@ function FormCard({ form, membroId }: { form: FormItem; membroId: string }) {
   return (
     <Link
       to={`/app/rede/${membroId}/form/${form.id}`}
-      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary hover:shadow-md"
+      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-sm transition-all hover:border-primary hover:shadow-md"
     >
       {inner}
     </Link>
@@ -878,16 +1023,16 @@ function SortableCard({
   const conteudo = (
     <>
       <span
-        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
           fora ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
         }`}
       >
-        <ClipboardList className="h-6 w-6" />
+        <ClipboardList className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] font-semibold">{form.nome}</p>
+        <p className="truncate text-[13.5px] font-semibold">{form.nome}</p>
         {form.descricao && (
-          <p className="truncate text-[13px] text-muted-foreground">
+          <p className="truncate text-[11.5px] text-muted-foreground">
             {form.descricao}
           </p>
         )}
@@ -908,7 +1053,7 @@ function SortableCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm"
+      className="flex items-center gap-2 rounded-2xl border border-border bg-card p-3.5 shadow-sm"
     >
       <button
         {...attributes}
