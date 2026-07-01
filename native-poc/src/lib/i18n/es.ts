@@ -229,4 +229,25 @@ export const es: Record<string, string> = {
   Desbloquear: "Desbloquear",
   "{n} envio(s) pendente(s)": "{n} envío(s) pendiente(s)",
   "{n} erro(s) de sincronização": "{n} error(es) de sincronización",
+
+  // ── Definir contraseña (concluir registro en la app) ──
+  "Defina sua senha": "Define tu contraseña",
+  Olá: "Hola",
+  "Crie uma senha para acessar sua conta.":
+    "Crea una contraseña para acceder a tu cuenta.",
+  "Crie uma senha": "Crea una contraseña",
+  "Confirmar senha": "Confirmar contraseña",
+  "Ao menos 7 caracteres": "Al menos 7 caracteres",
+  "1 letra maiúscula": "1 letra mayúscula",
+  "1 número": "1 número",
+  "A senha não cumpre os requisitos.": "La contraseña no cumple los requisitos.",
+  "As senhas não conferem.": "Las contraseñas no coinciden.",
+  "Criar senha e entrar": "Crear contraseña y entrar",
+  "Salvando…": "Guardando…",
+  "Não foi possível concluir. Tente novamente.":
+    "No se pudo completar. Inténtalo de nuevo.",
+  "Link inválido ou expirado": "Enlace inválido o expirado",
+  "Abra o link mais recente ou peça um novo ao administrador.":
+    "Abre el enlace más reciente o pide uno nuevo al administrador.",
+  "Ir para o login": "Ir al inicio de sesión",
 };

@@ -51,6 +51,22 @@ jobs:
         working-directory: native-poc
         run: npx cap sync android
 
+      - name: Restaurar keystore de assinatura (chave fixa p/ App Links)
+        working-directory: native-poc/android
+        run: |
+          if [ -n "${{ secrets.CHECKAI_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.CHECKAI_KEYSTORE_BASE64 }}" | base64 --decode > checkai.jks
+            {
+              echo "CHECKAI_KEYSTORE_PATH=$(pwd)/checkai.jks"
+              echo "CHECKAI_KEYSTORE_PASSWORD=${{ secrets.CHECKAI_KEYSTORE_PASSWORD }}"
+              echo "CHECKAI_KEY_ALIAS=${{ secrets.CHECKAI_KEY_ALIAS }}"
+              echo "CHECKAI_KEY_PASSWORD=${{ secrets.CHECKAI_KEY_PASSWORD }}"
+            } >> "$GITHUB_ENV"
+            echo "Keystore fixa restaurada — APK assinado com ela."
+          else
+            echo "Sem CHECKAI_KEYSTORE_BASE64 — chave debug padrão (App Links não verificam)."
+          fi
+
       - name: Build debug APK
         working-directory: native-poc/android
         run: |

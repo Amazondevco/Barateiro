@@ -27,6 +27,21 @@
 
                 <data android:scheme="checkai" />
             </intent-filter>
+
+            <!-- App Link https: abre o app DIRETO no link de convite (concluir
+                 cadastro / definir senha). autoVerify usa o assetlinks.json do
+                 domínio. Sem o app instalado, o link abre no navegador (PWA). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="https"
+                    android:host="check-ai-br.vercel.app"
+                    android:pathPrefix="/auth/redefinir" />
+            </intent-filter>
         </activity>
 
         <!-- Push: ícone monocromático (barra de status) + cor de acento padrão. -->

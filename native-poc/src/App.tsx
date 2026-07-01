@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/auth-context";
 import { AppShell } from "./ui/app-shell";
 import { LoginPage } from "./pages/login-page";
+import { DefinirSenhaPage } from "./pages/definir-senha-page";
 import { MembershipsPage } from "./pages/memberships-page";
 import { NetworkHomePage } from "./pages/network-home-page";
 import { NoticesPage } from "./pages/notices-page";
@@ -21,6 +22,7 @@ export default function App() {
       <DeepLinkHandler />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/definir-senha" element={<DefinirSenhaPage />} />
         <Route
           path="/app/*"
           element={
