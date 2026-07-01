@@ -220,7 +220,7 @@ export function FormsBoard({
       </div>
 
       {/* filtros + ordenar + criar pasta */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-2">
         <Popover
           label="Filtros"
           icon={SlidersHorizontal}
@@ -609,13 +609,9 @@ function Opcao({
 
 function FormCard({ form, membroId }: { form: FormItem; membroId: string }) {
   const fora = !!form.foraDoHorario;
-  return (
-    <Link
-      to={`/app/rede/${membroId}/form/${form.id}`}
-      className={`flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md ${
-        fora ? "opacity-70 hover:border-warning" : "hover:border-primary"
-      }`}
-    >
+
+  const inner = (
+    <>
       <span
         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
           fora ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
@@ -641,8 +637,29 @@ function FormCard({ form, membroId }: { form: FormItem; membroId: string }) {
             <Clock className="h-3.5 w-3.5" /> Fora do horário
           </span>
         ) : null}
-        <ChevronRight className="h-5 w-5 text-muted-foreground/60" />
+        {!fora && <ChevronRight className="h-5 w-5 text-muted-foreground/60" />}
       </div>
+    </>
+  );
+
+  // Fora do horário: aparece (com badge), mas não é clicável nem navega.
+  if (fora) {
+    return (
+      <div
+        aria-disabled="true"
+        className="flex cursor-not-allowed items-center gap-4 rounded-2xl border border-border bg-card p-4 opacity-70 shadow-sm"
+      >
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      to={`/app/rede/${membroId}/form/${form.id}`}
+      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary hover:shadow-md"
+    >
+      {inner}
     </Link>
   );
 }
@@ -654,6 +671,7 @@ function SortableCard({
   form: FormItem;
   membroId: string;
 }) {
+  const fora = !!form.foraDoHorario;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: form.id });
   const style = {
@@ -661,6 +679,36 @@ function SortableCard({
     transition,
     opacity: isDragging ? 0.6 : 1,
   };
+
+  const conteudo = (
+    <>
+      <span
+        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+          fora ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+        }`}
+      >
+        <ClipboardList className="h-6 w-6" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[15px] font-semibold">{form.nome}</p>
+        {form.descricao && (
+          <p className="truncate text-[13px] text-muted-foreground">
+            {form.descricao}
+          </p>
+        )}
+      </div>
+      {form.enviadoHoje ? (
+        <span className="flex shrink-0 items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
+          <CircleCheck className="h-3.5 w-3.5" /> Hoje
+        </span>
+      ) : fora ? (
+        <span className="flex shrink-0 items-center gap-1 rounded-full bg-warning-bg px-2 py-0.5 text-xs font-semibold text-warning">
+          <Clock className="h-3.5 w-3.5" /> Fora do horário
+        </span>
+      ) : null}
+    </>
+  );
+
   return (
     <div
       ref={setNodeRef}
@@ -675,35 +723,22 @@ function SortableCard({
       >
         <GripVertical className="h-5 w-5" />
       </button>
-      <Link
-        to={`/app/rede/${membroId}/form/${form.id}`}
-        className={`flex min-w-0 flex-1 items-center gap-3 ${form.foraDoHorario ? "opacity-70" : ""}`}
-      >
-        <span
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-            form.foraDoHorario ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
-          }`}
+      {/* Fora do horário: aparece (com badge), mas não navega. */}
+      {fora ? (
+        <div
+          aria-disabled="true"
+          className="flex min-w-0 flex-1 cursor-not-allowed items-center gap-3 opacity-70"
         >
-          <ClipboardList className="h-6 w-6" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-semibold">{form.nome}</p>
-          {form.descricao && (
-            <p className="truncate text-[13px] text-muted-foreground">
-              {form.descricao}
-            </p>
-          )}
+          {conteudo}
         </div>
-        {form.enviadoHoje ? (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
-            <CircleCheck className="h-3.5 w-3.5" /> Hoje
-          </span>
-        ) : form.foraDoHorario ? (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-warning-bg px-2 py-0.5 text-xs font-semibold text-warning">
-            <Clock className="h-3.5 w-3.5" /> Fora
-          </span>
-        ) : null}
-      </Link>
+      ) : (
+        <Link
+          to={`/app/rede/${membroId}/form/${form.id}`}
+          className="flex min-w-0 flex-1 items-center gap-3"
+        >
+          {conteudo}
+        </Link>
+      )}
     </div>
   );
 }

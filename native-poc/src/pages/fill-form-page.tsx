@@ -462,9 +462,9 @@ export function FillFormPage() {
         </div>
       ) : null}
 
-      {/* Cabeçalho */}
+      {/* Cabeçalho — a barra de progresso É a borda de baixo (linha única e sutil) */}
       <header
-        className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur"
+        className="sticky top-0 z-10 flex items-center gap-3 bg-background/95 px-4 py-3 backdrop-blur"
         style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
       >
         <button
@@ -489,25 +489,17 @@ export function FillFormPage() {
                 : form.descricao || "Checklist"}
           </p>
         </div>
-      </header>
 
-      {/* Progresso das etapas */}
-      {!reviewing && steps.length > 1 ? (
-        <div className="flex gap-1 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
-          {steps.map((_, index) => (
+        {/* Borda de baixo = trilho fininho; a parte laranja preenche conforme avança */}
+        <div className="absolute inset-x-0 bottom-0 h-0.5 bg-border">
+          {!reviewing && steps.length > 1 ? (
             <div
-              key={index}
-              className={`h-1 flex-1 rounded-full ${
-                index < stepIndex
-                  ? "bg-primary/50"
-                  : index === stepIndex
-                    ? "bg-primary"
-                    : "bg-border"
-              }`}
+              className="h-full rounded-r-full bg-primary transition-[width] duration-500 ease-out"
+              style={{ width: `${((stepIndex + 1) / steps.length) * 100}%` }}
             />
-          ))}
+          ) : null}
         </div>
-      ) : null}
+      </header>
 
       <div className={`flex-1 space-y-5 p-4 ${reviewing ? "pb-52" : "pb-28"}`}>
         {reviewing ? (
@@ -690,7 +682,7 @@ export function FillFormPage() {
               <button
                 type="button"
                 onClick={() => setReviewing(false)}
-                className="flex h-14 flex-none items-center justify-center gap-2 rounded-2xl bg-muted px-5 text-base font-semibold text-foreground transition-colors hover:bg-border"
+                className="flex h-12 flex-none items-center justify-center gap-2 rounded-2xl bg-muted px-5 text-base font-semibold text-foreground transition-colors hover:bg-border"
               >
                 <ArrowLeft className="h-4 w-4" /> Editar
               </button>
@@ -698,7 +690,7 @@ export function FillFormPage() {
                 type="button"
                 onClick={() => void handleSubmit()}
                 disabled={submitting || !signature}
-                className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
               >
                 {submitting ? (
                   <>
@@ -722,7 +714,7 @@ export function FillFormPage() {
                   setStepIndex((prev) => Math.max(0, prev - 1));
                   window.scrollTo({ top: 0 });
                 }}
-                className="flex h-14 flex-none items-center justify-center gap-2 rounded-2xl bg-muted px-5 text-base font-semibold text-foreground transition-colors hover:bg-border"
+                className="flex h-12 flex-none items-center justify-center gap-2 rounded-2xl bg-muted px-5 text-base font-semibold text-foreground transition-colors hover:bg-border"
               >
                 <ArrowLeft className="h-4 w-4" /> Voltar
               </button>
@@ -731,7 +723,7 @@ export function FillFormPage() {
               <button
                 type="button"
                 onClick={() => tentarAvancar(() => setReviewing(true))}
-                className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
               >
                 <ClipboardCheck className="h-5 w-5" /> Revisar e enviar
               </button>
@@ -743,7 +735,7 @@ export function FillFormPage() {
                     setStepIndex((prev) => Math.min(steps.length - 1, prev + 1)),
                   )
                 }
-                className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
               >
                 Próxima <ArrowRight className="h-5 w-5" />
               </button>

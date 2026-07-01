@@ -389,8 +389,9 @@ export function FillForm({
         </div>
       ) : null}
 
+      {/* Cabeçalho — a barra de progresso É a borda de baixo (linha única e sutil) */}
       <header
-        className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-card/95 p-4 backdrop-blur"
+        className="sticky top-0 z-20 flex items-center gap-3 bg-card/95 p-4 backdrop-blur"
         style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}
       >
         <button
@@ -416,21 +417,17 @@ export function FillForm({
                 : form.descricao || "Checklist"}
           </p>
         </div>
-      </header>
 
-      {/* progresso das etapas — segmentos */}
-      {!revisando && total > 1 && (
-        <div className="flex gap-1 border-b border-border bg-card/95 px-5 pb-4 pt-3 backdrop-blur">
-          {etapas.map((_, i) => (
+        {/* Borda de baixo = trilho fininho; a parte laranja preenche conforme avança */}
+        <div className="absolute inset-x-0 bottom-0 h-0.5 bg-border">
+          {!revisando && total > 1 ? (
             <div
-              key={i}
-              className={`h-1 flex-1 rounded-full ${
-                i < idx ? "bg-primary/50" : i === idx ? "bg-primary" : "bg-border"
-              }`}
+              className="h-full rounded-r-full bg-primary transition-[width] duration-500 ease-out"
+              style={{ width: `${((idx + 1) / total) * 100}%` }}
             />
-          ))}
+          ) : null}
         </div>
-      )}
+      </header>
 
       <div className={`flex-1 space-y-4 p-5 ${revisando ? "pb-[200px]" : "pb-[120px]"}`}>
         {revisando ? (
@@ -587,14 +584,14 @@ export function FillForm({
               <Button
                 variant="secondary"
                 onClick={() => setRevisando(false)}
-                className="h-14 flex-none rounded-2xl px-5"
+                className="h-12 flex-none rounded-2xl px-5"
               >
                 <ArrowLeft className="h-4 w-4" /> Editar
               </Button>
               <Button
                 onClick={enviar}
                 disabled={enviando || !assinada}
-                className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
+                className="h-12 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
               >
                 {enviando ? (
                   <>
@@ -618,7 +615,7 @@ export function FillForm({
                   setEtapa(idx - 1);
                   window.scrollTo({ top: 0 });
                 }}
-                className="h-14 flex-none rounded-2xl px-5"
+                className="h-12 flex-none rounded-2xl px-5"
               >
                 <ArrowLeft className="h-4 w-4" /> Voltar
               </Button>
@@ -626,14 +623,14 @@ export function FillForm({
             {ultima ? (
               <Button
                 onClick={() => tentarAvancar(() => setRevisando(true))}
-                className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
+                className="h-12 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
               >
                 <ClipboardCheck className="h-5 w-5" /> Revisar e enviar
               </Button>
             ) : (
               <Button
                 onClick={() => tentarAvancar(() => setEtapa(idx + 1))}
-                className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
+                className="h-12 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-sm"
               >
                 Próxima <ArrowRight className="h-5 w-5" />
               </Button>
