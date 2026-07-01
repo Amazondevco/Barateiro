@@ -10,18 +10,23 @@ import { cn } from "@/lib/utils";
 // vermelho. Reutilizada no cadastro e na definição/redefinição de senha.
 export function SenhaCriterios({
   senha,
+  concluido = false,
   className,
 }: {
   senha: string;
+  // Modo "conclusão": mostra todos os critérios já cumpridos (✓ verde), como
+  // confirmação de que a senha criada está dentro das regras.
+  concluido?: boolean;
   className?: string;
 }) {
   const criterios = criteriosSenha(senha);
-  const ativo = senha.length > 0;
+  const ativo = concluido || senha.length > 0;
 
   return (
     <ul className={cn("mt-2 space-y-1.5", className)}>
       {criterios.map((c) => {
-        const estado = !ativo ? "neutro" : c.ok ? "ok" : "falta";
+        const cumprido = concluido || c.ok;
+        const estado = !ativo ? "neutro" : cumprido ? "ok" : "falta";
         return (
           <li
             key={c.texto}

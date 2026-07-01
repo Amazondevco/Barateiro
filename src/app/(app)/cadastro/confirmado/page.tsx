@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { SenhaCriterios } from "@/components/senha-criterios";
 
 export const metadata = { title: "Conta confirmada — Check.AI" };
 
@@ -34,6 +35,14 @@ export default function ConfirmadoPage() {
           Sua conta está ativa. O próximo passo é entrar na sua rede pelo link
           ou convite que o gestor enviar.
         </p>
+
+        {/* Confirmação de que a senha criada atende aos requisitos */}
+        <div className="mt-6 w-full max-w-xs rounded-xl border border-border bg-muted/20 p-4 text-left">
+          <p className="text-xs font-semibold text-foreground">
+            Senha criada com segurança
+          </p>
+          <SenhaCriterios senha="" concluido className="mt-2" />
+        </div>
       </div>
 
       {/* Ação */}
