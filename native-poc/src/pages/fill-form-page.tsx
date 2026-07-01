@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Geolocation } from "@capacitor/geolocation";
+import { useI18n } from "../lib/i18n/i18n";
 import { fetchFormDefinition } from "../lib/operator-api";
 import type {
   FormDefinition,
@@ -98,6 +99,7 @@ async function pegarLocalizacao(): Promise<{ lat: number; lng: number } | null> 
 }
 
 export function FillFormPage() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { memberId = "", formId = "" } = useParams();
   const [loading, setLoading] = useState(true);
@@ -177,7 +179,7 @@ export function FillFormPage() {
         setError(
           loadError instanceof Error
             ? loadError.message
-            : "Falha ao carregar checklist.",
+            : t("Falha ao carregar checklist."),
         );
       } finally {
         setLoading(false);
@@ -232,7 +234,7 @@ export function FillFormPage() {
   }, [form]);
 
   if (loading) {
-    return <LoadingScreen label="Carregando checklist do operador…" />;
+    return <LoadingScreen label={t("Carregando checklist do operador…")} />;
   }
 
   if (!form) {
@@ -247,7 +249,7 @@ export function FillFormPage() {
 
   function labelFor(item: FormItem, value: string) {
     const pair = OPTIONS[item.tipo]?.find(([candidate]) => candidate === value);
-    return pair?.[1] ?? (value || "N/A");
+    return t(pair?.[1] ?? (value || "N/A"));
   }
 
   function validate() {
@@ -292,11 +294,11 @@ export function FillFormPage() {
     const nonConforming = ["nao", "ruptura"].includes(value);
     const exigeValor =
       item.tipo !== "texto" && item.tipo !== "numero" && item.tipo !== "foto";
-    if (exigeValor && !value) return "Não preenchido";
+    if (exigeValor && !value) return t("Não preenchido");
     if (item.obrigaObsQuandoNao && nonConforming && !note.trim())
-      return "Observação obrigatória";
+      return t("Observação obrigatória");
     if (item.obrigaFotoQuandoNao && nonConforming && !photo)
-      return "Foto obrigatória";
+      return t("Foto obrigatória");
     return null;
   }
 
@@ -344,9 +346,7 @@ export function FillFormPage() {
     if (form.exigeLocalizacao) {
       const loc = await pegarLocalizacao();
       if (!loc) {
-        setError(
-          "Não foi possível obter a localização. Ative o GPS e a permissão de localização para enviar este checklist.",
-        );
+        setError(t("Não foi possível obter a localização. Ative o GPS e a permissão de localização para enviar este checklist."));
         setSubmitting(false);
         return;
       }
@@ -431,7 +431,7 @@ export function FillFormPage() {
                 <MapPin className="h-7 w-7" />
               </span>
               <h2 className="text-base font-bold text-foreground">
-                Fora do local da unidade
+                {t("Fora do local da unidade")}
               </h2>
               <p className="mt-1.5 text-sm leading-snug text-muted-foreground">
                 Você está a ~{geoModal.dist} m da unidade (o limite é{" "}
@@ -448,14 +448,14 @@ export function FillFormPage() {
                 onClick={() => responderGeo(false)}
                 className="h-12 flex-1 rounded-xl bg-muted text-sm font-semibold text-foreground transition-colors hover:bg-border"
               >
-                Cancelar
+                {t("Cancelar")}
               </button>
               <button
                 type="button"
                 onClick={() => responderGeo(true)}
                 className="h-12 flex-1 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
               >
-                Enviar assim mesmo
+                {t("Enviar assim mesmo")}
               </button>
             </div>
           </div>
@@ -473,7 +473,7 @@ export function FillFormPage() {
             reviewing ? setReviewing(false) : navigate(`/app/rede/${memberId}`)
           }
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground transition-colors hover:text-foreground"
-          aria-label="Voltar"
+          aria-label={t("Voltar")}
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -483,10 +483,10 @@ export function FillFormPage() {
           </p>
           <p className="truncate text-xs font-medium text-muted-foreground">
             {reviewing
-              ? "Revisão final"
+              ? t("Revisão final")
               : steps.length > 1
-                ? `Etapa ${stepIndex + 1} de ${steps.length}`
-                : form.descricao || "Checklist"}
+                ? t("Etapa {a} de {b}", { a: stepIndex + 1, b: steps.length })
+                : form.descricao || t("Checklist")}
           </p>
         </div>
 
@@ -563,7 +563,7 @@ export function FillFormPage() {
                           >
                             {item.tipo === "foto"
                               ? photo
-                                ? "Foto"
+                                ? t("Foto")
                                 : "—"
                               : labelFor(item, value)}
                           </span>
@@ -660,7 +660,7 @@ export function FillFormPage() {
                   {signature ? <Check className="h-4 w-4" /> : null}
                 </span>
                 <span className="flex-1 text-[15px] font-semibold text-foreground">
-                  {signature ? "Assinatura anexada" : "Anexar minha assinatura"}
+                  {signature ? t("Assinatura anexada") : t("Anexar minha assinatura")}
                 </span>
                 <ChevronDown
                   className={`h-5 w-5 text-muted-foreground transition-transform ${
@@ -676,7 +676,7 @@ export function FillFormPage() {
                       className="mb-3 w-full"
                       onClick={() => setSignature(savedSignature)}
                     >
-                      <PenLine className="h-4 w-4" /> Usar assinatura salva
+                      <PenLine className="h-4 w-4" /> {t("Usar assinatura salva")}
                     </Button>
                   ) : null}
                   <SignaturePad value={signature} onChange={setSignature} />
@@ -690,7 +690,7 @@ export function FillFormPage() {
                 onClick={() => setReviewing(false)}
                 className="flex h-12 flex-none items-center justify-center gap-2 rounded-2xl bg-muted px-5 text-base font-semibold text-foreground transition-colors hover:bg-border"
               >
-                <ArrowLeft className="h-4 w-4" /> Editar
+                <ArrowLeft className="h-4 w-4" /> {t("Editar")}
               </button>
               <button
                 type="button"
@@ -700,11 +700,11 @@ export function FillFormPage() {
               >
                 {submitting ? (
                   <>
-                    <Loader2 className="h-5 w-5 animate-spin" /> Enviando…
+                    <Loader2 className="h-5 w-5 animate-spin" /> {t("Enviando…")}
                   </>
                 ) : (
                   <>
-                    <Check className="h-5 w-5" /> Confirmar
+                    <Check className="h-5 w-5" /> {t("Confirmar")}
                   </>
                 )}
               </button>
@@ -722,7 +722,7 @@ export function FillFormPage() {
                 }}
                 className="flex h-12 flex-none items-center justify-center gap-2 rounded-2xl bg-muted px-5 text-base font-semibold text-foreground transition-colors hover:bg-border"
               >
-                <ArrowLeft className="h-4 w-4" /> Voltar
+                <ArrowLeft className="h-4 w-4" /> {t("Voltar")}
               </button>
             ) : null}
             {isLastStep ? (
@@ -731,7 +731,7 @@ export function FillFormPage() {
                 onClick={() => tentarAvancar(() => setReviewing(true))}
                 className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
               >
-                <ClipboardCheck className="h-5 w-5" /> Revisar e enviar
+                <ClipboardCheck className="h-5 w-5" /> {t("Revisar e enviar")}
               </button>
             ) : (
               <button
@@ -743,7 +743,7 @@ export function FillFormPage() {
                 }
                 className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
               >
-                Próxima <ArrowRight className="h-5 w-5" />
+                {t("Próxima")} <ArrowRight className="h-5 w-5" />
               </button>
             )}
           </div>
@@ -780,6 +780,7 @@ function FormItemCard({
   onNote: (next: string) => void;
   onPhoto: (next: string) => void;
 }) {
+  const { t } = useI18n();
   const nonConforming = ["nao", "ruptura"].includes(value);
   const ehFoto = item.tipo === "foto";
   const showContextual =
@@ -840,8 +841,8 @@ function FormItemCard({
             <input
               value={note}
               onChange={(event) => onNote(event.target.value)}
-              placeholder="Adicionar observação..."
-              aria-label="Observação"
+              placeholder={t("Adicionar observação...")}
+              aria-label={t("Observação")}
               className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           ) : null}
@@ -862,6 +863,7 @@ function ItemInput({
   permiteNa: boolean;
   onValue: (next: string) => void;
 }) {
+  const { t } = useI18n();
   const options = OPTIONS[item.tipo];
 
   if (item.tipo === "multipla_escolha") {
@@ -910,7 +912,7 @@ function ItemInput({
               aria-pressed={selected}
               className={`${segmentBase} ${selected ? selectedClass : idle}`}
             >
-              {label}
+              {t(label)}
             </button>
           );
         })}
@@ -925,7 +927,7 @@ function ItemInput({
                 : idle
             }`}
           >
-            N/A
+            {t("N/A")}
           </button>
         ) : null}
       </div>
@@ -938,7 +940,7 @@ function ItemInput({
         rows={3}
         value={value}
         onChange={(event) => onValue(event.target.value)}
-        placeholder="Resposta"
+        placeholder={t("Resposta")}
         aria-label={item.texto}
         className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
@@ -951,7 +953,7 @@ function ItemInput({
       type={tipoInput}
       value={value}
       onChange={(event) => onValue(event.target.value)}
-      placeholder="Resposta"
+      placeholder={t("Resposta")}
       aria-label={item.texto}
       className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     />
@@ -969,6 +971,7 @@ function PhotoField({
   apenasCamera: boolean;
   geo: GeoCfg;
 }) {
+  const { t } = useI18n();
   const [uploading, setUploading] = useState(false);
 
   async function onFile(event: React.ChangeEvent<HTMLInputElement>) {
@@ -1001,13 +1004,13 @@ function PhotoField({
         <div className="relative h-10 w-10">
           <img
             src={value}
-            alt="Foto anexada"
+            alt={t("Foto anexada")}
             className="h-10 w-10 rounded-lg border border-border object-cover"
           />
           <button
             type="button"
             onClick={() => onChange("")}
-            aria-label="Remover foto"
+            aria-label={t("Remover foto")}
             className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-white shadow-sm"
           >
             <Trash2 className="h-3 w-3" />
@@ -1015,7 +1018,7 @@ function PhotoField({
         </div>
       ) : (
         <label
-          aria-label="Adicionar foto"
+          aria-label={t("Adicionar foto")}
           className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-danger/30 bg-card text-danger shadow-sm transition-colors hover:bg-danger-bg"
         >
           {uploading ? (
@@ -1028,7 +1031,7 @@ function PhotoField({
             accept="image/*"
             {...(apenasCamera ? { capture: "environment" as const } : {})}
             onChange={onFile}
-            aria-label="Adicionar foto"
+            aria-label={t("Adicionar foto")}
             hidden
           />
         </label>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Store } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../context/auth-context";
+import { useI18n } from "../lib/i18n/i18n";
 import {
   applyPrimaryColor,
   fetchNetworkHome,
@@ -14,6 +15,7 @@ import { LoadingScreen } from "../ui/loading-screen";
 import { FormsBoard } from "../ui/forms-board";
 
 export function NetworkHomePage() {
+  const { t } = useI18n();
   const { memberId = "" } = useParams();
   const { user } = useAuth();
   const initial = peekNetworkHome(memberId);
@@ -51,7 +53,7 @@ export function NetworkHomePage() {
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "Falha ao carregar a rede.",
+              : t("Falha ao carregar a rede."),
           );
       } finally {
         if (mounted) setLoading(false);
@@ -65,14 +67,14 @@ export function NetworkHomePage() {
   }, [memberId, user?.id]);
 
   if (loading) {
-    return <LoadingScreen label="Carregando a home da rede…" />;
+    return <LoadingScreen label={t("Carregando a home da rede…")} />;
   }
 
   if (!data) {
     return (
       <div className="mx-auto w-full max-w-md p-4">
         <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
-          {error ?? "Não foi possível carregar a rede."}
+          {error ?? t("Não foi possível carregar a rede.")}
         </p>
       </div>
     );
@@ -83,7 +85,7 @@ export function NetworkHomePage() {
   const subtitulo =
     [data.membership.unidadeNome, data.membership.cargoNome]
       .filter(Boolean)
-      .join(" · ") || "Operador";
+      .join(" · ") || t("Operador");
 
   return (
     <div className="flex flex-1 flex-col">

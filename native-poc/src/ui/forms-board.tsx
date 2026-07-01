@@ -56,6 +56,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "../lib/supabase";
+import { useI18n } from "../lib/i18n/i18n";
 
 export type FormItem = {
   id: string;
@@ -116,6 +117,7 @@ export function FormsBoard({
   redeId: string;
   forms: FormItem[];
 }) {
+  const { t } = useI18n();
   const [busca, setBusca] = useState("");
   const [modo, setModo] = useState<Modo>("az");
   const [status, setStatus] = useState<Status>("todos");
@@ -325,7 +327,7 @@ export function FormsBoard({
     await carregarPastas();
   }
 
-  const modoLabel = ORDENAR.find((o) => o.v === modo)?.label ?? "Ordenar";
+  const modoLabel = t(ORDENAR.find((o) => o.v === modo)?.label ?? "Ordenar");
   const filtroAtivo = status !== "todos";
   const semNada = ordenados.length === 0 && pastas.length === 0;
 
@@ -337,8 +339,8 @@ export function FormsBoard({
         <input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar checklist…"
-          aria-label="Buscar checklist"
+          placeholder={t("Buscar checklist…")}
+          aria-label={t("Buscar checklist")}
           className="h-12 w-full rounded-xl border border-border bg-card pl-11 pr-4 text-sm shadow-sm outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring"
         />
       </div>
@@ -346,18 +348,18 @@ export function FormsBoard({
       {/* filtros + ordenar + criar pasta */}
       <div className="flex items-center gap-1.5">
         <Popover
-          label="Filtros"
+          label={t("Filtros")}
           icon={SlidersHorizontal}
           active={filtroAtivo}
           badge={filtroAtivo ? 1 : 0}
         >
           <p className="px-1 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Status
+            {t("Status")}
           </p>
           {FILTROS.map((f) => (
             <Opcao
               key={f.v}
-              label={f.label}
+              label={t(f.label)}
               icon={
                 f.v === "enviados"
                   ? CircleCheck
@@ -374,19 +376,19 @@ export function FormsBoard({
               onClick={() => setStatus("todos")}
               className="mt-1 w-full rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-muted"
             >
-              Limpar filtros
+              {t("Limpar filtros")}
             </button>
           )}
         </Popover>
 
         <Popover label={modoLabel} icon={ArrowUpDown}>
           <p className="px-1 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Ordenar por
+            {t("Ordenar por")}
           </p>
           {ORDENAR.map((o) => (
             <Opcao
               key={o.v}
-              label={o.label}
+              label={t(o.label)}
               icon={o.v === "custom" ? GripVertical : undefined}
               selected={modo === o.v}
               onClick={() => escolherOrdem(o.v)}
@@ -400,18 +402,18 @@ export function FormsBoard({
           onClick={() => setModalAberto(true)}
           className="flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-border bg-card px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
         >
-          <FolderPlus className="h-3.5 w-3.5" /> Criar pasta
+          <FolderPlus className="h-3.5 w-3.5" /> {t("Criar pasta")}
         </button>
       </div>
 
       {semNada ? (
         <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
           <ClipboardList className="h-8 w-8 text-muted-foreground" />
-          <p className="font-medium">Nenhum checklist</p>
+          <p className="font-medium">{t("Nenhum checklist")}</p>
           <p className="max-w-xs text-sm text-muted-foreground">
             {busca || filtroAtivo
-              ? "Ajuste a busca ou os filtros."
-              : "Quando o gestor liberar checklists para você, eles aparecem aqui."}
+              ? t("Ajuste a busca ou os filtros.")
+              : t("Quando o gestor liberar checklists para você, eles aparecem aqui.")}
           </p>
         </div>
       ) : (
@@ -500,6 +502,7 @@ function PastaMenu({
   onEditar: () => void;
   onApagar: () => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -515,7 +518,7 @@ function PastaMenu({
         ref={btnRef}
         type="button"
         onClick={abrir}
-        aria-label="Opções da pasta"
+        aria-label={t("Opções da pasta")}
         className="rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
       >
         <MoreVertical className="h-5 w-5" />
@@ -543,7 +546,7 @@ function PastaMenu({
                 }}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
               >
-                <Pencil className="h-4 w-4 opacity-70" /> Editar
+                <Pencil className="h-4 w-4 opacity-70" /> {t("Editar")}
               </button>
               <button
                 type="button"
@@ -553,7 +556,7 @@ function PastaMenu({
                 }}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-danger hover:bg-danger-bg"
               >
-                <Trash2 className="h-4 w-4" /> Apagar
+                <Trash2 className="h-4 w-4" /> {t("Apagar")}
               </button>
             </div>
           </>,
@@ -581,6 +584,7 @@ function PastaCard({
   onEditar: () => void;
   onApagar: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <div className="flex items-center gap-3 p-3.5">
@@ -597,7 +601,7 @@ function PastaCard({
               {pasta.nome}
             </span>
             <span className="block text-[11.5px] text-muted-foreground">
-              {pasta.forms.length} checklist(s)
+              {t("{n} checklist(s)", { n: pasta.forms.length })}
             </span>
           </span>
           <ChevronDown
@@ -612,7 +616,7 @@ function PastaCard({
         <div className="space-y-2 border-t border-border bg-muted/30 p-3">
           {pasta.forms.length === 0 ? (
             <p className="px-1 py-2 text-center text-xs text-muted-foreground">
-              Nenhum checklist nesta pasta (ou filtrado pela busca).
+              {t("Nenhum checklist nesta pasta (ou filtrado pela busca).")}
             </p>
           ) : (
             pasta.forms.map((f) => (
@@ -647,6 +651,7 @@ function PastaModal({
   onClose: () => void;
   onSalvar: (nome: string, icone: string, ids: string[]) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const editar = modo === "editar";
   const [aba, setAba] = useState<"visual" | "formularios">("visual");
   const [nome, setNome] = useState(inicialNome ?? "");
@@ -696,7 +701,7 @@ function PastaModal({
             <HeaderIcon className="h-5 w-5" />
           </span>
           <h2 className="flex-1 text-base font-bold">
-            {editar ? "Editar pasta" : "Criar pasta"}
+            {editar ? t("Editar pasta") : t("Criar pasta")}
           </h2>
         </div>
 
@@ -704,8 +709,8 @@ function PastaModal({
         {editar && (
           <div className="flex gap-1 border-b border-border p-2">
             {[
-              { v: "visual" as const, label: "Visual" },
-              { v: "formularios" as const, label: "Formulários" },
+              { v: "visual" as const, label: t("Visual") },
+              { v: "formularios" as const, label: t("Formulários") },
             ].map((t) => (
               <button
                 key={t.v}
@@ -728,19 +733,19 @@ function PastaModal({
             <>
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
-                  Nome da pasta
+                  {t("Nome da pasta")}
                 </label>
                 <input
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   autoFocus
-                  placeholder="Ex.: Manhã, Frios, Auditorias…"
+                  placeholder={t("Ex.: Manhã, Frios, Auditorias…")}
                   className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
 
               <div>
-                <p className="mb-1.5 text-sm font-medium">Ícone</p>
+                <p className="mb-1.5 text-sm font-medium">{t("Ícone")}</p>
                 {/* Dropdown: fechado mostra só o ícone escolhido; abre a grade. */}
                 <button
                   type="button"
@@ -755,7 +760,7 @@ function PastaModal({
                       })()}
                     </span>
                     <span className="text-muted-foreground">
-                      Escolher ícone
+                      {t("Escolher ícone")}
                     </span>
                   </span>
                   <ChevronDown
@@ -774,7 +779,7 @@ function PastaModal({
                           setIcone(key);
                           setIconeAberto(false);
                         }}
-                        aria-label={`Ícone ${key}`}
+                        aria-label={t("Ícone") + " " + key}
                         className={`flex h-10 w-full items-center justify-center rounded-lg border transition-colors ${
                           icone === key
                             ? "border-primary bg-primary/10 text-primary"
@@ -790,7 +795,7 @@ function PastaModal({
 
               {!editar && (
                 <div>
-                  <p className="mb-1.5 text-sm font-medium">Adicionar checklists</p>
+                  <p className="mb-1.5 text-sm font-medium">{t("Adicionar checklists")}</p>
                   <div className="space-y-1.5">
                     {forms.map((f) => {
                       const jaEm = emPasta.get(f.id);
@@ -813,7 +818,7 @@ function PastaModal({
                             </span>
                             {jaEm ? (
                               <span className="block text-xs text-muted-foreground">
-                                Já está em outra pasta — será movido
+                                {t("Já está em outra pasta — será movido")}
                               </span>
                             ) : null}
                           </span>
@@ -822,7 +827,7 @@ function PastaModal({
                     })}
                     {forms.length === 0 ? (
                       <p className="py-2 text-center text-xs text-muted-foreground">
-                        Nenhum checklist disponível.
+                        {t("Nenhum checklist disponível.")}
                       </p>
                     ) : null}
                   </div>
@@ -834,11 +839,11 @@ function PastaModal({
           {editar && aba === "formularios" && (
             <div>
               <p className="mb-2 text-xs text-muted-foreground">
-                Arraste para mudar a ordem dos checklists dentro da pasta.
+                {t("Arraste para mudar a ordem dos checklists dentro da pasta.")}
               </p>
               {ordemForms.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
-                  Nenhum checklist nesta pasta.
+                  {t("Nenhum checklist nesta pasta.")}
                 </p>
               ) : (
                 <DndContext
@@ -871,7 +876,7 @@ function PastaModal({
             onClick={onClose}
             className="h-12 flex-1 rounded-xl bg-muted text-sm font-semibold text-foreground transition-colors hover:bg-border"
           >
-            {editar ? "Fechar" : "Cancelar"}
+            {editar ? t("Fechar") : t("Cancelar")}
           </button>
           <button
             type="button"
@@ -880,7 +885,7 @@ function PastaModal({
             className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {editar ? "Salvar" : "Criar pasta"}
+            {editar ? t("Salvar") : t("Criar pasta")}
           </button>
         </div>
       </div>
@@ -890,6 +895,7 @@ function PastaModal({
 
 // Linha arrastável de checklist (aba Formulários do modal de edição da pasta).
 function SortableFormRow({ form }: { form: FormItem }) {
+  const { t } = useI18n();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: form.id });
   const style = {
@@ -907,7 +913,7 @@ function SortableFormRow({ form }: { form: FormItem }) {
         type="button"
         {...attributes}
         {...listeners}
-        aria-label="Arrastar"
+        aria-label={t("Arrastar")}
         className="shrink-0 cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
       >
         <GripVertical className="h-5 w-5" />
@@ -998,6 +1004,7 @@ function Opcao({
 }
 
 function FormCard({ form, membroId }: { form: FormItem; membroId: string }) {
+  const { t } = useI18n();
   const fora = !!form.foraDoHorario;
 
   const inner = (
@@ -1020,11 +1027,11 @@ function FormCard({ form, membroId }: { form: FormItem; membroId: string }) {
       <div className="flex shrink-0 flex-col items-end gap-2">
         {form.enviadoHoje ? (
           <span className="flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
-            <CircleCheck className="h-3.5 w-3.5" /> Hoje
+            <CircleCheck className="h-3.5 w-3.5" /> {t("Hoje")}
           </span>
         ) : fora ? (
           <span className="flex items-center gap-1 rounded-full bg-warning-bg px-2 py-0.5 text-xs font-semibold text-warning">
-            <Clock className="h-3.5 w-3.5" /> Fora do horário
+            <Clock className="h-3.5 w-3.5" /> {t("Fora do horário")}
           </span>
         ) : null}
         {!fora && <ChevronRight className="h-5 w-5 text-muted-foreground/60" />}
@@ -1061,6 +1068,7 @@ function SortableCard({
   form: FormItem;
   membroId: string;
 }) {
+  const { t } = useI18n();
   const fora = !!form.foraDoHorario;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: form.id });
@@ -1089,11 +1097,11 @@ function SortableCard({
       </div>
       {form.enviadoHoje ? (
         <span className="flex shrink-0 items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-success">
-          <CircleCheck className="h-3.5 w-3.5" /> Hoje
+          <CircleCheck className="h-3.5 w-3.5" /> {t("Hoje")}
         </span>
       ) : fora ? (
         <span className="flex shrink-0 items-center gap-1 rounded-full bg-warning-bg px-2 py-0.5 text-xs font-semibold text-warning">
-          <Clock className="h-3.5 w-3.5" /> Fora do horário
+          <Clock className="h-3.5 w-3.5" /> {t("Fora do horário")}
         </span>
       ) : null}
     </>
@@ -1109,7 +1117,7 @@ function SortableCard({
         {...attributes}
         {...listeners}
         className="shrink-0 cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
-        aria-label="Arrastar"
+        aria-label={t("Arrastar")}
       >
         <GripVertical className="h-5 w-5" />
       </button>
