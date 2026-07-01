@@ -25,6 +25,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { Geolocation } from "@capacitor/geolocation";
 import { useI18n } from "../lib/i18n/i18n";
+import { traduzirConteudo } from "../lib/traduzir-conteudo";
 import { fetchFormDefinition } from "../lib/operator-api";
 import type {
   FormDefinition,
@@ -99,11 +100,14 @@ async function pegarLocalizacao(): Promise<{ lat: number; lng: number } | null> 
 }
 
 export function FillFormPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const navigate = useNavigate();
   const { memberId = "", formId = "" } = useParams();
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<FormDefinition | null>(null);
+  // Tradução do CONTEÚDO (nome/seções/perguntas) só para exibir no celular.
+  const [tx, setTx] = useState<Record<string, string>>({});
+  const tr = (s: string) => tx[s] ?? s;
   const [savedSignature, setSavedSignature] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -189,6 +193,32 @@ export function FillFormPage() {
     void load();
   }, [formId, memberId, draftKey]);
 
+  // Traduz o CONTEÚDO (nome, seções, perguntas, ajuda e opções) para a língua do
+  // operador — só para exibir. Guarda em cache no aparelho. Respostas seguem em
+  // código (o admin vê no idioma dele). Em PT, não faz nada.
+  useEffect(() => {
+    if (!form || lang === "pt") {
+      setTx({});
+      return;
+    }
+    const textos: string[] = [form.nome];
+    for (const s of form.sections) {
+      if (s.titulo) textos.push(s.titulo);
+      for (const it of s.items) {
+        if (it.texto) textos.push(it.texto);
+        if (it.ajuda) textos.push(it.ajuda);
+        for (const op of it.opcoes ?? []) if (op) textos.push(op);
+      }
+    }
+    let vivo = true;
+    void traduzirConteudo(textos, lang).then((mapa) => {
+      if (vivo) setTx(mapa);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [form, lang]);
+
   // Salva o rascunho a cada mudança (debounce). Pula a 1ª execução para não
   // gravar o estado vazio inicial por cima de um rascunho existente.
   useEffect(() => {
@@ -264,7 +294,7 @@ export function FillFormPage() {
           item.tipo !== "numero" &&
           item.tipo !== "foto"
         ) {
-          return `Preencha "${item.texto}".`;
+          return t('Preencha "{campo}".', { campo: tr(item.texto) });
         }
 
         if (
@@ -272,16 +302,16 @@ export function FillFormPage() {
           nonConforming &&
           !(notes[item.id] ?? "").trim()
         ) {
-          return `Adicione observação em "${item.texto}".`;
+          return t('Adicione observação em "{campo}".', { campo: tr(item.texto) });
         }
 
         if (item.obrigaFotoQuandoNao && nonConforming && !photos[item.id]) {
-          return `Adicione foto em "${item.texto}".`;
+          return t('Adicione foto em "{campo}".', { campo: tr(item.texto) });
         }
       }
     }
 
-    if (!signature) return "Adicione a assinatura antes de enviar.";
+    if (!signature) return t("Adicione a assinatura antes de enviar.");
     return null;
   }
 
@@ -479,7 +509,7 @@ export function FillFormPage() {
         </button>
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-bold leading-tight">
-            {form.nome}
+            {tr(form.nome)}
           </p>
           <p className="truncate text-xs font-medium text-muted-foreground">
             {reviewing
@@ -527,7 +557,7 @@ export function FillFormPage() {
                       <Icon className="h-4 w-4" />
                     </span>
                     <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                      {section.titulo}
+                      {tr(section.titulo ?? "")}
                     </h2>
                   </div>
                 ) : null}
@@ -550,11 +580,11 @@ export function FillFormPage() {
                         <div className="flex items-start justify-between gap-4">
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-foreground">
-                              {item.texto}
+                              {tr(item.texto)}
                             </p>
                             {photo ? (
                               <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
-                                <Camera className="h-3 w-3" /> 1 foto
+                                <Camera className="h-3 w-3" /> {t("1 foto")}
                               </span>
                             ) : null}
                           </div>
@@ -570,7 +600,7 @@ export function FillFormPage() {
                         </div>
                         {note ? (
                           <p className="mt-1.5 text-xs text-muted-foreground">
-                            Obs: {note}
+                            {t("Obs:")} {note}
                           </p>
                         ) : null}
                         {photo ? (
@@ -593,13 +623,14 @@ export function FillFormPage() {
             <div key={section.id} className="space-y-3">
               {section.titulo ? (
                 <h2 className="px-1 text-base font-bold text-foreground">
-                  {section.titulo}
+                  {tr(section.titulo ?? "")}
                 </h2>
               ) : null}
               {section.items.map((item) => (
                 <FormItemCard
                   key={item.id}
                   item={item}
+                  tr={tr}
                   permiteNa={section.permiteNa}
                   apenasCamera={form.fotoApenasCamera}
                   geo={{
@@ -757,6 +788,7 @@ type GeoCfg = { lat: number | null; lng: number | null; raio: number | null };
 
 function FormItemCard({
   item,
+  tr,
   permiteNa,
   apenasCamera,
   geo,
@@ -769,6 +801,7 @@ function FormItemCard({
   onPhoto,
 }: {
   item: FormItem;
+  tr: (s: string) => string;
   permiteNa: boolean;
   apenasCamera: boolean;
   geo: GeoCfg;
@@ -801,10 +834,10 @@ function FormItemCard({
         </span>
       ) : null}
       <p className="text-[15px] font-semibold leading-snug text-foreground">
-        {item.texto}
+        {tr(item.texto)}
       </p>
       {item.ajuda ? (
-        <p className="mt-1 text-xs text-muted-foreground">{item.ajuda}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{tr(item.ajuda)}</p>
       ) : null}
 
       {ehFoto ? (
@@ -820,6 +853,7 @@ function FormItemCard({
         <div className="mt-4">
           <ItemInput
             item={item}
+            tr={tr}
             value={value}
             permiteNa={permiteNa}
             onValue={onValue}
@@ -854,11 +888,13 @@ function FormItemCard({
 
 function ItemInput({
   item,
+  tr,
   value,
   permiteNa,
   onValue,
 }: {
   item: FormItem;
+  tr: (s: string) => string;
   value: string;
   permiteNa: boolean;
   onValue: (next: string) => void;
@@ -870,7 +906,7 @@ function ItemInput({
     return (
       <div
         role="radiogroup"
-        aria-label={item.texto}
+        aria-label={tr(item.texto)}
         className="flex flex-col gap-1.5"
       >
         {(item.opcoes ?? []).map((option) => (
@@ -885,7 +921,7 @@ function ItemInput({
               onChange={() => onValue(option)}
               className="h-4 w-4 accent-primary"
             />
-            {option}
+            {tr(option)}
           </label>
         ))}
       </div>
@@ -897,7 +933,7 @@ function ItemInput({
       "flex h-11 flex-1 items-center justify-center rounded-xl border text-sm font-medium transition-colors";
     const idle = "border-border bg-card text-muted-foreground hover:bg-muted";
     return (
-      <div role="group" aria-label={item.texto} className="flex gap-2">
+      <div role="group" aria-label={tr(item.texto)} className="flex gap-2">
         {options.map(([candidate, label]) => {
           const selected = value === candidate;
           const negative = ["nao", "ruptura"].includes(candidate);
@@ -941,7 +977,7 @@ function ItemInput({
         value={value}
         onChange={(event) => onValue(event.target.value)}
         placeholder={t("Resposta")}
-        aria-label={item.texto}
+        aria-label={tr(item.texto)}
         className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
     );
@@ -954,7 +990,7 @@ function ItemInput({
       value={value}
       onChange={(event) => onValue(event.target.value)}
       placeholder={t("Resposta")}
-      aria-label={item.texto}
+      aria-label={tr(item.texto)}
       className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
     />
   );

@@ -156,6 +156,12 @@ export const es: Record<string, string> = {
   "Remover foto": "Quitar foto",
   "Adicionar foto": "Agregar foto",
   Foto: "Foto",
+  "1 foto": "1 foto",
+  'Preencha "{campo}".': 'Completa "{campo}".',
+  'Adicione observação em "{campo}".': 'Agrega una observación en "{campo}".',
+  'Adicione foto em "{campo}".': 'Agrega una foto en "{campo}".',
+  "Adicione a assinatura antes de enviar.":
+    "Agrega la firma antes de enviar.",
   // opciones de respuesta
   OK: "OK",
   NÃO: "NO",
