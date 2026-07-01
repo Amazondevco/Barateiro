@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/auth-context";
 import { Button } from "../ui/button";
 import { Input, Label } from "../ui/input";
+import { ClientsCarousel } from "../ui/clients-carousel";
 import logoUrl from "../assets/checkai-logo.svg";
 
 export function LoginPage() {
@@ -33,7 +34,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-background p-6">
+    <div className="relative flex min-h-screen flex-col justify-center bg-background p-6">
       <div className="mx-auto w-full max-w-sm">
         {/* Marca Check.AI (verde fixo da marca do produto) */}
         <div className="mb-8 flex items-center gap-2.5">
@@ -94,6 +95,14 @@ export function LoginPage() {
           <span>© Amazon Dev &amp; Co. · {new Date().getFullYear()}</span>
           <span className="tabular-nums opacity-70">v{__APP_VERSION__}</span>
         </div>
+      </div>
+
+      {/* Carrossel de logos (clientes) — fixo na base, decorativo */}
+      <div
+        className="absolute inset-x-0 bottom-0"
+        style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
+      >
+        <ClientsCarousel />
       </div>
     </div>
   );

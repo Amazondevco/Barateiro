@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LoginForm } from "./login-form";
 import { InviteHashGuard } from "./invite-guard";
+import { ClientsCarousel } from "@/components/clients-carousel";
 
 export const metadata = { title: "Entrar — Check.AI" };
 
@@ -42,9 +43,15 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          © Amazon Dev &amp; Co. · {new Date().getFullYear()}
-        </p>
+        <div className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            © Amazon Dev &amp; Co. · {new Date().getFullYear()}
+          </p>
+          {/* Carrossel de logos (clientes) — decorativo */}
+          <div className="-mx-8 sm:-mx-12">
+            <ClientsCarousel />
+          </div>
+        </div>
       </div>
 
       {/* Painel de marca (direita) — logo em destaque sobre cor */}
