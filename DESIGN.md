@@ -413,3 +413,15 @@ Fase 1 implementada (espelhada PWA ↔ nativo):
 
 Regra: ao criar um botão só-de-ícone, **sempre** dar `aria-label` descritivo e
 `aria-hidden` no ícone interno.
+
+## Foto do preenchimento (câmera + carimbo)
+
+- **Apenas câmera (opcional, por checklist):** flag `formularios.foto_apenas_camera`.
+  Quando ligada, o campo de foto usa `capture="environment"` (só abre a câmera,
+  sem galeria). Desligada = permite galeria. Não é trava 100% em desktop.
+- **Carimbo de verificação (SEMPRE):** toda foto tirada no preenchimento recebe
+  uma marca d'água na base (barra escura translúcida) com **data/hora** e o
+  **status da área (geofence)**: "Dentro da área determinada" (verde) / "Fora da
+  área determinada" (vermelho) / "Localização indisponível". A linha de área só
+  aparece quando há raio + coordenadas da unidade. Feito por canvas em
+  `carimbarFoto` (nativo `sync.ts`, PWA `offline-sync.ts`). Vale PWA ↔ nativo.

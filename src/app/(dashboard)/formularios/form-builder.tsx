@@ -109,6 +109,7 @@ type Initial = {
   dias_semana?: number[];
   exige_localizacao?: boolean;
   geofence_raio_m?: number | null;
+  foto_apenas_camera?: boolean;
   unidades: string[];
   departamentos: string[];
   usuarios: string[];
@@ -194,6 +195,9 @@ export function FormBuilder({
   const [exigeLoc, setExigeLoc] = useState(initial?.exige_localizacao ?? false);
   const [raioM, setRaioM] = useState<number | null>(
     initial?.geofence_raio_m ?? null,
+  );
+  const [fotoApenasCamera, setFotoApenasCamera] = useState(
+    initial?.foto_apenas_camera ?? false,
   );
   const [selUnidades, setSelUnidades] = useState<string[]>(
     initial?.unidades ?? [],
@@ -348,6 +352,7 @@ export function FormBuilder({
       exige_localizacao: exigeLoc,
       // Raio só vale com unidade(s) escolhida(s) — sem unidade não há de onde medir.
       geofence_raio_m: exigeLoc && selUnidades.length > 0 ? raioM : null,
+      foto_apenas_camera: fotoApenasCamera,
       unidades: selUnidades,
       departamentos: deps,
       usuarios: usuariosSel,
@@ -600,6 +605,27 @@ export function FormBuilder({
                   registra a localização (sem validar a distância).
                 </p>
               ))}
+          </div>
+
+          {/* Foto — restringir à câmera. O carimbo de data/hora é sempre aplicado
+              nas fotos do preenchimento, independente desta opção. */}
+          <div className="space-y-3 border-t border-border pt-4">
+            <div>
+              <h4 className="text-sm font-semibold">Foto</h4>
+              <p className="text-xs text-muted-foreground">
+                Toda foto tirada no preenchimento recebe um carimbo com data,
+                hora e o status da área (dentro/fora do raio).
+              </p>
+            </div>
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={fotoApenasCamera}
+                onChange={(e) => setFotoApenasCamera(e.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              Permitir apenas fotos tiradas na hora (sem galeria)
+            </label>
           </div>
             </>
           )}

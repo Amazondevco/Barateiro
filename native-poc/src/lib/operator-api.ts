@@ -415,7 +415,7 @@ async function _fetchFormDefinition(memberId: string, formId: string) {
     supabase
       .from("formularios")
       .select(
-        "id, nome, descricao, exige_localizacao, geofence_raio_m, formulario_secoes(id, titulo, ordem, permite_na, quebra_pagina, formulario_itens(id, texto, tipo, ordem, opcoes, ajuda, obriga_obs_quando_nao, obriga_foto_quando_nao))",
+        "id, nome, descricao, exige_localizacao, geofence_raio_m, foto_apenas_camera, formulario_secoes(id, titulo, ordem, permite_na, quebra_pagina, formulario_itens(id, texto, tipo, ordem, opcoes, ajuda, obriga_obs_quando_nao, obriga_foto_quando_nao))",
       )
       .eq("id", formId)
       .single(),
@@ -461,6 +461,7 @@ async function _fetchFormDefinition(memberId: string, formId: string) {
       geofenceRaioM: ((form as { geofence_raio_m?: number | null }).geofence_raio_m as number | null) ?? null,
       unidadeLat: uni?.geo_lat ?? null,
       unidadeLng: uni?.geo_lng ?? null,
+      fotoApenasCamera: Boolean((form as { foto_apenas_camera?: boolean }).foto_apenas_camera),
     } satisfies FormDefinition,
     signature: ((member as { assinatura_svg?: string | null } | null)?.assinatura_svg ?? null) as string | null,
   };

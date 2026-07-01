@@ -136,3 +136,71 @@ export async function comprimirFoto(
     URL.revokeObjectURL(url);
   }
 }
+
+// Status do geofence no momento da foto (p/ o carimbo).
+export type CarimboArea = "dentro" | "fora" | "indisponivel" | null;
+
+function fmtDataHora(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+// Carimba a foto (marca d'água na base): data/hora + status da área (geofence).
+// Verificação de que a foto foi tirada naquele momento. Se falhar, devolve a
+// imagem original.
+export async function carimbarFoto(
+  dataUrl: string,
+  info: { quando: Date; area: CarimboArea },
+): Promise<string> {
+  try {
+    const image = await new Promise<HTMLImageElement>((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = rej;
+      i.src = dataUrl;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return dataUrl;
+    ctx.drawImage(image, 0, 0);
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const fs = Math.max(15, Math.round(W * 0.03));
+    const pad = Math.round(fs * 0.7);
+    const lineH = Math.round(fs * 1.35);
+
+    const areaTexto =
+      info.area === "dentro"
+        ? "Dentro da área determinada"
+        : info.area === "fora"
+          ? "Fora da área determinada"
+          : info.area === "indisponivel"
+            ? "Localização indisponível"
+            : null;
+
+    const linhas = areaTexto
+      ? [fmtDataHora(info.quando), areaTexto]
+      : [fmtDataHora(info.quando)];
+    const barH = pad * 2 + lineH * linhas.length;
+
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillRect(0, H - barH, W, barH);
+
+    ctx.textBaseline = "middle";
+    ctx.font = `600 ${fs}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+    linhas.forEach((ln, i) => {
+      const y = H - barH + pad + lineH * i + lineH / 2;
+      if (i === 1 && info.area === "dentro") ctx.fillStyle = "#4ade80";
+      else if (i === 1 && info.area === "fora") ctx.fillStyle = "#f87171";
+      else ctx.fillStyle = "#ffffff";
+      ctx.fillText(ln, pad, y);
+    });
+
+    return canvas.toDataURL("image/jpeg", 0.82);
+  } catch {
+    return dataUrl;
+  }
+}

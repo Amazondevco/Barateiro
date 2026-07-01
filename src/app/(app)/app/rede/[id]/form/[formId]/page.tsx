@@ -22,7 +22,7 @@ export default async function FillPage({
   const { data: form } = await supabase
     .from("formularios")
     .select(
-      "id, nome, descricao, exige_localizacao, geofence_raio_m, formulario_secoes(id, titulo, ordem, permite_na, quebra_pagina, formulario_itens(id, texto, ordem, tipo, opcoes, ajuda, obriga_obs_quando_nao, obriga_foto_quando_nao))",
+      "id, nome, descricao, exige_localizacao, geofence_raio_m, foto_apenas_camera, formulario_secoes(id, titulo, ordem, permite_na, quebra_pagina, formulario_itens(id, texto, ordem, tipo, opcoes, ajuda, obriga_obs_quando_nao, obriga_foto_quando_nao))",
     )
     .eq("id", formId)
     .single();
@@ -36,6 +36,7 @@ export default async function FillPage({
   const fm = form as unknown as {
     exige_localizacao?: boolean;
     geofence_raio_m?: number | null;
+    foto_apenas_camera?: boolean;
   };
   const uni = (
     membro as { unidades?: { geo_lat: number | null; geo_lng: number | null } | null } | null
@@ -48,6 +49,7 @@ export default async function FillPage({
       form={f}
       assinatura={(membro as { assinatura_svg: string | null } | null)?.assinatura_svg ?? null}
       exigeLocalizacao={fm.exige_localizacao ?? false}
+      apenasCamera={fm.foto_apenas_camera ?? false}
       geofence={
         raio
           ? { raio, uniLat: uni?.geo_lat ?? null, uniLng: uni?.geo_lng ?? null }

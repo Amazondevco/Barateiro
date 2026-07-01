@@ -31,6 +31,8 @@ export type FormDefinition = {
   geofenceRaioM: number | null;
   unidadeLat: number | null;
   unidadeLng: number | null;
+  // Quando true, os campos de foto só abrem a câmera (sem galeria).
+  fotoApenasCamera: boolean;
 };
 
 export type ProfileData = {

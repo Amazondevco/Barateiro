@@ -29,6 +29,7 @@ export type FormularioPayload = {
   dias_semana: number[]; // ISO 1=Seg…7=Dom; vazio = todos os dias
   exige_localizacao: boolean; // captura GPS no envio
   geofence_raio_m: number | null; // raio (m) da unidade; null = só captura, sem validar
+  foto_apenas_camera: boolean; // só câmera (sem galeria) nos campos de foto
   unidades: string[]; // vazio = todas as unidades do tipo
   departamentos: string[]; // vazio = todos da unidade
   usuarios: string[]; // vazio = todos do departamento
@@ -62,6 +63,7 @@ export async function saveFormulario(
     geofence_raio_m: payload.exige_localizacao
       ? (payload.geofence_raio_m ?? null)
       : null,
+    foto_apenas_camera: payload.foto_apenas_camera,
   };
 
   if (!id) {

@@ -32,7 +32,7 @@ import type {
   FormSection,
 } from "../lib/operator-types";
 import { enqueueFormResponse } from "../lib/queue-store";
-import { compressPhoto, syncQueue } from "../lib/sync";
+import { compressPhoto, carimbarFoto, syncQueue, type CarimboArea } from "../lib/sync";
 import { Button } from "../ui/button";
 import { LoadingScreen } from "../ui/loading-screen";
 import { SignaturePad } from "../ui/signature-pad";
@@ -601,6 +601,12 @@ export function FillFormPage() {
                   key={item.id}
                   item={item}
                   permiteNa={section.permiteNa}
+                  apenasCamera={form.fotoApenasCamera}
+                  geo={{
+                    lat: form.unidadeLat,
+                    lng: form.unidadeLng,
+                    raio: form.geofenceRaioM,
+                  }}
                   erro={invalid[item.id]}
                   value={values[item.id] ?? ""}
                   note={notes[item.id] ?? ""}
@@ -747,9 +753,13 @@ export function FillFormPage() {
   );
 }
 
+type GeoCfg = { lat: number | null; lng: number | null; raio: number | null };
+
 function FormItemCard({
   item,
   permiteNa,
+  apenasCamera,
+  geo,
   erro,
   value,
   note,
@@ -760,6 +770,8 @@ function FormItemCard({
 }: {
   item: FormItem;
   permiteNa: boolean;
+  apenasCamera: boolean;
+  geo: GeoCfg;
   erro?: string;
   value: string;
   note: string;
@@ -769,6 +781,7 @@ function FormItemCard({
   onPhoto: (next: string) => void;
 }) {
   const nonConforming = ["nao", "ruptura"].includes(value);
+  const ehFoto = item.tipo === "foto";
   const showContextual =
     nonConforming && (item.obrigaObsQuandoNao || item.obrigaFotoQuandoNao);
 
@@ -793,19 +806,35 @@ function FormItemCard({
         <p className="mt-1 text-xs text-muted-foreground">{item.ajuda}</p>
       ) : null}
 
-      <div className="mt-4">
-        <ItemInput
-          item={item}
-          value={value}
-          permiteNa={permiteNa}
-          onValue={onValue}
-        />
-      </div>
+      {ehFoto ? (
+        <div className="mt-4">
+          <PhotoField
+            value={photo}
+            onChange={onPhoto}
+            apenasCamera={apenasCamera}
+            geo={geo}
+          />
+        </div>
+      ) : (
+        <div className="mt-4">
+          <ItemInput
+            item={item}
+            value={value}
+            permiteNa={permiteNa}
+            onValue={onValue}
+          />
+        </div>
+      )}
 
       {showContextual ? (
         <div className="mt-4 flex gap-3 rounded-xl bg-danger-bg/40 p-3">
           {item.obrigaFotoQuandoNao ? (
-            <PhotoField value={photo} onChange={onPhoto} />
+            <PhotoField
+              value={photo}
+              onChange={onPhoto}
+              apenasCamera={apenasCamera}
+              geo={geo}
+            />
           ) : null}
           {item.obrigaObsQuandoNao ? (
             <input
@@ -932,9 +961,13 @@ function ItemInput({
 function PhotoField({
   value,
   onChange,
+  apenasCamera,
+  geo,
 }: {
   value: string;
   onChange: (next: string) => void;
+  apenasCamera: boolean;
+  geo: GeoCfg;
 }) {
   const [uploading, setUploading] = useState(false);
 
@@ -944,7 +977,19 @@ function PhotoField({
     setUploading(true);
 
     try {
-      onChange(await compressPhoto(file));
+      const comp = await compressPhoto(file);
+      // Carimbo: data/hora + status da área (geofence), sempre.
+      const quando = new Date();
+      let area: CarimboArea = null;
+      if (geo.lat != null && geo.lng != null && geo.raio != null) {
+        const loc = await pegarLocalizacao();
+        area = !loc
+          ? "indisponivel"
+          : distanciaM(loc.lat, loc.lng, geo.lat, geo.lng) <= geo.raio
+            ? "dentro"
+            : "fora";
+      }
+      onChange(await carimbarFoto(comp, { quando, area }));
     } finally {
       setUploading(false);
     }
@@ -981,7 +1026,7 @@ function PhotoField({
           <input
             type="file"
             accept="image/*"
-            capture="environment"
+            {...(apenasCamera ? { capture: "environment" as const } : {})}
             onChange={onFile}
             aria-label="Adicionar foto"
             hidden

@@ -28,7 +28,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { enqueueSubmission } from "@/lib/offline-db";
-import { sincronizar, pendingCount, comprimirFoto } from "@/lib/offline-sync";
+import {
+  sincronizar,
+  pendingCount,
+  comprimirFoto,
+  carimbarFoto,
+  type CarimboArea,
+} from "@/lib/offline-sync";
 import { SignaturePad } from "../../../../signature-pad";
 
 type Item = {
@@ -111,12 +117,14 @@ export function FillForm({
   form,
   assinatura,
   exigeLocalizacao = false,
+  apenasCamera = false,
   geofence = null,
 }: {
   redeMembroId: string;
   form: FormData;
   assinatura: string | null;
   exigeLocalizacao?: boolean;
+  apenasCamera?: boolean;
   geofence?: { raio: number; uniLat: number | null; uniLng: number | null } | null;
 }) {
   const router = useRouter();
@@ -489,6 +497,16 @@ export function FillForm({
                               limparInvalido(it.id);
                             }}
                             danger={contextual}
+                            apenasCamera={apenasCamera}
+                            geo={
+                              geofence
+                                ? {
+                                    lat: geofence.uniLat,
+                                    lng: geofence.uniLng,
+                                    raio: geofence.raio,
+                                  }
+                                : { lat: null, lng: null, raio: null }
+                            }
                           />
                         )}
                         {mostraObs && (
@@ -834,10 +852,14 @@ function FotoCampo({
   value,
   onChange,
   danger = false,
+  apenasCamera = false,
+  geo,
 }: {
   value: string;
   onChange: (url: string) => void;
   danger?: boolean;
+  apenasCamera?: boolean;
+  geo: { lat: number | null; lng: number | null; raio: number | null };
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const [subindo, setSubindo] = useState(false);
@@ -849,7 +871,19 @@ function FotoCampo({
     try {
       // Guarda a foto localmente (comprimida). O upload acontece na
       // sincronização → tirar foto funciona mesmo offline.
-      onChange(await comprimirFoto(f));
+      const comp = await comprimirFoto(f);
+      // Carimbo: data/hora + status da área (geofence), sempre.
+      const quando = new Date();
+      let area: CarimboArea = null;
+      if (geo.lat != null && geo.lng != null && geo.raio != null) {
+        const loc = await pegarLocalizacao();
+        area = !loc
+          ? "indisponivel"
+          : distanciaM(loc.lat, loc.lng, geo.lat, geo.lng) <= geo.raio
+            ? "dentro"
+            : "fora";
+      }
+      onChange(await carimbarFoto(comp, { quando, area }));
     } catch {
       /* ignore */
     } finally {
@@ -859,7 +893,14 @@ function FotoCampo({
 
   return (
     <div>
-      <input ref={ref} type="file" accept="image/*" capture="environment" onChange={onFile} className="hidden" />
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        {...(apenasCamera ? { capture: "environment" as const } : {})}
+        onChange={onFile}
+        className="hidden"
+      />
       {value ? (
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
