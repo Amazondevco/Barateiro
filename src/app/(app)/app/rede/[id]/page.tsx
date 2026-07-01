@@ -161,7 +161,7 @@ export default async function AppRedePage({
       </div>
 
       <div className="mx-auto w-full max-w-md flex-1 px-4">
-        <FormsBoard membroId={id} forms={lista} />
+        <FormsBoard membroId={id} redeId={m.rede_id} forms={lista} />
       </div>
     </div>
   );

@@ -123,7 +123,11 @@ export function NetworkHomePage() {
             {error}
           </p>
         ) : null}
-        <FormsBoard membroId={memberId} forms={data.forms} />
+        <FormsBoard
+          membroId={memberId}
+          redeId={data.membership.redeId}
+          forms={data.forms}
+        />
       </div>
     </div>
   );
