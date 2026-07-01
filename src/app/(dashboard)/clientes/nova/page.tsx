@@ -17,7 +17,7 @@ export default function NovaRedePage() {
       </Link>
       <PageHeader
         title="Nova rede"
-        subtitle="Cadastre um novo supermercado-cliente."
+        subtitle="Cadastre uma nova rede-cliente."
       />
       <div className="max-w-3xl">
         <RedeForm action={createRede} submitLabel="Criar rede" />

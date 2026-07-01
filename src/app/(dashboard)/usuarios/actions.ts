@@ -4,11 +4,16 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
-import { validarSenha } from "@/lib/senha";
 import { novoConviteToken } from "@/lib/convite";
 import type { Papel } from "@/lib/types";
 
-export type FormState = { error?: string; ok?: boolean };
+export type FormState = {
+  error?: string;
+  ok?: boolean;
+  // Ao criar usuário: link de acesso gerado (o usuário define a própria senha).
+  link?: string;
+  email?: string;
+};
 
 // Gera um link de acesso (recuperação → o usuário define a própria senha) para
 // UM usuário, guarda em profiles.convite_link e devolve para copiar/enviar.
@@ -67,7 +72,6 @@ export async function createUsuario(
 
   const nome = String(formData.get("nome") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const senha = String(formData.get("senha") ?? "");
   const papel = String(formData.get("papel") ?? "gerente") as Papel;
   let rede_id: string | null =
     String(formData.get("rede_id") ?? "").trim() || null;
@@ -75,10 +79,7 @@ export async function createUsuario(
     String(formData.get("departamento_id") ?? "").trim() || null;
   const unidadeIds = formData.getAll("unidade_ids").map((u) => String(u));
 
-  if (!nome || !email || !senha)
-    return { error: "Preencha nome, e-mail e senha." };
-  const erroSenha = validarSenha(senha);
-  if (erroSenha) return { error: erroSenha };
+  if (!nome || !email) return { error: "Preencha nome e e-mail." };
 
   // Autorização
   if (caller.papel === "admin_supermercado") {
@@ -96,10 +97,11 @@ export async function createUsuario(
   if (rede_id && !departamentoId)
     return { error: "Selecione o departamento do usuário." };
 
+  // Cria a conta SEM senha — o próprio usuário define a dele pelo link de acesso
+  // (que não expira por tempo). email_confirm evita a etapa de confirmar e-mail.
   const admin = createAdminClient();
   const { data, error } = await admin.auth.admin.createUser({
     email,
-    password: senha,
     email_confirm: true,
     user_metadata: { nome, papel, rede_id },
   });
@@ -124,7 +126,14 @@ export async function createUsuario(
 
   revalidatePath("/usuarios");
   if (rede_id) revalidatePath(`/clientes/${rede_id}`);
-  return { ok: true };
+
+  // Gera o link de acesso para o usuário definir a própria senha.
+  let link: string | undefined;
+  if (userId) {
+    const r = await gerarLinkUsuario(userId);
+    if (r.ok) link = r.link;
+  }
+  return { ok: true, link, email };
 }
 
 export async function updateUsuario(

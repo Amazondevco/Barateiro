@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Check.AI — Gestão",
-  description: "Plataforma de gestão para redes de supermercado",
+  description: "Plataforma de gestão de checklists para qualquer tipo de negócio",
   icons: { icon: "/icon.svg", apple: "/icon-512.svg" },
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Check.AI" },
 };

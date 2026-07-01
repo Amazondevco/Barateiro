@@ -235,7 +235,7 @@ export default async function RedeDetailPage({
             {(usuarios ?? []).length === 0 ? (
               <EmptyState
                 title="Nenhum usuário do sistema"
-                description="Crie o admin do supermercado e os gerentes desta rede."
+                description="Crie o admin da rede e os gerentes desta rede."
               />
             ) : (
               <Table>

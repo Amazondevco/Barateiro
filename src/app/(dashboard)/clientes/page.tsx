@@ -34,7 +34,7 @@ export default async function ClientesPage() {
     <>
       <PageHeader
         title="Clientes (Redes)"
-        subtitle="Supermercados-clientes da plataforma."
+        subtitle="Redes-clientes da plataforma."
         action={
           <Link href="/clientes/nova">
             <Button size="lg" className="font-semibold">
@@ -47,7 +47,7 @@ export default async function ClientesPage() {
       {redes.length === 0 ? (
         <EmptyState
           title="Nenhuma rede ainda"
-          description="Cadastre o primeiro supermercado-cliente para começar."
+          description="Cadastre o primeiro cliente para começar."
           action={
             <Link href="/clientes/nova">
               <Button size="lg" className="font-semibold">

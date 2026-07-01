@@ -59,7 +59,7 @@ export function EditUsuarioButton({
                 <Label htmlFor="eus_papel">Papel</Label>
                 <Select id="eus_papel" name="papel" defaultValue={usuario.papel}>
                   {podeSuper && <option value="super_admin">Super Admin</option>}
-                  <option value="admin_supermercado">Admin do supermercado</option>
+                  <option value="admin_supermercado">Admin da rede</option>
                   <option value="gerente">Gerente</option>
                 </Select>
               </div>
