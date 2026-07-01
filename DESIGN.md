@@ -289,9 +289,12 @@ dos mockups é só placeholder. Fonte permanece **Geist**.
   `border-danger bg-danger-bg text-danger`, N/A = `border-primary bg-primary/10 text-primary`.
   Quando "Não", abre bloco contextual (`bg-danger-bg/40`) com botão de **foto** +
   campo de **observação**.
-- **Progresso (preencher):** segmentos `h-1 flex-1 rounded-full`; concluído =
-  `bg-primary/50`, atual = `bg-primary`, futuro = `bg-border`. Header com voltar +
-  "Etapa X de N". Rodapé fixo com botão primário ("Próxima"/"Revisar").
+- **Progresso (preencher):** barra **contínua** que É a borda de baixo do header
+  (uma linha só, sem faixa separada). Trilho `absolute inset-x-0 bottom-0 h-0.5
+  bg-border`; preenchimento `bg-primary rounded-r-full` com `width` = `(etapa+1)/
+  total` e `transition-[width] duration-500 ease-out`. Some na revisão (fica só a
+  borda). Header com voltar + "Etapa X de N". Rodapé fixo com botão primário
+  (`h-12 rounded-2xl`, "Próxima"/"Revisar").
 - **Revisão:** resumo agrupado por seção (cabeçalho com **ícone** inferido do
   título via `secaoIcon` + cartão com linhas pergunta → badge), indicador de anexo.
   **A partir da assinatura tudo fica FIXO na base:** bloco recolhível "Anexar
