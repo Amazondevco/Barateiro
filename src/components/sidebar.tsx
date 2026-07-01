@@ -147,7 +147,7 @@ export function Sidebar({
                       collapsed ? "justify-center px-0" : "gap-3 px-3",
                       active
                         ? "bg-sidebar-active text-sidebar-active-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-[color:var(--sidebar-strong)]",
+                        : "text-sidebar-foreground hover:bg-sidebar hover:text-[color:var(--sidebar-strong)]",
                     )}
                   >
                     <Icon className="h-[18px] w-[18px] shrink-0" />
@@ -205,7 +205,9 @@ export function Sidebar({
           {menuOpen && (
             <div
               className={cn(
-                "absolute bottom-[calc(100%+0.5rem)] z-30 rounded-2xl border border-white/10 bg-sidebar p-1.5 shadow-2xl",
+                // Painel elevado: um tom distinto do sidebar (bg-sidebar-hover)
+                // + sombra, sem borda branca — lê como um cartão flutuante.
+                "absolute bottom-[calc(100%+0.5rem)] z-30 rounded-2xl bg-sidebar-hover p-1.5 shadow-2xl ring-1 ring-black/5",
                 collapsed ? "left-0 w-52" : "inset-x-0",
               )}
             >
@@ -216,7 +218,7 @@ export function Sidebar({
                     setMenuOpen(false);
                     onNavigate?.();
                   }}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-[color:var(--sidebar-strong)]"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar hover:text-[color:var(--sidebar-strong)]"
                 >
                   <Settings className="h-[18px] w-[18px] shrink-0" /> Configurações
                 </Link>
@@ -227,7 +229,7 @@ export function Sidebar({
                   setMenuOpen(false);
                   onNavigate?.();
                 }}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-[color:var(--sidebar-strong)]"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar hover:text-[color:var(--sidebar-strong)]"
               >
                 <LifeBuoy className="h-[18px] w-[18px] shrink-0" /> Suporte Check.AI
               </Link>
@@ -235,7 +237,7 @@ export function Sidebar({
                 <UserSwitcher
                   currentEmail={userEmail}
                   triggerLabel="Trocar conta"
-                  triggerClassName="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-[color:var(--sidebar-strong)]"
+                  triggerClassName="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar hover:text-[color:var(--sidebar-strong)]"
                 />
               )}
               <div className="mx-1 my-1 h-px bg-white/10" />
