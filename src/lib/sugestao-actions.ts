@@ -139,9 +139,16 @@ export async function escalarSugestao(
     .maybeSingle();
   if (!sug) return { ok: false, error: "Sugestão não encontrada." };
 
-  // A RLS de insert exige is_admin_da_rede(rede_id) para destino='plataforma'.
+  // A RLS de insert exige autor_id = auth.uid() E is_admin_da_rede(rede_id) para
+  // destino='plataforma'. Então o autor da cópia é o ADMIN que encaminha; o nome
+  // preserva o autor original para o super admin saber quem sugeriu.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sessão expirada." };
+
   const { error } = await supabase.from("sugestoes").insert({
-    autor_id: sug.autor_id,
+    autor_id: user.id,
     autor_nome: sug.autor_nome,
     rede_id: sug.rede_id,
     destino: "plataforma",
