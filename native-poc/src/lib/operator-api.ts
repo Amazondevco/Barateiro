@@ -470,9 +470,10 @@ async function _fetchFormDefinition(memberId: string, formId: string) {
 // Resolve rede e autor pela própria sessão — igual à server action do PWA.
 export async function enviarSugestao(
   texto: string,
+  audioPath?: string | null,
 ): Promise<{ error?: string; ok?: boolean }> {
   const t = texto.trim();
-  if (!t) return { error: "Escreva a sugestão." };
+  if (!t && !audioPath) return { error: "Escreva ou grave a sugestão." };
 
   const {
     data: { user },
@@ -498,9 +499,23 @@ export async function enviarSugestao(
     rede_id: membro.rede_id,
     destino: "rede",
     texto: t,
+    audio_url: audioPath ?? null,
   });
   if (error) return { error: error.message };
   return { ok: true };
+}
+
+// Sobe o áudio da sugestão para o bucket `sugestoes` e devolve o path (ou null).
+export async function subirAudioSugestao(blob: Blob): Promise<string | null> {
+  try {
+    const path = `${crypto.randomUUID()}.webm`;
+    const { error } = await supabase.storage
+      .from("sugestoes")
+      .upload(path, blob, { contentType: "audio/webm" });
+    return error ? null : path;
+  } catch {
+    return null;
+  }
 }
 
 // ── Relatórios do operador ────────────────────────────────────────────────
@@ -649,4 +664,33 @@ export async function fetchRelatorio(
     maisPerdidos,
     checklists,
   };
+}
+
+// Base da PWA (mesma do compartilhamento de app). Usada para endpoints que o
+// app nativo não tem localmente (ex.: transcrição de áudio via server).
+const WEB_BASE = "https://check-ai-br.vercel.app";
+
+// Transcreve um áudio (data URL base64) chamando a rota /api/transcrever da PWA,
+// autenticando com o token da sessão atual. Retorna "" em qualquer falha.
+export async function transcreverAudio(dataUrl: string): Promise<string> {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) return "";
+    const res = await fetch(`${WEB_BASE}/api/transcrever`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ dataUrl }),
+    });
+    if (!res.ok) return "";
+    const json = (await res.json()) as { texto?: string };
+    return (json?.texto ?? "").trim();
+  } catch {
+    return "";
+  }
 }
