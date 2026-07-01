@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { enviarEmail, emailConviteHtml } from "@/lib/email";
+import { novoConviteToken } from "@/lib/convite";
 
 export type FormState = { error?: string; ok?: boolean };
 
@@ -38,9 +39,13 @@ export async function convidarResponsavel(
   const proto = h.get("x-forwarded-proto") ?? "https";
   const redirectTo = host ? `${proto}://${host}/auth/redefinir` : undefined;
 
-  // Gera o link (sem enviar e-mail pelo Supabase). 1º como convite (cria a
-  // conta); se já existir, como recuperação (cai na mesma tela de cadastro).
-  let link: string | undefined;
+  if (!host) return { error: "Não foi possível gerar o link do convite.", email };
+
+  // Garante a conta do responsável no Auth (o trigger handle_new_user provisiona
+  // o profile). Usamos generateLink só para CRIAR/localizar o usuário — o link
+  // OTP do Supabase é descartado (expira e é vulnerável a prefetch). O acesso
+  // usa o NOSSO token, guardado no profile, que não expira por tempo.
+  let userId: string | undefined;
   const invite = await admin.auth.admin.generateLink({
     type: "invite",
     email,
@@ -56,24 +61,42 @@ export async function convidarResponsavel(
   if (invite.error) {
     const msg = invite.error.message.toLowerCase();
     if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+      // Já existe → localiza o usuário por e-mail.
       const rec = await admin.auth.admin.generateLink({
         type: "recovery",
         email,
         options: { redirectTo },
       });
       if (rec.error) return { error: rec.error.message, email };
-      link = rec.data.properties?.action_link;
+      userId = rec.data.user?.id;
     } else {
       return { error: invite.error.message, email };
     }
   } else {
-    link = invite.data.properties?.action_link;
+    userId = invite.data.user?.id;
   }
 
-  if (!link) return { error: "Não foi possível gerar o link do convite.", email };
+  if (!userId) return { error: "Não foi possível gerar o link do convite.", email };
 
-  // Guarda o link no cadastro da rede (best-effort: se a coluna ainda não existir,
-  // o erro é ignorado e o link continua disponível pelo botão de gerar/copiar).
+  // Token PRÓPRIO → link não expira por tempo (só quando o cadastro é concluído
+  // ou quando um novo convite é gerado, sobrescrevendo o convite_token).
+  const token = novoConviteToken();
+  const params = new URLSearchParams({ convite: token });
+  params.set("email", email);
+  if (rede?.contato_nome) params.set("nome", rede.contato_nome);
+  const link = `${proto}://${host}/auth/redefinir?${params.toString()}`;
+
+  await admin
+    .from("profiles")
+    .update({
+      convite_token: token,
+      convite_usado_em: null,
+      convite_link: link,
+      convite_em: new Date().toISOString(),
+    })
+    .eq("id", userId);
+
+  // Também guarda no cadastro da rede (para o super admin copiar/reenviar).
   await admin
     .from("redes")
     .update({ convite_link: link, convite_em: new Date().toISOString() })

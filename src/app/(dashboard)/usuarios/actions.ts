@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
 import { validarSenha } from "@/lib/senha";
+import { novoConviteToken } from "@/lib/convite";
 import type { Papel } from "@/lib/types";
 
 export type FormState = { error?: string; ok?: boolean };
@@ -32,30 +33,25 @@ export async function gerarLinkUsuario(
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
   const proto = h.get("x-forwarded-proto") ?? "https";
-  const redirectTo = host ? `${proto}://${host}/auth/redefinir` : undefined;
+  if (!host) return { error: "Não foi possível gerar o link.", email: u.email };
 
-  const rec = await admin.auth.admin.generateLink({
-    type: "recovery",
-    email: u.email,
-    options: { redirectTo },
-  });
-  if (rec.error) return { error: rec.error.message, email: u.email };
-  // IMPORTANTE: NÃO compartilhar o action_link do Supabase (/auth/v1/verify) —
-  // é uso único e o robô de preview do WhatsApp/antivírus o consome antes da
-  // pessoa abrir. Em vez disso, apontamos para a NOSSA página com o token_hash;
-  // o token só é consumido no submit (verifyOtp), à prova de prefetch.
-  const tokenHash = rec.data.properties?.hashed_token;
-  if (!tokenHash || !host) {
-    return { error: "Não foi possível gerar o link.", email: u.email };
-  }
-  const params = new URLSearchParams({ token_hash: tokenHash, type: "recovery" });
+  // Token PRÓPRIO (não OTP do Supabase) → o link não expira por tempo. Só deixa
+  // de valer quando o cadastro é concluído ou quando este método gera outro
+  // (o convite_token é sobrescrito). À prova de prefetch: visitar não consome.
+  const token = novoConviteToken();
+  const params = new URLSearchParams({ convite: token });
   params.set("email", u.email);
   if (u.nome) params.set("nome", u.nome);
   const link = `${proto}://${host}/auth/redefinir?${params.toString()}`;
 
   await admin
     .from("profiles")
-    .update({ convite_link: link, convite_em: new Date().toISOString() })
+    .update({
+      convite_token: token,
+      convite_usado_em: null,
+      convite_link: link,
+      convite_em: new Date().toISOString(),
+    })
     .eq("id", userId);
 
   if (u.rede_id) revalidatePath(`/clientes/${u.rede_id}`);

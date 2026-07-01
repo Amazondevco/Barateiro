@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { validarSenha, SENHA_REGRAS } from "@/lib/senha";
+import { definirSenhaPorConvite } from "./actions";
 
 // Tela de cadastro do responsável / redefinição de senha (alvo do link).
 // IMPORTANTE: visitar o link NÃO estabelece sessão (senão abrir o link de outra
@@ -46,6 +47,9 @@ export default function RedefinirSenhaPage() {
   const tokensRef = useRef<{ access_token: string; refresh_token: string } | null>(null);
   // Fluxo novo (Opção A): token_hash na query, consumido só no submit.
   const tokenHashRef = useRef<string | null>(null);
+  // Fluxo atual: convite PRÓPRIO (não expira por tempo). Token no query,
+  // consumido só no submit por um server action (admin API).
+  const conviteRef = useRef<string | null>(null);
 
   const [ready, setReady] = useState(false);
   const [ctx, setCtx] = useState<Ctx | null>(null);
@@ -62,6 +66,15 @@ export default function RedefinirSenhaPage() {
     const p = new URLSearchParams(hash);
     // remove o token da URL (hash e query) sem estabelecer sessão
     if (hash || search) window.history.replaceState(null, "", window.location.pathname);
+
+    // Fluxo atual: convite próprio (não expira). Só é consumido no submit.
+    const convite = q.get("convite");
+    if (convite) {
+      conviteRef.current = convite;
+      setCtx({ email: q.get("email") ?? "", nome: q.get("nome") ?? "" });
+      setReady(true);
+      return;
+    }
 
     // Fluxo novo (Opção A): token_hash na query. NÃO consome aqui — só no submit
     // (verifyOtp), de modo que prévias de link (WhatsApp/antivírus) não queimem.
@@ -106,12 +119,37 @@ export default function RedefinirSenhaPage() {
     const erroSenha = validarSenha(senha);
     if (erroSenha) return setError(erroSenha);
     if (senha !== confirma) return setError("As senhas não conferem.");
-    if (!tokenHashRef.current && !tokensRef.current) {
+    if (!conviteRef.current && !tokenHashRef.current && !tokensRef.current) {
       return setError("Link inválido — peça um novo.");
     }
 
     setLoading(true);
     const supabase = makeClient();
+
+    // Fluxo atual: convite próprio. Server action define a senha (admin API) e
+    // marca o convite como usado; depois entramos com e-mail+senha.
+    if (conviteRef.current) {
+      const r = await definirSenhaPorConvite(conviteRef.current, senha);
+      if (r.error || !r.ok) {
+        setLoading(false);
+        return setError(r.error ?? "Não foi possível concluir. Tente novamente.");
+      }
+      const login = await supabase.auth.signInWithPassword({
+        email: r.email ?? ctx?.email ?? "",
+        password: senha,
+      });
+      setLoading(false);
+      if (login.error) {
+        // Senha foi salva; só a sessão falhou → manda pro login.
+        setError("Senha criada! Faça login para entrar.");
+        setTimeout(() => router.replace("/login"), 1200);
+        return;
+      }
+      setDone(true);
+      setTimeout(() => router.replace("/"), 1200);
+      return;
+    }
+
     // Só AGORA consumimos o link e estabelecemos a sessão desta pessoa.
     if (tokenHashRef.current) {
       // Fluxo novo: verifyOtp consome o token de uso único neste momento.
