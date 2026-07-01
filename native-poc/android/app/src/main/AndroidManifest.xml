@@ -56,4 +56,7 @@
     <!-- Geofence dos formulários: GPS para validar a presença na unidade. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Gravação de áudio da sugestão (o WebView pede a permissão ao usuário). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 </manifest>

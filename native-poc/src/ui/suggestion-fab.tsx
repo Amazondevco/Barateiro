@@ -74,8 +74,18 @@ export function SuggestionFab() {
       rec.start();
       setGravando(true);
       timerRef.current = setTimeout(stopRec, MAX_SEG * 1000);
-    } catch {
-      setErro("Não foi possível acessar o microfone.");
+    } catch (e) {
+      // Usuário negou o microfone (ou já estava negado nas permissões do app).
+      const nome = e instanceof DOMException ? e.name : "";
+      if (nome === "NotAllowedError" || nome === "SecurityError") {
+        setErro(
+          "Permissão de microfone negada. Libere o microfone nas configurações do app para gravar.",
+        );
+      } else if (nome === "NotFoundError") {
+        setErro("Nenhum microfone encontrado no aparelho.");
+      } else {
+        setErro("Não foi possível acessar o microfone.");
+      }
     }
   }
 
