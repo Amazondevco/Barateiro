@@ -509,7 +509,7 @@ export function FillFormPage() {
                 <ClipboardCheck className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-primary">Quase lá!</p>
+                <p className="text-sm font-bold text-primary">{t("Quase lá!")}</p>
                 <p className="text-xs leading-snug text-primary/80">
                   Confira suas respostas abaixo antes de confirmar o envio
                   definitivo.

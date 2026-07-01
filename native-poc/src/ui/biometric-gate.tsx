@@ -5,6 +5,7 @@ import { verifyBiometric } from "../lib/biometric";
 import { isNativePlatform } from "../lib/platform";
 import { Button } from "./button";
 import logoUrl from "../assets/checkai-logo.svg";
+import { useI18n } from "../lib/i18n/i18n";
 
 // Pede a biometria na ABERTURA do app, mas NÃO incomoda em recarregar a página
 // (refresh) nem ao voltar do segundo plano rapidamente. Só volta a pedir quando o
@@ -40,6 +41,7 @@ function marcarAtividade() {
 }
 
 export function BiometricGate({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n();
   const armado = isNativePlatform();
   // Trava no início só se NÃO for um refresh/retorno recente (mesmo processo).
   const [locked, setLocked] = useState(armado && !recenteDesbloqueio());
@@ -89,12 +91,12 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
           Check<span className="text-[#15803d]">.AI</span>
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          App bloqueado. Use a biometria ou o código do celular para entrar.
+          {t("App bloqueado. Use a biometria ou o código do celular para entrar.")}
         </p>
       </div>
       <Button type="button" onClick={() => void unlock()}>
         <Fingerprint className="h-4 w-4" />
-        Desbloquear
+        {t("Desbloquear")}
       </Button>
     </div>
   );

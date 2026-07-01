@@ -215,4 +215,12 @@ export const en: Record<string, string> = {
   "Obs:": "Note:",
   "foto anexada": "photo attached",
   Assinatura: "Signature",
+
+  // ── Diversos ──
+  "Quase lá!": "Almost there!",
+  "App bloqueado. Use a biometria ou o código do celular para entrar.":
+    "App locked. Use biometrics or your phone passcode to enter.",
+  Desbloquear: "Unlock",
+  "{n} envio(s) pendente(s)": "{n} pending submission(s)",
+  "{n} erro(s) de sincronização": "{n} sync error(s)",
 };

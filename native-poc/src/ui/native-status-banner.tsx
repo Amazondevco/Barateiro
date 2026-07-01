@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { CloudOff, RefreshCw } from "lucide-react";
 import { getQueueItems } from "../lib/queue-store";
 import { useNetworkStatus } from "../lib/use-network-status";
+import { useI18n } from "../lib/i18n/i18n";
 
 type QueueSummary = {
   pending: number;
@@ -18,6 +19,7 @@ async function readQueueSummary() {
 }
 
 export function NativeStatusBanner() {
+  const { t } = useI18n();
   const network = useNetworkStatus();
   const [queue, setQueue] = useState<QueueSummary>({ pending: 0, errors: 0 });
 
@@ -57,21 +59,20 @@ export function NativeStatusBanner() {
         {!network.connected ? (
           <span className="inline-flex items-center gap-1.5">
             <CloudOff className="h-3.5 w-3.5 text-warning" />
-            Offline
+            {t("Offline")}
           </span>
         ) : null}
 
         {queue.pending > 0 ? (
           <span className="inline-flex items-center gap-1.5">
             <RefreshCw className="h-3.5 w-3.5 animate-spin text-primary" />
-            {queue.pending} envio{queue.pending > 1 ? "s" : ""} pendente
-            {queue.pending > 1 ? "s" : ""}
+            {t("{n} envio(s) pendente(s)", { n: queue.pending })}
           </span>
         ) : null}
 
         {queue.errors > 0 ? (
           <span className="inline-flex items-center gap-1.5 text-danger">
-            {queue.errors} erro{queue.errors > 1 ? "s" : ""} de sincronização
+            {t("{n} erro(s) de sincronização", { n: queue.errors })}
           </span>
         ) : null}
       </div>
