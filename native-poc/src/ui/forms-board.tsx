@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   Search,
@@ -436,7 +437,8 @@ export function FormsBoard({
   );
 }
 
-// Menu "3 pontinhos" da pasta: Editar / Apagar (fecha ao clicar fora).
+// Menu "3 pontinhos" da pasta: Editar / Apagar. Renderizado via PORTAL para não
+// ser cortado pelo overflow-hidden do card nem por outros cartões (empilhamento).
 function PastaMenu({
   onEditar,
   onApagar,
@@ -445,49 +447,64 @@ function PastaMenu({
   onApagar: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    function onDown(e: PointerEvent) {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("pointerdown", onDown);
-    return () => document.removeEventListener("pointerdown", onDown);
-  }, []);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  function abrir() {
+    if (btnRef.current) setRect(btnRef.current.getBoundingClientRect());
+    setOpen((v) => !v);
+  }
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <div className="shrink-0">
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={abrir}
         aria-label="Opções da pasta"
         className="rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
       >
         <MoreVertical className="h-5 w-5" />
       </button>
-      {open && (
-        <div className="absolute right-0 top-10 z-20 w-40 overflow-hidden rounded-xl border border-border bg-card p-1 shadow-lg">
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              onEditar();
-            }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
-          >
-            <Pencil className="h-4 w-4 opacity-70" /> Editar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              onApagar();
-            }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-danger hover:bg-danger-bg"
-          >
-            <Trash2 className="h-4 w-4" /> Apagar
-          </button>
-        </div>
-      )}
+      {open &&
+        rect &&
+        createPortal(
+          <>
+            <div
+              className="fixed inset-0 z-[60]"
+              onClick={() => setOpen(false)}
+            />
+            <div
+              className="fixed z-[61] w-40 overflow-hidden rounded-xl border border-border bg-card p-1 shadow-xl"
+              style={{
+                top: rect.bottom + 4,
+                right: Math.max(8, window.innerWidth - rect.right),
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onEditar();
+                }}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
+              >
+                <Pencil className="h-4 w-4 opacity-70" /> Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onApagar();
+                }}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-danger hover:bg-danger-bg"
+              >
+                <Trash2 className="h-4 w-4" /> Apagar
+              </button>
+            </div>
+          </>,
+          document.body,
+        )}
     </div>
   );
 }
