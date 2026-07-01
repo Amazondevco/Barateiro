@@ -3,6 +3,7 @@ import { Building2, ChevronRight, Store } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { fetchMemberships, peekMemberships, type Membership } from "../lib/operator-api";
 import { LoadingScreen } from "../ui/loading-screen";
+import { marcarBooted } from "../lib/boot-state";
 
 export function MembershipsPage() {
   const initial = peekMemberships();
@@ -27,7 +28,10 @@ export function MembershipsPage() {
               : "Falha ao carregar vínculos.",
           );
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          marcarBooted(); // vínculos carregados → fim da "abertura"
+        }
       }
     }
 

@@ -9,6 +9,7 @@ import {
   type NetworkHomeData,
 } from "../lib/operator-api";
 import { isLightHex } from "../lib/utils";
+import { marcarBooted } from "../lib/boot-state";
 import { LoadingScreen } from "../ui/loading-screen";
 import { FormsBoard } from "../ui/forms-board";
 
@@ -28,6 +29,7 @@ export function NetworkHomePage() {
     function apply(next: NetworkHomeData) {
       if (!mounted) return;
       setData(next);
+      marcarBooted(); // home carregou → fim da "abertura"; próximos loads = logo
       applyPrimaryColor(next.brand.primaryColor);
       // Persiste a logo da rede p/ a tela de carregamento (último quadro).
       try {
