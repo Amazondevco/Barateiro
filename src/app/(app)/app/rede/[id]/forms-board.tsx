@@ -221,7 +221,7 @@ export function FormsBoard({
       </div>
 
       {/* filtros + ordenar (sem overflow: o overflow corta o menu que abre embaixo) */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-1.5">
         <Popover
           label="Filtros"
           icon={SlidersHorizontal}
@@ -275,9 +275,9 @@ export function FormsBoard({
         <button
           type="button"
           onClick={() => setModalAberto(true)}
-          className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-card px-3.5 text-[13px] font-medium text-muted-foreground shadow-sm transition-colors hover:border-primary hover:text-primary"
+          className="flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-border bg-card px-2.5 text-xs font-medium text-muted-foreground shadow-sm transition-colors hover:border-primary hover:text-primary"
         >
-          <FolderPlus className="h-4 w-4" /> Criar pasta
+          <FolderPlus className="h-3.5 w-3.5" /> Criar pasta
         </button>
       </div>
 
@@ -558,13 +558,13 @@ function Popover({
     <div ref={ref} className="relative shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium shadow-sm transition-colors ${
+        className={`flex h-8 items-center gap-1 rounded-full border px-2.5 text-xs font-medium shadow-sm transition-colors ${
           active
             ? "border-primary bg-primary/10 text-primary"
             : "border-border bg-card text-muted-foreground hover:bg-muted"
         }`}
       >
-        <Icon className="h-4 w-4" /> {label}
+        <Icon className="h-3.5 w-3.5" /> {label}
         {badge > 0 && (
           <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
             {badge}

@@ -220,7 +220,7 @@ export function FormsBoard({
       </div>
 
       {/* filtros + ordenar + criar pasta */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Popover
           label="Filtros"
           icon={SlidersHorizontal}
@@ -274,9 +274,9 @@ export function FormsBoard({
         <button
           type="button"
           onClick={() => setModalAberto(true)}
-          className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-card px-3.5 text-[13px] font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          className="flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-border bg-card px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
         >
-          <FolderPlus className="h-4 w-4" /> Criar pasta
+          <FolderPlus className="h-3.5 w-3.5" /> Criar pasta
         </button>
       </div>
 
@@ -557,13 +557,13 @@ function Popover({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-medium ${
+        className={`flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 text-xs font-medium ${
           active
             ? "border-primary bg-primary/10 text-primary"
             : "border-border bg-card text-muted-foreground"
         }`}
       >
-        <Icon className="h-4 w-4" /> {label}
+        <Icon className="h-3.5 w-3.5" /> {label}
         {badge > 0 && (
           <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
             {badge}
