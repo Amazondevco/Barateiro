@@ -7,6 +7,7 @@ import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { FormState } from "./actions";
 import type { Rede } from "@/lib/types";
+import { TIPOS_NEGOCIO } from "@/lib/tipos-negocio";
 
 const DIAS = [
   { v: 1, l: "Seg" },
@@ -39,6 +40,27 @@ export function RedeForm({
             <div className="sm:col-span-2">
               <Label htmlFor="nome">Nome *</Label>
               <Input id="nome" name="nome" defaultValue={rede?.nome ?? ""} required />
+            </div>
+            <div className="sm:col-span-2">
+              <Label htmlFor="tipo_negocio">Tipo de negócio *</Label>
+              <Select
+                id="tipo_negocio"
+                name="tipo_negocio"
+                defaultValue={rede?.tipo_negocio ?? ""}
+                required
+              >
+                <option value="" disabled>
+                  Selecione o tipo de negócio
+                </option>
+                {TIPOS_NEGOCIO.map((t) => (
+                  <option key={t.slug} value={t.slug}>
+                    {t.label}
+                  </option>
+                ))}
+              </Select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Personaliza os checklists e relatórios gerados por IA para o ramo.
+              </p>
             </div>
             <div>
               <Label htmlFor="cnpj">CNPJ</Label>

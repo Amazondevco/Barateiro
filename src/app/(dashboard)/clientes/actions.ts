@@ -135,6 +135,7 @@ function parseRede(formData: FormData) {
   return {
     nome: String(formData.get("nome") ?? "").trim(),
     cnpj: String(formData.get("cnpj") ?? "").trim() || null,
+    tipo_negocio: String(formData.get("tipo_negocio") ?? "").trim() || null,
     logo_url: String(formData.get("logo_url") ?? "").trim() || null,
     cor_primaria: String(formData.get("cor_primaria") ?? "#2563eb"),
     plano: String(formData.get("plano") ?? "free"),
@@ -160,6 +161,7 @@ export async function createRede(
 ): Promise<FormState> {
   const payload = parseRede(formData);
   if (!payload.nome) return { error: "Informe o nome da rede." };
+  if (!payload.tipo_negocio) return { error: "Selecione o tipo de negócio." };
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -190,6 +192,7 @@ export async function updateRede(
 ): Promise<FormState> {
   const payload = parseRede(formData);
   if (!payload.nome) return { error: "Informe o nome da rede." };
+  if (!payload.tipo_negocio) return { error: "Selecione o tipo de negócio." };
 
   const supabase = await createClient();
   const { error } = await supabase.from("redes").update(payload).eq("id", id);

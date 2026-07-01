@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Power, Info, Building2, Users } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { labelNegocio } from "@/lib/tipos-negocio";
 import { PillTabs } from "@/components/ui/pill-tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -124,6 +125,9 @@ export default async function RedeDetailPage({
           }))}
         />
         <div className="flex items-center gap-3">
+          {labelNegocio(rede.tipo_negocio) && (
+            <Badge tone="neutral">{labelNegocio(rede.tipo_negocio)}</Badge>
+          )}
           <Badge tone={rede.status === "ativo" ? "success" : "neutral"}>
             {rede.status}
           </Badge>

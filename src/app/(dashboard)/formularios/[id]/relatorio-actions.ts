@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
 import { transcribeAudio } from "@/lib/transcribe";
+import { descritorNegocio } from "@/lib/tipos-negocio";
 import { KINDS, KINDS_COM_ITEM, KIND_LABEL, type Kind, type Spec } from "@/lib/relatorios";
 
 export type RelState = { error?: string; ok?: boolean };
@@ -12,7 +13,9 @@ const CATALOGO = (KINDS as readonly string[])
   .map((k) => `- "${k}": ${KIND_LABEL[k as Kind]}`)
   .join("\n");
 
-const SYSTEM = `Você cria PAINÉIS de relatórios para checklists operacionais de supermercado.
+// System prompt de relatórios adaptado ao SEGMENTO da rede (genérico por padrão).
+function buildSystem(descritor: string): string {
+  return `Você cria PAINÉIS de relatórios para checklists operacionais de ${descritor}.
 Escolha apenas relatórios da lista de tipos (kind) abaixo — não invente outros:
 ${CATALOGO}
 
@@ -23,8 +26,9 @@ Regras:
 - Dê títulos curtos e claros em português.
 - "spec" pode ter {"topN": N} para limitar barras (padrão 8).
 Responda APENAS JSON válido.`;
+}
 
-async function callGroq(user: string): Promise<unknown | null> {
+async function callGroq(user: string, system: string): Promise<unknown | null> {
   const key = process.env.GROQ_API_KEY;
   if (!key) return null;
   try {
@@ -37,7 +41,7 @@ async function callGroq(user: string): Promise<unknown | null> {
         max_tokens: 1500,
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: SYSTEM },
+          { role: "system", content: system },
           { role: "user", content: user },
         ],
       }),
@@ -80,17 +84,18 @@ async function contexto(formId: string) {
   const supabase = await createClient();
   const { data: form } = await supabase
     .from("formularios")
-    .select("rede_id, nome, descricao, formulario_secoes(titulo, formulario_itens(id, texto, tipo))")
+    .select("rede_id, nome, descricao, redes(tipo_negocio), formulario_secoes(titulo, formulario_itens(id, texto, tipo))")
     .eq("id", formId)
     .single();
   if (!form) return null;
-  return { supabase, form: form as FormCtx };
+  return { supabase, form: form as unknown as FormCtx };
 }
 
 type FormCtx = {
   rede_id: string;
   nome: string;
   descricao: string | null;
+  redes: { tipo_negocio: string | null } | null;
   formulario_secoes: { titulo: string; formulario_itens: { id: string; texto: string; tipo: string }[] }[];
 };
 
@@ -99,6 +104,15 @@ function itensValidos(f: FormCtx): Set<string> {
   for (const sec of f.formulario_secoes)
     for (const it of sec.formulario_itens) s.add(it.id);
   return s;
+}
+
+// Descritor do ramo da rede do checklist (embed pode vir objeto ou array).
+function segmentoDescritor(f: FormCtx): string {
+  const r = f.redes as unknown;
+  const tipo = Array.isArray(r)
+    ? (r[0] as { tipo_negocio?: string | null } | undefined)?.tipo_negocio
+    : (r as { tipo_negocio?: string | null } | null)?.tipo_negocio;
+  return descritorNegocio(tipo ?? null);
 }
 
 function resumoForm(f: FormCtx): string {
@@ -141,6 +155,7 @@ export async function gerarPainelIA(formId: string): Promise<RelState> {
 
   const out = await callGroq(
     `${resumoForm(form)}\n\nProponha de 3 a 5 relatórios importantes para este checklist. Responda JSON: {"relatorios":[{"titulo","kind","spec"}]}`,
+    buildSystem(segmentoDescritor(form)),
   );
   const props = validar((out as { relatorios?: unknown })?.relatorios, itensValidos(form));
   if (!props.length) return { error: "A IA não conseguiu propor relatórios. Tente de novo." };
@@ -168,6 +183,7 @@ export async function novoRelatorio(
 
   const out = await callGroq(
     `${resumoForm(form)}\n\nO usuário quer este relatório: "${desc}".\nEscolha 1 relatório que melhor atende. Responda JSON: {"relatorios":[{"titulo","kind","spec"}]}`,
+    buildSystem(segmentoDescritor(form)),
   );
   const props = validar((out as { relatorios?: unknown })?.relatorios, itensValidos(form)).slice(0, 1);
   if (!props.length) return { error: "Não entendi. Tente descrever de outro jeito." };

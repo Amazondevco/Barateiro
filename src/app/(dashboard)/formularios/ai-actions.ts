@@ -2,6 +2,9 @@
 
 import type { SecaoDraft } from "./actions";
 import type { ItemTipo, UnidadeTipo } from "@/lib/types";
+import { getSessionProfile } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/server";
+import { descritorNegocio, usaGondola } from "@/lib/tipos-negocio";
 
 export type AiForm = {
   nome: string;
@@ -24,7 +27,11 @@ const TIPOS: ItemTipo[] = [
 ];
 const UNIDADES: UnidadeTipo[] = ["loja", "cd", "escritorio", "outro"];
 
-const SYSTEM = `Você é um especialista em checklists digitais operacionais para redes de supermercado.
+// System prompt montado com o SEGMENTO da rede — o mesmo motor serve qualquer
+// ramo (segurança, frota, indústria, supermercado…). `gondola` só habilita a
+// dica de "abastecido/ruptura" para ramos com gôndola/estoque de prateleira.
+function buildSystem(descritor: string, gondola: boolean): string {
+  return `Você é um especialista em checklists digitais operacionais para ${descritor}.
 Gere a estrutura de um formulário de checklist a partir da entrada do usuário (descrição em texto OU conteúdo de um formulário impresso para digitalizar).
 
 Responda APENAS com JSON válido (sem markdown, sem comentários), exatamente neste formato:
@@ -44,13 +51,39 @@ Responda APENAS com JSON válido (sem markdown, sem comentários), exatamente ne
 }
 
 Regras:
-- Itens objetivos e verificáveis ("Produtos dentro da validade", "Balança calibrada").
-- Use "ok_nao" como padrão; "sim_nao" para perguntas de sim/não (ex.: "Temperatura dentro do padrão?"); "abastecido_ruptura" para checagem de abastecimento de gôndola.
+- Itens objetivos e verificáveis, adequados ao ramo (ex.: "Equipamento em condições de uso", "EPI em uso", "Área limpa e organizada").
+- Use "ok_nao" como padrão; "sim_nao" para perguntas de sim/não (ex.: "Está dentro do padrão?").${
+    gondola
+      ? ' Use "abastecido_ruptura" para checagem de abastecimento de gôndola/estoque de prateleira.'
+      : ' Não use "abastecido_ruptura" (é específico de varejo com gôndola).'
+  }
 - Itens críticos (limpeza, validade, temperatura, segurança): "obriga_obs": true e "obriga_foto": true.
-- Agrupe em seções lógicas por área/departamento.
+- Agrupe em seções lógicas por área/setor do ramo.
 - MOBILE-FIRST: o preenchimento será no CELULAR. Itens curtos, diretos e fáceis de marcar com o polegar. Evite frases longas.
 - Ao digitalizar um documento: preserve as seções e itens existentes, converta em itens verificáveis e descarte cabeçalhos/rodapés/assinaturas irrelevantes.
 - Português do Brasil.`;
+}
+
+// Segmento (descritor + gôndola) da rede do admin logado. Super admin ou sem
+// rede/tipo → genérico ("operações gerais").
+async function segmentoDoCaller(): Promise<{ descritor: string; gondola: boolean }> {
+  try {
+    const profile = await getSessionProfile();
+    if (profile?.rede_id) {
+      const admin = createAdminClient();
+      const { data } = await admin
+        .from("redes")
+        .select("tipo_negocio")
+        .eq("id", profile.rede_id)
+        .maybeSingle();
+      const slug = (data as { tipo_negocio?: string } | null)?.tipo_negocio ?? null;
+      return { descritor: descritorNegocio(slug), gondola: usaGondola(slug) };
+    }
+  } catch {
+    /* fallback genérico */
+  }
+  return { descritor: descritorNegocio(null), gondola: usaGondola(null) };
+}
 
 function extractJson(text: string): string {
   const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -94,7 +127,7 @@ function normalize(raw: unknown): AiForm {
   };
 }
 
-async function callGroq(userMessage: string): Promise<AiResult> {
+async function callGroq(userMessage: string, system: string): Promise<AiResult> {
   const key = process.env.GROQ_API_KEY;
   if (!key)
     return { error: "IA ainda não configurada. Defina GROQ_API_KEY no servidor." };
@@ -114,7 +147,7 @@ async function callGroq(userMessage: string): Promise<AiResult> {
           max_tokens: 6000,
           response_format: { type: "json_object" },
           messages: [
-            { role: "system", content: SYSTEM },
+            { role: "system", content: system },
             { role: "user", content: userMessage },
           ],
         }),
@@ -142,15 +175,19 @@ export async function generateFormulario(
   if (!desc && !file)
     return { error: "Descreva o que o checklist precisa verificar." };
 
+  const { descritor, gondola } = await segmentoDoCaller();
+  const system = buildSystem(descritor, gondola);
+
   if (file) {
     const extra = desc
       ? `\n\nInstruções adicionais do usuário: ${desc}`
       : "";
     return callGroq(
       `Digitalize o checklist impresso abaixo em um checklist digital estruturado e mobile-first, preservando seções e itens. Conteúdo extraído do arquivo:\n\n${file}${extra}`,
+      system,
     );
   }
-  return callGroq(desc);
+  return callGroq(desc, system);
 }
 
 // ---- Importar de arquivo (PDF / Word / Excel / texto) ----

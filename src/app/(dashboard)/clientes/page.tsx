@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, THead, TH, TR, TD, EmptyState } from "@/components/ui/table";
 import { createClient } from "@/lib/supabase/server";
+import { labelNegocio } from "@/lib/tipos-negocio";
 
 export const metadata = { title: "Clientes (Redes) — Check.AI" };
 
@@ -12,6 +13,7 @@ type RedeRow = {
   id: string;
   nome: string;
   cnpj: string | null;
+  tipo_negocio: string | null;
   plano: string;
   status: "ativo" | "inativo";
   cor_primaria: string | null;
@@ -24,7 +26,7 @@ export default async function ClientesPage() {
   const { data } = await supabase
     .from("redes")
     .select(
-      "id,nome,cnpj,plano,status,cor_primaria,unidades(count),profiles(count)",
+      "id,nome,cnpj,tipo_negocio,plano,status,cor_primaria,unidades(count),profiles(count)",
     )
     .order("created_at", { ascending: false });
 
@@ -61,6 +63,7 @@ export default async function ClientesPage() {
           <THead>
             <TR>
               <TH>Rede</TH>
+              <TH>Segmento</TH>
               <TH>Plano</TH>
               <TH>Unidades</TH>
               <TH>Usuários</TH>
@@ -89,6 +92,13 @@ export default async function ClientesPage() {
                       )}
                     </span>
                   </Link>
+                </TD>
+                <TD>
+                  {labelNegocio(r.tipo_negocio) ? (
+                    <Badge tone="neutral">{labelNegocio(r.tipo_negocio)}</Badge>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </TD>
                 <TD className="capitalize">{r.plano}</TD>
                 <TD>{r.unidades?.[0]?.count ?? 0}</TD>

@@ -31,6 +31,7 @@ export type Rede = {
   id: string;
   nome: string;
   cnpj: string | null;
+  tipo_negocio: string | null;
   logo_url: string | null;
   cor_primaria: string | null;
   plano: string;
