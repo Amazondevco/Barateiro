@@ -145,7 +145,7 @@ export function DashboardShell({
       {/* Coluna principal */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <header
-          className="relative z-10 flex h-16 shrink-0 items-center justify-between px-4 shadow-[0_6px_20px_-8px_rgba(2,6,23,0.18)] lg:px-6"
+          className="relative z-10 flex h-16 shrink-0 items-center justify-between px-4 shadow-[0_6px_20px_-8px_rgba(2,6,23,0.18)] lg:pl-0 lg:pr-6"
           style={headerStyle}
         >
           {/* Separação sidebar ↔ topbar: traço vertical curto (menor que a
@@ -155,31 +155,37 @@ export function DashboardShell({
             aria-hidden
             className="absolute left-0 top-1/2 hidden h-8 w-px -translate-y-1/2 bg-border shadow-[1.5px_0_4px_-1px_rgba(0,0,0,0.3)] lg:block"
           />
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            {/* Recolher/expandir sidebar (desktop) */}
-            <button
-              type="button"
-              className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-foreground/10 hover:text-foreground lg:flex"
-              onClick={toggleCollapsed}
-              aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
-              title={collapsed ? "Expandir menu" : "Recolher menu"}
-            >
-              {collapsed ? (
-                <PanelLeftOpen className="h-5 w-5" />
-              ) : (
-                <PanelLeftClose className="h-5 w-5" />
-              )}
-            </button>
+          <div className="flex min-w-0 flex-1 items-center">
+            {/* Recolher/expandir (desktop): célula de largura fixa encostada na
+                linha sidebar↔topbar, com o botão CENTRALIZADO. Assim o centro do
+                botão cai no meio exato entre as duas linhas (esquerda = borda da
+                célula em left:0; direita = divisor do título logo após). */}
+            <div className="hidden h-full w-14 items-center justify-center lg:flex">
+              <button
+                type="button"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-foreground/10 hover:text-foreground"
+                onClick={toggleCollapsed}
+                aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+                title={collapsed ? "Expandir menu" : "Recolher menu"}
+              >
+                {collapsed ? (
+                  <PanelLeftOpen className="h-5 w-5" />
+                ) : (
+                  <PanelLeftClose className="h-5 w-5" />
+                )}
+              </button>
+            </div>
             {/* Menu (mobile) */}
             <button
               type="button"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-foreground/10 hover:text-foreground lg:hidden"
+              className="mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-foreground/10 hover:text-foreground lg:hidden"
               onClick={() => setOpen((v) => !v)}
               aria-label="Menu"
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <div className="mx-1 hidden h-8 w-px shrink-0 bg-border lg:block" />
+            {/* divisor botão ↔ título (sem margem à esquerda: encosta na célula) */}
+            <div className="mr-2 hidden h-8 w-px shrink-0 bg-border lg:block" />
             <TopbarTitle />
           </div>
 
