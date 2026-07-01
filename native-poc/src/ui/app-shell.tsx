@@ -5,7 +5,6 @@ import { BottomNav } from "./bottom-nav";
 import { NativeStatusBanner } from "./native-status-banner";
 import { PullToRefresh } from "./pull-to-refresh";
 import { SuggestionFab } from "./suggestion-fab";
-import { VLibras } from "./vlibras";
 import { isNativePlatform } from "../lib/platform";
 import { aplicarStatusBar, temaEscuro } from "../lib/status-bar";
 
@@ -82,7 +81,6 @@ export function AppShell() {
       </main>
       {!compact ? <BottomNav /> : null}
       {!compact ? <SuggestionFab /> : null}
-      <VLibras />
     </div>
   );
 }
