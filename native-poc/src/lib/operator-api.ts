@@ -502,3 +502,141 @@ export async function enviarSugestao(
   if (error) return { error: error.message };
   return { ok: true };
 }
+
+// ── Relatórios do operador ────────────────────────────────────────────────
+export type RelatorioDia = {
+  data: string; // yyyy-mm-dd
+  esperados: number;
+  preenchidos: number;
+};
+export type RelatorioForm = { nome: string; perdidos: number };
+export type RelatorioData = {
+  preenchidos: number; // envios feitos no período
+  perdidos: number; // esperados em dias passados que não foram preenchidos
+  pendentesHoje: number; // esperados hoje ainda não preenchidos
+  esperados: number; // total de "slots" esperados até agora no período
+  taxa: number; // 0–100 (cumpridos / esperados)
+  porDia: RelatorioDia[];
+  maisPerdidos: RelatorioForm[];
+};
+
+function diaLocalISO(d: Date): string {
+  // yyyy-mm-dd no fuso local (não UTC) — evita "pular" dia perto da meia-noite.
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// Calcula preenchidos/perdidos/pendentes de um operador num intervalo [inicio, fim].
+// Um checklist é "esperado" num dia quando: já existia (created_at), passa o
+// filtro de unidade/departamento e o dia-da-semana bate (dias_semana vazio = todo dia).
+export async function fetchRelatorio(
+  memberId: string,
+  userId: string,
+  inicio: string,
+  fim: string,
+): Promise<RelatorioData> {
+  const { data: member, error: memberErr } = await supabase
+    .from("rede_membros")
+    .select("rede_id, unidade_id, departamento_id")
+    .eq("id", memberId)
+    .single();
+  if (memberErr) throw memberErr;
+
+  const { data: forms, error: formsErr } = await supabase
+    .from("formularios")
+    .select(
+      "id, nome, dias_semana, created_at, formulario_unidades(unidade_id), formulario_departamentos(departamento_id)",
+    )
+    .eq("rede_id", member.rede_id)
+    .eq("status", "ativo");
+  if (formsErr) throw formsErr;
+
+  const aplicaveis = (forms ?? [])
+    .filter((f) => {
+      const units = (
+        (f.formulario_unidades as Array<{ unidade_id: string }> | null) ?? []
+      ).map((r) => r.unidade_id);
+      if (units.length > 0 && (!member.unidade_id || !units.includes(member.unidade_id)))
+        return false;
+      const deps = (
+        (f.formulario_departamentos as Array<{ departamento_id: string }> | null) ?? []
+      ).map((r) => r.departamento_id);
+      if (
+        deps.length > 0 &&
+        (!member.departamento_id || !deps.includes(member.departamento_id))
+      )
+        return false;
+      return true;
+    })
+    .map((f) => ({
+      id: String(f.id),
+      nome: String(f.nome),
+      weekdays: ((f.dias_semana as number[] | null) ?? []) as number[],
+      criadoEm: String(f.created_at).slice(0, 10),
+    }));
+
+  const { data: respostas, error: respErr } = await supabase
+    .from("respostas")
+    .select("formulario_id, data_referencia")
+    .eq("usuario_id", userId)
+    .gte("data_referencia", inicio)
+    .lte("data_referencia", fim);
+  if (respErr) throw respErr;
+
+  const feitos = new Set(
+    (respostas ?? []).map((r) => `${r.formulario_id}|${r.data_referencia}`),
+  );
+  const preenchidos = (respostas ?? []).length;
+
+  const hoje = diaLocalISO(new Date());
+  const porDia: RelatorioDia[] = [];
+  const perdidosPorForm = new Map<string, number>();
+  let perdidos = 0;
+  let pendentesHoje = 0;
+  let esperados = 0;
+  let cumpridos = 0;
+
+  const cursor = new Date(`${inicio}T00:00:00`);
+  const fimDate = new Date(`${fim}T00:00:00`);
+  while (cursor <= fimDate) {
+    const dstr = diaLocalISO(cursor);
+    if (dstr > hoje) break; // dias futuros não contam
+    const weekday = cursor.getDay() || 7; // 1=seg … 7=dom (igual ao resto do app)
+    let espDia = 0;
+    let feitosDia = 0;
+    for (const f of aplicaveis) {
+      if (dstr < f.criadoEm) continue; // o checklist ainda não existia
+      const esperado = f.weekdays.length === 0 || f.weekdays.includes(weekday);
+      if (!esperado) continue;
+      espDia++;
+      esperados++;
+      const feito = feitos.has(`${f.id}|${dstr}`);
+      if (feito) {
+        cumpridos++;
+        feitosDia++;
+      } else if (dstr < hoje) {
+        perdidos++;
+        perdidosPorForm.set(f.nome, (perdidosPorForm.get(f.nome) ?? 0) + 1);
+      } else {
+        pendentesHoje++; // é hoje e ainda não preencheu
+      }
+    }
+    porDia.push({ data: dstr, esperados: espDia, preenchidos: feitosDia });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  const taxa = esperados > 0 ? Math.round((cumpridos / esperados) * 100) : 100;
+  const maisPerdidos = [...perdidosPorForm.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([nome, qtd]) => ({ nome, perdidos: qtd }));
+
+  return {
+    preenchidos,
+    perdidos,
+    pendentesHoje,
+    esperados,
+    taxa,
+    porDia,
+    maisPerdidos,
+  };
+}

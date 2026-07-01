@@ -9,6 +9,7 @@ import { FormsPage } from "./pages/forms-page";
 import { FillFormPage } from "./pages/fill-form-page";
 import { RevisaoPage } from "./pages/revisao-page";
 import { ProfilePage } from "./pages/profile-page";
+import { ReportsPage } from "./pages/reports-page";
 import { ConfigPage } from "./pages/config-page";
 import { LoadingScreen } from "./ui/loading-screen";
 import { DeepLinkHandler } from "./ui/deep-link-handler";
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="revisao/:origem/:id" element={<RevisaoPage />} />
           <Route path="avisos" element={<NoticesPage />} />
           <Route path="formularios" element={<FormsPage />} />
+          <Route path="relatorios" element={<ReportsPage />} />
           <Route path="perfil" element={<ProfilePage />} />
           <Route path="config" element={<ConfigPage />} />
         </Route>

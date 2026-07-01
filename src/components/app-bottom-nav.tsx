@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Bell, ClipboardCheck, User, Settings, type LucideIcon } from "lucide-react";
+import { Home, Bell, ClipboardCheck, ChartColumn, Settings, type LucideIcon } from "lucide-react";
 
 const TABS: { href: string; icon: LucideIcon; match: (p: string) => boolean }[] = [
   { href: "/app", icon: Home, match: (p) => p === "/app" || p.startsWith("/app/rede") },
   { href: "/app/avisos", icon: Bell, match: (p) => p.startsWith("/app/avisos") },
   { href: "/app/formularios", icon: ClipboardCheck, match: (p) => p.startsWith("/app/formularios") },
-  { href: "/app/perfil", icon: User, match: (p) => p.startsWith("/app/perfil") },
+  { href: "/app/relatorios", icon: ChartColumn, match: (p) => p.startsWith("/app/relatorios") },
   { href: "/app/config", icon: Settings, match: (p) => p.startsWith("/app/config") },
 ];
 

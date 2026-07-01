@@ -30,7 +30,7 @@ export default function ConfigPage() {
       {/* Conta */}
       <Secao titulo="Conta">
         <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <LinhaLink href="/app/perfil" icon={User} label="Meus dados" />
+          <LinhaLink href="/app/perfil" icon={User} label="Minhas informações" />
           <LinhaLink href="/app/formularios" icon={FileText} label="Checklists enviados" />
         </div>
       </Secao>

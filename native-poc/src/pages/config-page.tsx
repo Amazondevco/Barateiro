@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   ChevronRight,
   Fingerprint,
@@ -8,6 +9,7 @@ import {
   Moon,
   Sun,
   UploadCloud,
+  UserRound,
   Wifi,
   WifiOff,
 } from "lucide-react";
@@ -100,6 +102,30 @@ export function ConfigPage() {
       <header className="mt-2">
         <h1 className="text-xl font-semibold">Configurações</h1>
       </header>
+
+      {/* Minhas informações → página de perfil */}
+      <section>
+        <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Conta
+        </p>
+        <Link
+          to="/app/perfil"
+          className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-muted"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <UserRound className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-semibold">
+              Minhas informações
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              Dados pessoais e vínculo
+            </span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+        </Link>
+      </section>
 
       {/* Aparência */}
       <section>
@@ -222,10 +248,10 @@ export function ConfigPage() {
         </div>
       </section>
 
-      {/* Conta */}
+      {/* Sessão */}
       <section>
         <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Conta
+          Sessão
         </p>
         <button
           type="button"

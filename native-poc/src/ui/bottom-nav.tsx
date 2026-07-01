@@ -1,11 +1,11 @@
-import { Bell, ClipboardCheck, Home, Settings, User } from "lucide-react";
+import { Bell, ChartColumn, ClipboardCheck, Home, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const tabs = [
   { to: "/app", icon: Home, match: (p: string) => p === "/app" || p.startsWith("/app/rede") },
   { to: "/app/avisos", icon: Bell, match: (p: string) => p.startsWith("/app/avisos") },
   { to: "/app/formularios", icon: ClipboardCheck, match: (p: string) => p.startsWith("/app/formularios") },
-  { to: "/app/perfil", icon: User, match: (p: string) => p.startsWith("/app/perfil") },
+  { to: "/app/relatorios", icon: ChartColumn, match: (p: string) => p.startsWith("/app/relatorios") },
   { to: "/app/config", icon: Settings, match: (p: string) => p.startsWith("/app/config") },
 ];
 
