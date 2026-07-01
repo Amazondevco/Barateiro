@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/table";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
 import { SugestaoCard } from "./sugestao-card";
 
@@ -31,13 +31,16 @@ export default async function SugestoesPage() {
   };
   const lista = (sugestoes ?? []) as Sug[];
 
-  // URLs assinadas para os áudios (bucket privado)
+  // URLs assinadas para os áudios (bucket privado). Usa o admin client porque o
+  // bucket `sugestoes` não tem policy de leitura — a autorização de quem vê a
+  // sugestão já foi feita pela RLS da tabela acima.
+  const admin = createAdminClient();
   const audioUrls: Record<string, string> = {};
   await Promise.all(
     lista
       .filter((s) => s.audio_url)
       .map(async (s) => {
-        const { data } = await supabase.storage
+        const { data } = await admin.storage
           .from("sugestoes")
           .createSignedUrl(s.audio_url!, 3600);
         if (data?.signedUrl) audioUrls[s.id] = data.signedUrl;
@@ -74,6 +77,7 @@ export default async function SugestoesPage() {
               audioUrl={audioUrls[s.id] ?? null}
               status={s.status}
               criadoEm={s.criado_em}
+              podeEscalar={profile.papel === "admin_supermercado"}
             />
           ))}
         </div>

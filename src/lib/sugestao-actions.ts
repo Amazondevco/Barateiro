@@ -124,3 +124,32 @@ export async function resolverSugestao(
   revalidatePath("/sugestoes");
   return { ok: true, notificado };
 }
+
+// Escala uma sugestão da rede para a PLATAFORMA (Check.AI / super admin).
+// Cria uma cópia com destino='plataforma' que aparece na página do super admin.
+export async function escalarSugestao(
+  id: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
+
+  const { data: sug } = await supabase
+    .from("sugestoes")
+    .select("autor_id, autor_nome, rede_id, texto, audio_url")
+    .eq("id", id)
+    .maybeSingle();
+  if (!sug) return { ok: false, error: "Sugestão não encontrada." };
+
+  // A RLS de insert exige is_admin_da_rede(rede_id) para destino='plataforma'.
+  const { error } = await supabase.from("sugestoes").insert({
+    autor_id: sug.autor_id,
+    autor_nome: sug.autor_nome,
+    rede_id: sug.rede_id,
+    destino: "plataforma",
+    texto: sug.texto,
+    audio_url: sug.audio_url,
+  });
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/sugestoes");
+  return { ok: true };
+}
