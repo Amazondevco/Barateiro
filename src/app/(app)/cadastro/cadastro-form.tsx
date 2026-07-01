@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { TERMO_PRIVACIDADE, TERMO_VERSAO } from "@/lib/termo-privacidade";
-import { validarSenha, SENHA_REGRAS } from "@/lib/senha";
+import { validarSenha } from "@/lib/senha";
+import { SenhaCriterios } from "@/components/senha-criterios";
 
 // ---------- máscaras / validações ----------
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
@@ -232,7 +233,7 @@ export function CadastroForm() {
             </Campo>
             <Campo label="Senha">
               <Input value={senha} onChange={(e) => setSenha(e.target.value)} type="password" placeholder="senha" autoComplete="new-password" />
-              <p className="mt-1 text-xs text-muted-foreground">{SENHA_REGRAS}</p>
+              <SenhaCriterios senha={senha} />
             </Campo>
             <Campo label="Confirmar senha">
               <Input value={senha2} onChange={(e) => setSenha2(e.target.value)} type="password" placeholder="repita a senha" autoComplete="new-password" />

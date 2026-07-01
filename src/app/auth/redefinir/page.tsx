@@ -7,7 +7,8 @@ import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
-import { validarSenha, SENHA_REGRAS } from "@/lib/senha";
+import { validarSenha } from "@/lib/senha";
+import { SenhaCriterios } from "@/components/senha-criterios";
 import { definirSenhaPorConvite } from "./actions";
 
 // Tela de cadastro do responsável / redefinição de senha (alvo do link).
@@ -234,7 +235,7 @@ export default function RedefinirSenhaPage() {
                     onChange={(e) => setSenha(e.target.value)}
                     required
                   />
-                  <p className="mt-1 text-xs text-muted-foreground">{SENHA_REGRAS}</p>
+                  <SenhaCriterios senha={senha} />
                 </div>
                 <div>
                   <Label htmlFor="confirma">Confirmar senha</Label>
