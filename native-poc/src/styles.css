@@ -152,6 +152,38 @@ body {
   overscroll-behavior-y: contain;
 }
 
+/* Tela de carregamento animada (carrossel de ícones da marca).
+   fade = só opacidade (não conflita com o transform do pulse). */
+@keyframes checkai-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes checkai-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+/* quadros do meio: aparece e pulsa 2× */
+.checkai-loader {
+  animation:
+    checkai-fade 220ms ease-out,
+    checkai-pulse 600ms ease-in-out 2;
+}
+/* último quadro (logo da rede): pulsa infinito até carregar */
+.checkai-loader-hold {
+  animation:
+    checkai-fade 220ms ease-out,
+    checkai-pulse 950ms ease-in-out infinite;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

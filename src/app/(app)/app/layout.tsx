@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppChrome } from "@/components/app-chrome";
 import { OfflineSyncProvider } from "@/components/offline-sync-provider";
 import { LocationPrimer } from "./location-primer";
+import { BrandPersist } from "@/components/brand-persist";
 import { getMinhaRedeMarca } from "@/lib/rede-branding";
 
 // iOS usa apple-touch-icon (não o manifest) → ícone da rede por sessão.
@@ -28,6 +29,7 @@ export default async function AppLoggedLayout({
 
   let nome: string | undefined;
   let cor: string | null = null;
+  let logo: string | null = null;
   if (c?.sub) {
     const [{ data: ident }, marca] = await Promise.all([
       supabase.from("identidades").select("nome").eq("id", c.sub).maybeSingle(),
@@ -35,6 +37,7 @@ export default async function AppLoggedLayout({
     ]);
     nome = ident?.nome ?? undefined;
     cor = marca?.app_cor || marca?.cor_primaria || null;
+    logo = marca?.logo_url ?? null;
   }
 
   // Cor primária da rede vale para o app todo (barra, botões, banner…)
@@ -49,6 +52,7 @@ export default async function AppLoggedLayout({
     <div style={style} className="app-shell flex min-h-screen flex-col">
       <OfflineSyncProvider />
       <LocationPrimer />
+      <BrandPersist logo={logo} />
       <AppChrome nome={nome} email={c?.email ?? ""}>
         {children}
       </AppChrome>

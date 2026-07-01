@@ -1,24 +1,65 @@
-// Skeleton de carregamento do app do operador (web). Torna a troca de tela
-// instantânea (mostra este esqueleto na hora) em vez de congelar na tela
-// anterior até o servidor responder.
+"use client";
+
+import { useEffect, useState } from "react";
+import { ClipboardCheck, Clock, Smartphone, type LucideIcon } from "lucide-react";
+
+// Carrossel da marca (igual ao app nativo): Check.AI → prancheta → relógio →
+// celular → logo da rede. Cada quadro pulsa 2× (crossfade); segura na logo da
+// rede (pulsando) até carregar. Sem texto. Linhas tintadas na cor da rede.
+const CHECKAI = "/icon-512.svg";
+const FRAME_MS = 1250;
+
+type Frame = { kind: "img"; src: string } | { kind: "icon"; Icon: LucideIcon };
+
 export default function AppLoading() {
+  const [redeLogo, setRedeLogo] = useState<string | null>(null);
+  const [i, setI] = useState(0);
+
+  // Logo da rede (persistida por BrandPersist). Client-only → sem erro de SSR.
+  useEffect(() => {
+    try {
+      const l = localStorage.getItem("checkai-logo");
+      if (l) setRedeLogo(l);
+    } catch {
+      /* ignora */
+    }
+  }, []);
+
+  const frames: Frame[] = [
+    { kind: "img", src: CHECKAI },
+    { kind: "icon", Icon: ClipboardCheck },
+    { kind: "icon", Icon: Clock },
+    { kind: "icon", Icon: Smartphone },
+    { kind: "img", src: redeLogo ?? CHECKAI },
+  ];
+
+  const isLast = i >= frames.length - 1;
+  useEffect(() => {
+    if (isLast) return;
+    const t = setTimeout(() => setI((v) => v + 1), FRAME_MS);
+    return () => clearTimeout(t);
+  }, [i, isLast]);
+
+  const frame = frames[i];
+
   return (
-    <div className="mx-auto w-full max-w-md space-y-4 p-4">
-      <div className="h-7 w-40 animate-pulse rounded-lg bg-muted" />
-      <div className="h-11 w-full animate-pulse rounded-xl bg-muted" />
-      <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4"
-          >
-            <div className="h-11 w-11 shrink-0 animate-pulse rounded-xl bg-muted" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
-              <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
-            </div>
-          </div>
-        ))}
+    <div className="flex min-h-[70vh] items-center justify-center p-6">
+      <div
+        key={i}
+        className={`flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 ${
+          isLast ? "checkai-loader-hold" : "checkai-loader"
+        }`}
+      >
+        {frame.kind === "img" ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={frame.src}
+            alt=""
+            className="h-16 w-16 rounded-2xl object-contain"
+          />
+        ) : (
+          <frame.Icon className="h-11 w-11 text-primary" strokeWidth={1.75} />
+        )}
       </div>
     </div>
   );

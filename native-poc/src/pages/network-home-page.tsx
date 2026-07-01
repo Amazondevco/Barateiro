@@ -29,6 +29,14 @@ export function NetworkHomePage() {
       if (!mounted) return;
       setData(next);
       applyPrimaryColor(next.brand.primaryColor);
+      // Persiste a logo da rede p/ a tela de carregamento (último quadro).
+      try {
+        if (next.brand.logoUrl)
+          localStorage.setItem("checkai-logo", next.brand.logoUrl);
+        else localStorage.removeItem("checkai-logo");
+      } catch {
+        /* ignora */
+      }
     }
 
     async function load() {
