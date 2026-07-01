@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, XCircle, Clock, TrendingUp } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, TrendingUp, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Periodo = "hoje" | "semana" | "mes" | "dia";
@@ -16,6 +16,7 @@ type RelatorioData = {
   taxa: number;
   porDia: RelatorioDia[];
   maisPerdidos: RelatorioForm[];
+  checklists: { id: string; nome: string }[];
 };
 
 type Membro = {
@@ -78,12 +79,12 @@ async function carregarMembros(): Promise<{ userId: string | null; membros: Memb
   return { userId: user.id, membros };
 }
 
-// Mesma lógica do app nativo: esperado = já existia + passa unidade/depto + dia bate.
 async function computeRelatorio(
   membro: Membro,
   userId: string,
   inicio: string,
   fim: string,
+  formId?: string,
 ): Promise<RelatorioData> {
   const { data: forms } = await supabase
     .from("formularios")
@@ -114,6 +115,10 @@ async function computeRelatorio(
       criadoEm: String(f.created_at).slice(0, 10),
     }));
 
+  const checklists = aplicaveis.map((f) => ({ id: f.id, nome: f.nome }));
+  const alvo = formId ? aplicaveis.filter((f) => f.id === formId) : aplicaveis;
+  const alvoIds = new Set(alvo.map((f) => f.id));
+
   const { data: respostas } = await supabase
     .from("respostas")
     .select("formulario_id, data_referencia")
@@ -124,7 +129,9 @@ async function computeRelatorio(
   const feitos = new Set(
     (respostas ?? []).map((r) => `${r.formulario_id}|${r.data_referencia}`),
   );
-  const preenchidos = (respostas ?? []).length;
+  const preenchidos = (respostas ?? []).filter((r) =>
+    alvoIds.has(String(r.formulario_id)),
+  ).length;
 
   const hoje = diaLocalISO(new Date());
   const porDia: RelatorioDia[] = [];
@@ -142,7 +149,7 @@ async function computeRelatorio(
     const weekday = cursor.getDay() || 7;
     let espDia = 0;
     let feitosDia = 0;
-    for (const f of aplicaveis) {
+    for (const f of alvo) {
       if (dstr < f.criadoEm) continue;
       const esperado = f.weekdays.length === 0 || f.weekdays.includes(weekday);
       if (!esperado) continue;
@@ -168,7 +175,16 @@ async function computeRelatorio(
     .slice(0, 5)
     .map(([nome, qtd]) => ({ nome, perdidos: qtd }));
 
-  return { preenchidos, perdidos, pendentesHoje, esperados, taxa, porDia, maisPerdidos };
+  return {
+    preenchidos,
+    perdidos,
+    pendentesHoje,
+    esperados,
+    taxa,
+    porDia,
+    maisPerdidos,
+    checklists,
+  };
 }
 
 export default function RelatoriosPage() {
@@ -177,6 +193,7 @@ export default function RelatoriosPage() {
   const [memberId, setMemberId] = useState<string | null>(null);
   const [periodo, setPeriodo] = useState<Periodo>("hoje");
   const [dia, setDia] = useState<string>(() => diaLocalISO(new Date()));
+  const [checklistId, setChecklistId] = useState<string>("");
   const [data, setData] = useState<RelatorioData | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -202,7 +219,7 @@ export default function RelatoriosPage() {
     let vivo = true;
     setCarregando(true);
     setErro(null);
-    computeRelatorio(membro, userId, inicio, fim)
+    computeRelatorio(membro, userId, inicio, fim, checklistId || undefined)
       .then((r) => vivo && setData(r))
       .catch((e) =>
         vivo && setErro(e instanceof Error ? e.message : "Falha ao carregar."),
@@ -212,13 +229,14 @@ export default function RelatoriosPage() {
       vivo = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, memberId, inicio, fim]);
+  }, [userId, memberId, inicio, fim, checklistId]);
 
   const incluiHoje = fim >= diaLocalISO(new Date());
   const multiDias = periodo === "semana" || periodo === "mes";
+  const checklists = data?.checklists ?? [];
 
   return (
-    <div className="mx-auto w-full max-w-md space-y-5 px-5 py-6">
+    <div className="mx-auto w-full max-w-md space-y-4 px-5 py-6">
       <header className="mt-2">
         <h1 className="text-2xl font-bold tracking-tight">Relatórios</h1>
         <p className="text-sm text-muted-foreground">
@@ -227,46 +245,63 @@ export default function RelatoriosPage() {
       </header>
 
       {membros.length > 1 ? (
-        <select
+        <SelectPill
           value={memberId ?? ""}
-          onChange={(e) => setMemberId(e.target.value)}
-          className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {membros.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.redeNome}
-              {m.unidadeNome ? ` · ${m.unidadeNome}` : ""}
-            </option>
-          ))}
-        </select>
-      ) : null}
-
-      <div className="flex flex-wrap gap-1.5">
-        {PERIODOS.map((p) => (
-          <button
-            key={p.v}
-            type="button"
-            onClick={() => setPeriodo(p.v)}
-            className={`h-9 rounded-full border px-3.5 text-sm font-medium transition-colors ${
-              periodo === p.v
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border bg-card text-muted-foreground"
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
-
-      {periodo === "dia" ? (
-        <input
-          type="date"
-          value={dia}
-          max={diaLocalISO(new Date())}
-          onChange={(e) => setDia(e.target.value)}
-          className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onChange={setMemberId}
+          options={membros.map((m) => ({
+            value: m.id,
+            label: `${m.redeNome}${m.unidadeNome ? ` · ${m.unidadeNome}` : ""}`,
+          }))}
         />
       ) : null}
+
+      {/* Filtros agrupados */}
+      <div className="space-y-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
+        <div>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Período
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {PERIODOS.map((p) => (
+              <button
+                key={p.v}
+                type="button"
+                onClick={() => setPeriodo(p.v)}
+                className={`h-9 rounded-full border px-3.5 text-sm font-medium transition-colors ${
+                  periodo === p.v
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-background text-muted-foreground"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          {periodo === "dia" ? (
+            <input
+              type="date"
+              value={dia}
+              max={diaLocalISO(new Date())}
+              onChange={(e) => setDia(e.target.value)}
+              className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          ) : null}
+        </div>
+
+        <div className="border-t border-border pt-3">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Checklist
+          </p>
+          <SelectPill
+            value={checklistId}
+            onChange={setChecklistId}
+            options={[
+              { value: "", label: "Todos os checklists" },
+              ...checklists.map((c) => ({ value: c.id, label: c.nome })),
+            ]}
+          />
+        </div>
+      </div>
 
       {carregando ? (
         <p className="py-16 text-center text-sm text-muted-foreground">
@@ -342,6 +377,33 @@ export default function RelatoriosPage() {
   );
 }
 
+function SelectPill({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full appearance-none rounded-xl border border-border bg-background py-2.5 pl-3 pr-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    </div>
+  );
+}
+
 function MetricCard({
   icon: Icon,
   tom,
@@ -402,27 +464,40 @@ function TaxaRing({ valor }: { valor: number }) {
   );
 }
 
+// Barras por dia: rola na horizontal quando há muitos dias (ex.: mês). Cada
+// coluna tem largura fixa; a trilha ocupa a altura toda e as barras são % dela.
 function BarrasPorDia({ dias }: { dias: RelatorioDia[] }) {
   const maxEsp = Math.max(1, ...dias.map((d) => d.esperados));
   return (
-    <div className="flex items-end gap-1" style={{ height: 96 }}>
-      {dias.map((d) => {
-        const espH = (d.esperados / maxEsp) * 100;
-        const feitoH = (d.preenchidos / maxEsp) * 100;
-        const dt = new Date(`${d.data}T00:00:00`);
-        return (
-          <div key={d.data} className="flex flex-1 flex-col items-center gap-1">
-            <div className="relative flex w-full flex-1 items-end">
-              <div className="w-full rounded-t bg-muted" style={{ height: `${espH}%` }} />
-              <div
-                className="absolute bottom-0 w-full rounded-t bg-primary"
-                style={{ height: `${feitoH}%` }}
-              />
+    <div className="-mx-1 overflow-x-auto px-1 pb-1">
+      <div className="flex items-end gap-1" style={{ height: 116, minWidth: "100%" }}>
+        {dias.map((d) => {
+          const espH = (d.esperados / maxEsp) * 100;
+          const feitoH = (d.preenchidos / maxEsp) * 100;
+          const dt = new Date(`${d.data}T00:00:00`);
+          return (
+            <div
+              key={d.data}
+              className="flex h-full shrink-0 flex-col items-center justify-end gap-1"
+              style={{ width: 18 }}
+            >
+              <div className="relative w-full flex-1">
+                <div
+                  className="absolute bottom-0 w-full rounded-t bg-muted"
+                  style={{ height: `${espH}%` }}
+                />
+                <div
+                  className="absolute bottom-0 w-full rounded-t bg-primary"
+                  style={{ height: `${feitoH}%` }}
+                />
+              </div>
+              <span className="text-[10px] leading-none text-muted-foreground">
+                {dt.getDate()}
+              </span>
             </div>
-            <span className="text-[10px] text-muted-foreground">{dt.getDate()}</span>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

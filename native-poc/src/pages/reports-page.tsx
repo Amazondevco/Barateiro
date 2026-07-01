@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, XCircle, Clock, TrendingUp } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, TrendingUp, ChevronDown } from "lucide-react";
 import { useAuth } from "../context/auth-context";
 import {
   fetchMemberships,
@@ -16,7 +16,6 @@ function diaLocalISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-// Converte o período escolhido em [inicio, fim] (datas locais yyyy-mm-dd).
 function intervaloDe(periodo: Periodo, dia: string): { inicio: string; fim: string } {
   const hoje = new Date();
   const hojeStr = diaLocalISO(hoje);
@@ -43,17 +42,16 @@ export function ReportsPage() {
   );
   const [periodo, setPeriodo] = useState<Periodo>("hoje");
   const [dia, setDia] = useState<string>(() => diaLocalISO(new Date()));
+  const [checklistId, setChecklistId] = useState<string>(""); // "" = todos
   const [data, setData] = useState<RelatorioData | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  // Descobre o vínculo (member) — usa o primeiro ativo; seletor se houver vários.
   useEffect(() => {
     let vivo = true;
     void fetchMemberships((fresh) => {
       if (!vivo) return;
-      const ativos = fresh.filter((m) => m.status === "ativo");
-      setMemberships(ativos);
+      setMemberships(fresh.filter((m) => m.status === "ativo"));
     }).then((list) => {
       if (!vivo) return;
       const ativos = list.filter((m) => m.status === "ativo");
@@ -76,7 +74,7 @@ export function ReportsPage() {
     let vivo = true;
     setCarregando(true);
     setErro(null);
-    fetchRelatorio(memberId, user.id, inicio, fim)
+    fetchRelatorio(memberId, user.id, inicio, fim, checklistId || undefined)
       .then((r) => vivo && setData(r))
       .catch((e) =>
         vivo && setErro(e instanceof Error ? e.message : "Falha ao carregar."),
@@ -85,13 +83,14 @@ export function ReportsPage() {
     return () => {
       vivo = false;
     };
-  }, [user?.id, memberId, inicio, fim]);
+  }, [user?.id, memberId, inicio, fim, checklistId]);
 
   const incluiHoje = fim >= diaLocalISO(new Date());
   const multiDias = periodo === "semana" || periodo === "mes";
+  const checklists = data?.checklists ?? [];
 
   return (
-    <div className="mx-auto w-full max-w-md space-y-5 p-4">
+    <div className="mx-auto w-full max-w-md space-y-4 p-4">
       <header className="mt-2">
         <h1 className="text-xl font-semibold">Relatórios</h1>
         <p className="text-sm text-muted-foreground">
@@ -100,47 +99,63 @@ export function ReportsPage() {
       </header>
 
       {memberships.length > 1 ? (
-        <select
+        <SelectPill
           value={memberId ?? ""}
-          onChange={(e) => setMemberId(e.target.value)}
-          className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {memberships.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.redeNome}
-              {m.unidadeNome ? ` · ${m.unidadeNome}` : ""}
-            </option>
-          ))}
-        </select>
-      ) : null}
-
-      {/* Filtro de período */}
-      <div className="flex flex-wrap gap-1.5">
-        {PERIODOS.map((p) => (
-          <button
-            key={p.v}
-            type="button"
-            onClick={() => setPeriodo(p.v)}
-            className={`h-9 rounded-full border px-3.5 text-sm font-medium transition-colors ${
-              periodo === p.v
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border bg-card text-muted-foreground"
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
-
-      {periodo === "dia" ? (
-        <input
-          type="date"
-          value={dia}
-          max={diaLocalISO(new Date())}
-          onChange={(e) => setDia(e.target.value)}
-          className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onChange={setMemberId}
+          options={memberships.map((m) => ({
+            value: m.id,
+            label: `${m.redeNome}${m.unidadeNome ? ` · ${m.unidadeNome}` : ""}`,
+          }))}
         />
       ) : null}
+
+      {/* Filtros agrupados */}
+      <div className="space-y-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
+        <div>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Período
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {PERIODOS.map((p) => (
+              <button
+                key={p.v}
+                type="button"
+                onClick={() => setPeriodo(p.v)}
+                className={`h-9 rounded-full border px-3.5 text-sm font-medium transition-colors ${
+                  periodo === p.v
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-background text-muted-foreground"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          {periodo === "dia" ? (
+            <input
+              type="date"
+              value={dia}
+              max={diaLocalISO(new Date())}
+              onChange={(e) => setDia(e.target.value)}
+              className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          ) : null}
+        </div>
+
+        <div className="border-t border-border pt-3">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Checklist
+          </p>
+          <SelectPill
+            value={checklistId}
+            onChange={setChecklistId}
+            options={[
+              { value: "", label: "Todos os checklists" },
+              ...checklists.map((c) => ({ value: c.id, label: c.nome })),
+            ]}
+          />
+        </div>
+      </div>
 
       {carregando ? (
         <div className="py-16">
@@ -171,25 +186,10 @@ export function ReportsPage() {
 
           {/* Cards de métricas */}
           <div className="grid grid-cols-2 gap-3">
-            <MetricCard
-              icon={CheckCircle2}
-              tom="success"
-              valor={data.preenchidos}
-              label="Preenchidos"
-            />
-            <MetricCard
-              icon={XCircle}
-              tom="danger"
-              valor={data.perdidos}
-              label="Perdidos"
-            />
+            <MetricCard icon={CheckCircle2} tom="success" valor={data.preenchidos} label="Preenchidos" />
+            <MetricCard icon={XCircle} tom="danger" valor={data.perdidos} label="Perdidos" />
             {incluiHoje ? (
-              <MetricCard
-                icon={Clock}
-                tom="warning"
-                valor={data.pendentesHoje}
-                label="Pendentes hoje"
-              />
+              <MetricCard icon={Clock} tom="warning" valor={data.pendentesHoje} label="Pendentes hoje" />
             ) : null}
           </div>
 
@@ -215,13 +215,8 @@ export function ReportsPage() {
               <p className="mb-3 text-sm font-semibold">Checklists mais perdidos</p>
               <div className="space-y-2">
                 {data.maisPerdidos.map((f) => (
-                  <div
-                    key={f.nome}
-                    className="flex items-center justify-between gap-3 text-sm"
-                  >
-                    <span className="min-w-0 flex-1 truncate text-muted-foreground">
-                      {f.nome}
-                    </span>
+                  <div key={f.nome} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="min-w-0 flex-1 truncate text-muted-foreground">{f.nome}</span>
                     <span className="shrink-0 rounded-lg bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger">
                       {f.perdidos}×
                     </span>
@@ -238,6 +233,34 @@ export function ReportsPage() {
           ) : null}
         </>
       ) : null}
+    </div>
+  );
+}
+
+// Select estilizado (aparência de pílula) usando <select> nativo por baixo.
+function SelectPill({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full appearance-none rounded-xl border border-border bg-background py-2.5 pl-3 pr-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
     </div>
   );
 }
@@ -260,9 +283,7 @@ function MetricCard({
   }[tom];
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-      <span
-        className={`inline-flex h-9 w-9 items-center justify-center rounded-xl ${cores}`}
-      >
+      <span className={`inline-flex h-9 w-9 items-center justify-center rounded-xl ${cores}`}>
         <Icon className="h-5 w-5" />
       </span>
       <p className="mt-2.5 text-2xl font-bold tabular-nums">{valor}</p>
@@ -271,7 +292,6 @@ function MetricCard({
   );
 }
 
-// Anel de progresso (SVG) com a taxa no centro.
 function TaxaRing({ valor }: { valor: number }) {
   const r = 26;
   const c = 2 * Math.PI * r;
@@ -281,14 +301,7 @@ function TaxaRing({ valor }: { valor: number }) {
   return (
     <div className="relative h-16 w-16 shrink-0">
       <svg className="h-16 w-16 -rotate-90" viewBox="0 0 64 64">
-        <circle
-          cx="32"
-          cy="32"
-          r={r}
-          fill="none"
-          stroke="var(--color-muted)"
-          strokeWidth="7"
-        />
+        <circle cx="32" cy="32" r={r} fill="none" stroke="var(--color-muted)" strokeWidth="7" />
         <circle
           cx="32"
           cy="32"
@@ -308,32 +321,40 @@ function TaxaRing({ valor }: { valor: number }) {
   );
 }
 
-// Barrinhas por dia: esperados (fundo) + preenchidos (primário) sobrepostos.
+// Barras por dia: rola na horizontal quando há muitos dias (ex.: mês). Cada
+// coluna tem largura fixa; a trilha ocupa a altura toda e as barras são % dela.
 function BarrasPorDia({ dias }: { dias: RelatorioData["porDia"] }) {
   const maxEsp = Math.max(1, ...dias.map((d) => d.esperados));
   return (
-    <div className="flex items-end gap-1" style={{ height: 96 }}>
-      {dias.map((d) => {
-        const espH = (d.esperados / maxEsp) * 100;
-        const feitoH = (d.preenchidos / maxEsp) * 100;
-        const dt = new Date(`${d.data}T00:00:00`);
-        const rotulo = String(dt.getDate());
-        return (
-          <div key={d.data} className="flex flex-1 flex-col items-center gap-1">
-            <div className="relative flex w-full flex-1 items-end">
-              <div
-                className="w-full rounded-t bg-muted"
-                style={{ height: `${espH}%` }}
-              />
-              <div
-                className="absolute bottom-0 w-full rounded-t bg-primary"
-                style={{ height: `${feitoH}%` }}
-              />
+    <div className="-mx-1 overflow-x-auto px-1 pb-1">
+      <div className="flex items-end gap-1" style={{ height: 116, minWidth: "100%" }}>
+        {dias.map((d) => {
+          const espH = (d.esperados / maxEsp) * 100;
+          const feitoH = (d.preenchidos / maxEsp) * 100;
+          const dt = new Date(`${d.data}T00:00:00`);
+          return (
+            <div
+              key={d.data}
+              className="flex h-full shrink-0 flex-col items-center justify-end gap-1"
+              style={{ width: 18 }}
+            >
+              <div className="relative w-full flex-1">
+                <div
+                  className="absolute bottom-0 w-full rounded-t bg-muted"
+                  style={{ height: `${espH}%` }}
+                />
+                <div
+                  className="absolute bottom-0 w-full rounded-t bg-primary"
+                  style={{ height: `${feitoH}%` }}
+                />
+              </div>
+              <span className="text-[10px] leading-none text-muted-foreground">
+                {dt.getDate()}
+              </span>
             </div>
-            <span className="text-[10px] text-muted-foreground">{rotulo}</span>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

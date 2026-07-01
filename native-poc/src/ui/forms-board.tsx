@@ -28,6 +28,16 @@ import {
   Fish,
   Milk,
   Package,
+  Carrot,
+  Egg,
+  Coffee,
+  Refrigerator,
+  Boxes,
+  Sparkles,
+  Truck,
+  Utensils,
+  Banana,
+  Candy,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -76,12 +86,22 @@ const ICONES: { key: string; Icon: LucideIcon }[] = [
   { key: "folder", Icon: Folder },
   { key: "cart", Icon: ShoppingCart },
   { key: "snow", Icon: Snowflake },
+  { key: "fridge", Icon: Refrigerator },
   { key: "apple", Icon: Apple },
+  { key: "banana", Icon: Banana },
+  { key: "carrot", Icon: Carrot },
   { key: "beef", Icon: Beef },
-  { key: "bread", Icon: Croissant },
-  { key: "wine", Icon: Wine },
   { key: "fish", Icon: Fish },
+  { key: "egg", Icon: Egg },
+  { key: "bread", Icon: Croissant },
   { key: "milk", Icon: Milk },
+  { key: "coffee", Icon: Coffee },
+  { key: "wine", Icon: Wine },
+  { key: "candy", Icon: Candy },
+  { key: "utensils", Icon: Utensils },
+  { key: "clean", Icon: Sparkles },
+  { key: "truck", Icon: Truck },
+  { key: "boxes", Icon: Boxes },
   { key: "box", Icon: Package },
 ];
 const iconePorKey = (k?: string): LucideIcon =>
@@ -630,6 +650,7 @@ function PastaModal({
   const [aba, setAba] = useState<"visual" | "formularios">("visual");
   const [nome, setNome] = useState(inicialNome ?? "");
   const [icone, setIcone] = useState(inicialIcone ?? "folder");
+  const [iconeAberto, setIconeAberto] = useState(false);
   const [sel, setSel] = useState<Record<string, boolean>>({});
   const [salvando, setSalvando] = useState(false);
   // Ordem local dos checklists da pasta (aba Formulários).
@@ -719,23 +740,51 @@ function PastaModal({
 
               <div>
                 <p className="mb-1.5 text-sm font-medium">Ícone</p>
-                <div className="flex flex-wrap gap-2">
-                  {ICONES.map(({ key, Icon }) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setIcone(key)}
-                      aria-label={`Ícone ${key}`}
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${
-                        icone === key
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border bg-background text-muted-foreground hover:bg-muted"
-                      }`}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </button>
-                  ))}
-                </div>
+                {/* Dropdown: fechado mostra só o ícone escolhido; abre a grade. */}
+                <button
+                  type="button"
+                  onClick={() => setIconeAberto((v) => !v)}
+                  className="flex w-full items-center justify-between rounded-xl border border-border bg-background p-2.5 text-sm"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      {(() => {
+                        const Cur = iconePorKey(icone);
+                        return <Cur className="h-5 w-5" />;
+                      })()}
+                    </span>
+                    <span className="text-muted-foreground">
+                      Escolher ícone
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className={`h-5 w-5 text-muted-foreground transition-transform ${
+                      iconeAberto ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {iconeAberto && (
+                  <div className="mt-2 grid max-h-44 grid-cols-6 gap-2 overflow-y-auto rounded-xl border border-border bg-card p-2">
+                    {ICONES.map(({ key, Icon }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          setIcone(key);
+                          setIconeAberto(false);
+                        }}
+                        aria-label={`Ícone ${key}`}
+                        className={`flex h-10 w-full items-center justify-center rounded-lg border transition-colors ${
+                          icone === key
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {!editar && (

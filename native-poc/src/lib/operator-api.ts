@@ -518,6 +518,7 @@ export type RelatorioData = {
   taxa: number; // 0–100 (cumpridos / esperados)
   porDia: RelatorioDia[];
   maisPerdidos: RelatorioForm[];
+  checklists: { id: string; nome: string }[]; // aplicáveis (p/ o filtro)
 };
 
 function diaLocalISO(d: Date): string {
@@ -533,6 +534,7 @@ export async function fetchRelatorio(
   userId: string,
   inicio: string,
   fim: string,
+  formId?: string, // opcional: limita as métricas a um checklist
 ): Promise<RelatorioData> {
   const { data: member, error: memberErr } = await supabase
     .from("rede_membros")
@@ -582,10 +584,17 @@ export async function fetchRelatorio(
     .lte("data_referencia", fim);
   if (respErr) throw respErr;
 
+  // Lista completa (para o filtro) e alvo das métricas (todos ou 1 checklist).
+  const checklists = aplicaveis.map((f) => ({ id: f.id, nome: f.nome }));
+  const alvo = formId ? aplicaveis.filter((f) => f.id === formId) : aplicaveis;
+  const alvoIds = new Set(alvo.map((f) => f.id));
+
   const feitos = new Set(
     (respostas ?? []).map((r) => `${r.formulario_id}|${r.data_referencia}`),
   );
-  const preenchidos = (respostas ?? []).length;
+  const preenchidos = (respostas ?? []).filter((r) =>
+    alvoIds.has(String(r.formulario_id)),
+  ).length;
 
   const hoje = diaLocalISO(new Date());
   const porDia: RelatorioDia[] = [];
@@ -603,7 +612,7 @@ export async function fetchRelatorio(
     const weekday = cursor.getDay() || 7; // 1=seg … 7=dom (igual ao resto do app)
     let espDia = 0;
     let feitosDia = 0;
-    for (const f of aplicaveis) {
+    for (const f of alvo) {
       if (dstr < f.criadoEm) continue; // o checklist ainda não existia
       const esperado = f.weekdays.length === 0 || f.weekdays.includes(weekday);
       if (!esperado) continue;
@@ -638,5 +647,6 @@ export async function fetchRelatorio(
     taxa,
     porDia,
     maisPerdidos,
+    checklists,
   };
 }
