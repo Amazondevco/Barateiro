@@ -104,7 +104,7 @@ export function SuggestionFab({ raised = false }: { raised?: boolean }) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className={`fixed ${raised ? "bottom-24" : "bottom-6"} right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95`}
+        className={`fixed ${raised ? "bottom-[124px]" : "bottom-6"} right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95`}
         aria-label="Enviar sugestão"
         title="Enviar sugestão"
       >

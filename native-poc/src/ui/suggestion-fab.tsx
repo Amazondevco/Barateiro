@@ -126,7 +126,7 @@ export function SuggestionFab() {
         onClick={() => setOpen(true)}
         aria-label="Enviar sugestão"
         className="fixed right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
-        style={{ bottom: "calc(96px + env(safe-area-inset-bottom))" }}
+        style={{ bottom: "calc(124px + env(safe-area-inset-bottom))" }}
       >
         <Lightbulb className="h-5 w-5" />
       </button>
