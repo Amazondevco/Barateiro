@@ -95,6 +95,8 @@ export function LoginPage() {
               />
               <button
                 type="button"
+                // Não roubar o foco do input → o teclado não fecha ao mostrar/ocultar.
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? t("Ocultar senha") : t("Mostrar senha")}
                 title={showPassword ? t("Ocultar senha") : t("Mostrar senha")}
