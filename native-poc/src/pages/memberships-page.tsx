@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
-import { Building2, ChevronRight, Store } from "lucide-react";
+import { Building2, ChevronRight, Store, ShieldCheck, ExternalLink } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { fetchMemberships, peekMemberships, type Membership } from "../lib/operator-api";
+import { supabase } from "../lib/supabase";
 import { useI18n } from "../lib/i18n/i18n";
 import { LoadingScreen } from "../ui/loading-screen";
 import { marcarBooted } from "../lib/boot-state";
+
+// Console do gestor é PWA (server actions + RLS). O app nativo do operador só
+// abre a versão web — não reimplementa a gestão (mantém a trava no servidor).
+const CONSOLE_URL = "https://check-ai-br.vercel.app/app/admin";
 
 export function MembershipsPage() {
   const { t } = useI18n();
@@ -12,6 +17,28 @@ export function MembershipsPage() {
   const [loading, setLoading] = useState(initial === null);
   const [memberships, setMemberships] = useState<Membership[]>(initial ?? []);
   const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Detecta admin da rede (tem `profiles`, ao contrário do operador). Se for,
+  // oferece abrir o console web.
+  useEffect(() => {
+    let mounted = true;
+    void supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data.user?.id;
+      if (!uid) return;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("papel")
+        .eq("id", uid)
+        .maybeSingle();
+      if (mounted && (prof as { papel?: string } | null)?.papel === "admin_supermercado") {
+        setIsAdmin(true);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -71,6 +98,27 @@ export function MembershipsPage() {
         </p>
       ) : null}
 
+      {isAdmin ? (
+        <a
+          href={CONSOLE_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="mb-4 flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <ShieldCheck className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">{t("Console do gestor")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("Gestão e acompanhamento abrem na versão web.")}
+            </p>
+          </div>
+          <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </a>
+      ) : null}
+
+      {activeMemberships.length > 0 ? (
       <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border">
         {activeMemberships.map((item) => (
           <Link
@@ -91,6 +139,7 @@ export function MembershipsPage() {
           </Link>
         ))}
       </div>
+      ) : null}
 
       {inactiveMemberships.length > 0 ? (
         <div className="mt-4 rounded-xl bg-muted p-4">

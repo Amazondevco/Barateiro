@@ -252,4 +252,7 @@ export const es: Record<string, string> = {
   "Ir para o login": "Ir al inicio de sesión",
   "Cadastro concluído! Faça login para entrar.":
     "¡Registro completado! Inicia sesión para entrar.",
+  "Console do gestor": "Consola del gestor",
+  "Gestão e acompanhamento abrem na versão web.":
+    "La gestión y el seguimiento se abren en la versión web.",
 };
