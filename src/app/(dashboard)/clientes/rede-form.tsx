@@ -64,32 +64,6 @@ export function RedeForm({
 
       <Card>
         <CardContent className="space-y-4">
-          <h3 className="font-semibold">Identidade (white-label)</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <LogoUploader defaultUrl={rede?.logo_url} />
-            </div>
-            <div>
-              <Label htmlFor="cor_primaria">Cor primária</Label>
-              <div className="flex items-center gap-2">
-                <input
-                  id="cor_primaria"
-                  name="cor_primaria"
-                  type="color"
-                  defaultValue={rede?.cor_primaria ?? "#2563eb"}
-                  className="h-10 w-14 cursor-pointer rounded-lg border border-input bg-card"
-                />
-                <span className="text-sm text-muted-foreground">
-                  Aparece no tema do cliente
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="space-y-4">
           <h3 className="font-semibold">Endereço</h3>
           <EnderecoField defaultValue={rede?.endereco} />
         </CardContent>
@@ -110,6 +84,33 @@ export function RedeForm({
             <div>
               <Label htmlFor="contato_fone">Telefone</Label>
               <Input id="contato_fone" name="contato_fone" defaultValue={rede?.contato_fone ?? ""} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Identidade (white-label) — por último. */}
+      <Card>
+        <CardContent className="space-y-4">
+          <h3 className="font-semibold">Identidade (white-label)</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <LogoUploader defaultUrl={rede?.logo_url} />
+            </div>
+            <div>
+              <Label htmlFor="cor_primaria">Cor primária</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="cor_primaria"
+                  name="cor_primaria"
+                  type="color"
+                  defaultValue={rede?.cor_primaria ?? "#2563eb"}
+                  className="h-10 w-14 cursor-pointer rounded-lg border border-input bg-card"
+                />
+                <span className="text-sm text-muted-foreground">
+                  Aparece no tema do cliente
+                </span>
+              </div>
             </div>
           </div>
         </CardContent>
