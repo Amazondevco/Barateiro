@@ -7,7 +7,7 @@ import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { FormState } from "./actions";
 import type { Rede } from "@/lib/types";
-import { TIPOS_NEGOCIO } from "@/lib/tipos-negocio";
+import { TipoNegocioField, LogoUploader } from "./rede-form-fields";
 
 const DIAS = [
   { v: 1, l: "Seg" },
@@ -42,25 +42,8 @@ export function RedeForm({
               <Input id="nome" name="nome" defaultValue={rede?.nome ?? ""} required />
             </div>
             <div className="sm:col-span-2">
-              <Label htmlFor="tipo_negocio">Tipo de negócio *</Label>
-              <Select
-                id="tipo_negocio"
-                name="tipo_negocio"
-                defaultValue={rede?.tipo_negocio ?? ""}
-                required
-              >
-                <option value="" disabled>
-                  Selecione o tipo de negócio
-                </option>
-                {TIPOS_NEGOCIO.map((t) => (
-                  <option key={t.slug} value={t.slug}>
-                    {t.label}
-                  </option>
-                ))}
-              </Select>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Personaliza os checklists e relatórios gerados por IA para o ramo.
-              </p>
+              <Label>Tipo de negócio *</Label>
+              <TipoNegocioField defaultValue={rede?.tipo_negocio} />
             </div>
             <div>
               <Label htmlFor="cnpj">CNPJ</Label>
@@ -83,13 +66,7 @@ export function RedeForm({
           <h3 className="font-semibold">Identidade (white-label)</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="logo_url">URL do logo</Label>
-              <Input
-                id="logo_url"
-                name="logo_url"
-                placeholder="https://…"
-                defaultValue={rede?.logo_url ?? ""}
-              />
+              <LogoUploader defaultUrl={rede?.logo_url} />
             </div>
             <div>
               <Label htmlFor="cor_primaria">Cor primária</Label>

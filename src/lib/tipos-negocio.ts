@@ -54,14 +54,20 @@ export function tipoNegocio(slug?: string | null): TipoNegocio {
   return (slug && MAP[slug]) || OUTRO;
 }
 
-// Rótulo do tipo (para exibir a tag). Nulo se não houver.
+// Rótulo do tipo (para exibir a tag). Ramo livre ("Outro" digitado) mostra o
+// próprio texto. Nulo se não houver.
 export function labelNegocio(slug?: string | null): string | null {
-  return slug ? MAP[slug]?.label ?? null : null;
+  if (!slug) return null;
+  return MAP[slug]?.label ?? slug;
 }
 
-// Descritor do ramo para os prompts de IA (cai no genérico se vazio/desconhecido).
+// Descritor do ramo para os prompts de IA. Ramo livre usa o texto como contexto;
+// cai no genérico se vazio/desconhecido.
 export function descritorNegocio(slug?: string | null): string {
-  return tipoNegocio(slug).descritor;
+  if (slug && MAP[slug]) return MAP[slug].descritor;
+  const livre = slug?.trim();
+  if (livre) return `uma empresa do ramo "${livre}"`;
+  return OUTRO.descritor;
 }
 
 export function usaGondola(slug?: string | null): boolean {
