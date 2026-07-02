@@ -196,6 +196,7 @@ export async function updateUsuario(
 export async function setUsuarioStatus(
   id: string,
   status: "ativo" | "inativo",
+  redeId?: string,
 ) {
   const caller = await getSessionProfile();
   if (!caller || (caller.papel !== "super_admin" && caller.papel !== "admin_supermercado"))
@@ -203,4 +204,5 @@ export async function setUsuarioStatus(
   const admin = createAdminClient();
   await admin.from("profiles").update({ status }).eq("id", id);
   revalidatePath("/usuarios");
+  if (redeId) revalidatePath(`/clientes/${redeId}`);
 }

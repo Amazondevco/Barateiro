@@ -16,7 +16,7 @@ import { createUnidade, setUnidadeStatus } from "./unidade-actions";
 import { AddUnidadeForm } from "./add-unidade-form";
 import { EditUnidadeButton } from "./edit-unidade-button";
 import { AddUsuarioForm } from "@/components/add-usuario-form";
-import { createUsuario } from "../../usuarios/actions";
+import { createUsuario, setUsuarioStatus } from "../../usuarios/actions";
 import { UsuarioLinkButton } from "./usuario-link-button";
 
 const TABS = [
@@ -131,21 +131,27 @@ export default async function RedeDetailPage({
           {labelNegocio(rede.tipo_negocio) && (
             <Badge tone="neutral">{labelNegocio(rede.tipo_negocio)}</Badge>
           )}
-          <Badge tone={rede.status === "ativo" ? "success" : "neutral"}>
-            {rede.status}
-          </Badge>
-          <form
-            action={setRedeStatus.bind(
-              null,
-              id,
-              rede.status === "ativo" ? "inativo" : "ativo",
-            )}
-          >
-            <Button variant="outline" size="sm" type="submit">
-              <Power className="h-4 w-4" />
-              {rede.status === "ativo" ? "Desativar" : "Ativar"}
-            </Button>
-          </form>
+          {/* Ativar/desativar a REDE inteira só na aba Dados. Em Unidades e
+              Usuários o liga/desliga é por linha (cada unidade, cada usuário). */}
+          {tab === "dados" && (
+            <>
+              <Badge tone={rede.status === "ativo" ? "success" : "neutral"}>
+                {rede.status}
+              </Badge>
+              <form
+                action={setRedeStatus.bind(
+                  null,
+                  id,
+                  rede.status === "ativo" ? "inativo" : "ativo",
+                )}
+              >
+                <Button variant="outline" size="sm" type="submit">
+                  <Power className="h-4 w-4" />
+                  {rede.status === "ativo" ? "Desativar" : "Ativar"}
+                </Button>
+              </form>
+            </>
+          )}
         </div>
       </div>
 
@@ -265,9 +271,23 @@ export default async function RedeDetailPage({
                       <TD>{u.email}</TD>
                       <TD>{PAPEL_LABEL[u.papel as Papel]}</TD>
                       <TD>
-                        <Badge tone={u.status === "ativo" ? "success" : "neutral"}>
-                          {u.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge tone={u.status === "ativo" ? "success" : "neutral"}>
+                            {u.status}
+                          </Badge>
+                          <form
+                            action={setUsuarioStatus.bind(
+                              null,
+                              u.id,
+                              u.status === "ativo" ? "inativo" : "ativo",
+                              id,
+                            )}
+                          >
+                            <Button variant="ghost" size="sm" type="submit">
+                              {u.status === "ativo" ? "Desativar" : "Ativar"}
+                            </Button>
+                          </form>
+                        </div>
                       </TD>
                       <TD>
                         <UsuarioLinkButton
