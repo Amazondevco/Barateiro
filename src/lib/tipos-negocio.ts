@@ -82,20 +82,73 @@ export const AREAS_PUBLICAS: OpcaoSimples[] = [
   { slug: "outro", label: "Outro" },
 ];
 
+// Área para órgãos que NÃO são Secretaria (Prefeitura, Câmara, Autarquia…):
+// setores administrativos, não temáticos.
+export const AREAS_ADMIN: OpcaoSimples[] = [
+  { slug: "gabinete", label: "Gabinete" },
+  { slug: "administracao", label: "Administração" },
+  { slug: "juridico", label: "Jurídico" },
+  { slug: "financeiro", label: "Financeiro" },
+  { slug: "rh", label: "Recursos Humanos" },
+  { slug: "ti", label: "Tecnologia da Informação" },
+  { slug: "compras", label: "Compras / Licitação" },
+  { slug: "obras", label: "Obras / Infraestrutura" },
+  { slug: "atendimento", label: "Atendimento ao público" },
+  { slug: "outro", label: "Outro" },
+];
+
+// Departamentos (só Secretaria) — múltipla escolha. Lista aberta a mais itens.
+export const DEPARTAMENTOS_PUBLICOS: string[] = [
+  "Frota",
+  "Limpeza",
+  "Portaria",
+  "Manutenção",
+  "Segurança / Vigilância",
+  "Almoxarifado",
+  "Transporte",
+  "Zeladoria",
+  "Cozinha / Merenda",
+  "Jardinagem",
+  "TI",
+  "Recursos Humanos",
+  "Administrativo",
+];
+
 export type Segmento =
   | { publico: false; ramo: string } // privado: slug conhecido ou texto livre
-  | { publico: true; orgao: string; area: string };
+  | { publico: true; orgao: string; area: string; deptos: string[] };
 
-export function encodePublico(orgao: string, area: string): string {
-  return JSON.stringify({ seg: "pub", orgao: orgao.trim(), area: area.trim() });
+export function encodePublico(
+  orgao: string,
+  area: string,
+  deptos: string[] = [],
+): string {
+  const o: { seg: "pub"; orgao: string; area: string; deptos?: string[] } = {
+    seg: "pub",
+    orgao: orgao.trim(),
+    area: area.trim(),
+  };
+  const d = deptos.map((x) => x.trim()).filter(Boolean);
+  if (d.length) o.deptos = d;
+  return JSON.stringify(o);
 }
 
 export function parseSegmento(v?: string | null): Segmento {
   if (v && v.trimStart().startsWith("{")) {
     try {
-      const o = JSON.parse(v) as { seg?: string; orgao?: string; area?: string };
+      const o = JSON.parse(v) as {
+        seg?: string;
+        orgao?: string;
+        area?: string;
+        deptos?: unknown;
+      };
       if (o?.seg === "pub") {
-        return { publico: true, orgao: o.orgao ?? "", area: o.area ?? "" };
+        return {
+          publico: true,
+          orgao: o.orgao ?? "",
+          area: o.area ?? "",
+          deptos: Array.isArray(o.deptos) ? o.deptos.map(String) : [],
+        };
       }
     } catch {
       /* valor legado/corrompido → trata como privado */
@@ -136,7 +189,8 @@ export function labelNegocio(v?: string | null): string | null {
 export function descritorNegocio(v?: string | null): string {
   const s = parseSegmento(v);
   if (s.publico) {
-    return `um órgão público (setor público) — ${rotuloPublico(s.orgao, s.area)}`;
+    const dep = s.deptos.length ? ` (departamentos: ${s.deptos.join(", ")})` : "";
+    return `um órgão público (setor público) — ${rotuloPublico(s.orgao, s.area)}${dep}`;
   }
   if (s.ramo && MAP[s.ramo]) return MAP[s.ramo].descritor;
   const livre = s.ramo?.trim();

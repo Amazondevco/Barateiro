@@ -20,11 +20,14 @@ import {
   TIPOS_NEGOCIO,
   ORGAOS_PUBLICOS,
   AREAS_PUBLICAS,
+  AREAS_ADMIN,
+  DEPARTAMENTOS_PUBLICOS,
   parseSegmento,
   encodePublico,
   type OpcaoSimples,
 } from "@/lib/tipos-negocio";
 import { parseEndereco } from "@/lib/endereco";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 // Normaliza para busca sem acento/caixa ("seguranca" acha "Segurança").
 const norm = (s: string) =>
@@ -262,11 +265,32 @@ export function SegmentoNegocioField({
 
   // Público: órgão + área (reverte o texto salvo para preencher os campos).
   const orgIni = reverter(ORGAOS_PUBLICOS, parsed.publico ? parsed.orgao : "");
-  const areaIni = reverter(AREAS_PUBLICAS, parsed.publico ? parsed.area : "");
+  // Secretaria usa a lista temática; os demais órgãos, a administrativa.
+  const areaOpcoesIni = orgIni.slug === "secretaria" ? AREAS_PUBLICAS : AREAS_ADMIN;
+  const areaIni = reverter(areaOpcoesIni, parsed.publico ? parsed.area : "");
   const [orgSlug, setOrgSlug] = useState(orgIni.slug);
   const [orgOutro, setOrgOutro] = useState(orgIni.outro);
   const [areaSlug, setAreaSlug] = useState(areaIni.slug);
   const [areaOutro, setAreaOutro] = useState(areaIni.outro);
+  const [deptos, setDeptos] = useState<string[]>(
+    parsed.publico ? parsed.deptos : [],
+  );
+
+  const ehSecretaria = orgSlug === "secretaria";
+  const areaOpcoes = ehSecretaria ? AREAS_PUBLICAS : AREAS_ADMIN;
+
+  // Troca de órgão: se muda a categoria (Secretaria ↔ outros), a lista de área
+  // muda — zera a área. Departamentos só existem em Secretaria.
+  function trocarOrgao(s: string) {
+    const eraSec = orgSlug === "secretaria";
+    const seraSec = s === "secretaria";
+    setOrgSlug(s);
+    if (eraSec !== seraSec) {
+      setAreaSlug("");
+      setAreaOutro("");
+    }
+    if (!seraSec) setDeptos([]);
+  }
 
   const textoDe = (opts: OpcaoSimples[], slug: string, outro: string) =>
     slug === "outro"
@@ -274,13 +298,13 @@ export function SegmentoNegocioField({
       : (opts.find((o) => o.slug === slug)?.label ?? "");
 
   const orgText = textoDe(ORGAOS_PUBLICOS, orgSlug, orgOutro);
-  const areaText = textoDe(AREAS_PUBLICAS, areaSlug, areaOutro);
+  const areaText = textoDe(areaOpcoes, areaSlug, areaOutro);
 
   // Valor submetido no campo oculto `tipo_negocio`.
   const valor =
     seg === "publico"
       ? orgText || areaText
-        ? encodePublico(orgText, areaText)
+        ? encodePublico(orgText, areaText, ehSecretaria ? deptos : [])
         : ""
       : privSlug === "outro"
         ? privOutro.trim()
@@ -336,7 +360,7 @@ export function SegmentoNegocioField({
             label="Tipo do órgão *"
             options={ORGAOS_PUBLICOS}
             slug={orgSlug}
-            setSlug={setOrgSlug}
+            setSlug={trocarOrgao}
             outro={orgOutro}
             setOutro={setOrgOutro}
             placeholder="Selecione o tipo do órgão"
@@ -344,7 +368,7 @@ export function SegmentoNegocioField({
           />
           <CampoComOutro
             label="Área *"
-            options={AREAS_PUBLICAS}
+            options={areaOpcoes}
             slug={areaSlug}
             setSlug={setAreaSlug}
             outro={areaOutro}
@@ -352,6 +376,20 @@ export function SegmentoNegocioField({
             placeholder="Selecione a área"
             outroPlaceholder="Qual a área?"
           />
+          {ehSecretaria && (
+            <div className="sm:col-span-2">
+              <Label>Departamentos</Label>
+              <MultiSelect
+                emptyLabel="Selecione os departamentos"
+                options={DEPARTAMENTOS_PUBLICOS.map((d) => ({ id: d, nome: d }))}
+                selected={deptos}
+                onChange={setDeptos}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Ex.: frota, limpeza, portaria — pode escolher mais de um.
+              </p>
+            </div>
+          )}
           <p className="mt-1 text-xs text-muted-foreground sm:col-span-2">
             Personaliza os checklists e relatórios gerados por IA para o órgão
             público.
