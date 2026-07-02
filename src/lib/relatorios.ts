@@ -70,12 +70,17 @@ export async function carregarBase(
   formId: string,
   redeId: string,
   desdeIso?: string,
+  filtro?: { unidadeId?: string; usuarioIds?: string[] },
 ): Promise<BaseDados> {
   let q = supabase
     .from("respostas")
     .select("id, unidade_id, data_referencia, total_itens, total_nao")
     .eq("formulario_id", formId);
   if (desdeIso) q = q.gte("data_referencia", desdeIso);
+  // Filtros opcionais (console admin): escopam as respostas ANTES de agregar,
+  // então valoresPorItem já sai coerente com o recorte. Retrocompatível.
+  if (filtro?.unidadeId) q = q.eq("unidade_id", filtro.unidadeId);
+  if (filtro?.usuarioIds) q = q.in("usuario_id", filtro.usuarioIds);
 
   const [{ data: resp }, { data: itens }, { data: unis }] = await Promise.all([
     q.order("data_referencia", { ascending: false }).limit(1000),
