@@ -125,13 +125,10 @@ export async function convidarResponsavel(
   return { ok: true, email, link, emailEnviado };
 }
 
+// Regras operacionais (horário limite, janela de edição, retenção, dias) NÃO
+// vivem mais aqui — serão por formulário. Não são enviadas no payload: no insert
+// as colunas usam o default do banco; no update os valores atuais são preservados.
 function parseRede(formData: FormData) {
-  const dias = formData
-    .getAll("dias_frequencia")
-    .map((d) => parseInt(String(d), 10))
-    .filter((n) => !Number.isNaN(n))
-    .sort();
-
   return {
     nome: String(formData.get("nome") ?? "").trim(),
     cnpj: String(formData.get("cnpj") ?? "").trim() || null,
@@ -142,16 +139,6 @@ function parseRede(formData: FormData) {
     contato_nome: String(formData.get("contato_nome") ?? "").trim() || null,
     contato_email: String(formData.get("contato_email") ?? "").trim() || null,
     contato_fone: String(formData.get("contato_fone") ?? "").trim() || null,
-    horario_limite: String(formData.get("horario_limite") ?? "10:00"),
-    dias_frequencia: dias.length ? dias : [1, 3, 5, 6],
-    janela_edicao_min: parseInt(
-      String(formData.get("janela_edicao_min") ?? "30"),
-      10,
-    ),
-    retencao_fotos_dias: parseInt(
-      String(formData.get("retencao_fotos_dias") ?? "60"),
-      10,
-    ),
   };
 }
 
