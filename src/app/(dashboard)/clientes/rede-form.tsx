@@ -12,6 +12,7 @@ import {
   SegmentoNegocioField,
   LogoUploader,
   EnderecoField,
+  CpfField,
 } from "./rede-form-fields";
 
 export function RedeForm({
@@ -77,6 +78,7 @@ export function RedeForm({
               <Label htmlFor="contato_nome">Nome</Label>
               <Input id="contato_nome" name="contato_nome" defaultValue={rede?.contato_nome ?? ""} />
             </div>
+            <CpfField defaultValue={rede?.contato_cpf} />
             <div>
               <Label htmlFor="contato_email">E-mail</Label>
               <Input id="contato_email" name="contato_email" type="email" defaultValue={rede?.contato_email ?? ""} />

@@ -27,6 +27,7 @@ import {
   type OpcaoSimples,
 } from "@/lib/tipos-negocio";
 import { parseEndereco } from "@/lib/endereco";
+import { cpfValido, formatCpf } from "@/lib/cpf";
 import { MultiSelect } from "@/components/ui/multi-select";
 
 // Normaliza para busca sem acento/caixa ("seguranca" acha "Segurança").
@@ -396,6 +397,31 @@ export function SegmentoNegocioField({
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── CPF do contato: formata e valida (verificadores) ────────────────────────
+export function CpfField({ defaultValue }: { defaultValue?: string | null }) {
+  const [cpf, setCpf] = useState(formatCpf(defaultValue ?? ""));
+  const digitos = cpf.replace(/\D/g, "");
+  const invalido = digitos.length > 0 && !cpfValido(cpf);
+
+  return (
+    <div>
+      <Label htmlFor="contato_cpf">CPF</Label>
+      <Input
+        id="contato_cpf"
+        name="contato_cpf"
+        value={cpf}
+        inputMode="numeric"
+        maxLength={14}
+        placeholder="000.000.000-00"
+        onChange={(e) => setCpf(formatCpf(e.target.value))}
+        className={invalido ? "border-danger focus-visible:ring-danger" : ""}
+        aria-invalid={invalido}
+      />
+      {invalido && <p className="mt-1 text-xs text-danger">CPF inválido.</p>}
     </div>
   );
 }

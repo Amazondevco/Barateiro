@@ -8,6 +8,7 @@ import { getSessionContext } from "@/lib/auth";
 import { enviarEmail, emailConviteHtml } from "@/lib/email";
 import { novoConviteToken } from "@/lib/convite";
 import { encodeEndereco, parseEndereco } from "@/lib/endereco";
+import { cpfValido } from "@/lib/cpf";
 
 export type FormState = { error?: string; ok?: boolean };
 
@@ -140,6 +141,8 @@ function parseRede(formData: FormData) {
     contato_nome: String(formData.get("contato_nome") ?? "").trim() || null,
     contato_email: String(formData.get("contato_email") ?? "").trim() || null,
     contato_fone: String(formData.get("contato_fone") ?? "").trim() || null,
+    contato_cpf:
+      String(formData.get("contato_cpf") ?? "").replace(/\D/g, "") || null,
     endereco: encodeEndereco({
       cep: String(formData.get("cep") ?? ""),
       logradouro: String(formData.get("logradouro") ?? ""),
@@ -159,6 +162,8 @@ export async function createRede(
   const payload = parseRede(formData);
   if (!payload.nome) return { error: "Informe o nome da rede." };
   if (!payload.tipo_negocio) return { error: "Selecione o segmento (tipo de negócio ou órgão)." };
+  if (payload.contato_cpf && !cpfValido(payload.contato_cpf))
+    return { error: "CPF do contato inválido." };
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -209,6 +214,8 @@ export async function updateRede(
   const payload = parseRede(formData);
   if (!payload.nome) return { error: "Informe o nome da rede." };
   if (!payload.tipo_negocio) return { error: "Selecione o segmento (tipo de negócio ou órgão)." };
+  if (payload.contato_cpf && !cpfValido(payload.contato_cpf))
+    return { error: "CPF do contato inválido." };
 
   const supabase = await createClient();
   const { error } = await supabase.from("redes").update(payload).eq("id", id);
