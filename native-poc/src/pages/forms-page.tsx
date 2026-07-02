@@ -134,24 +134,24 @@ function EnviadosList({
         <Link
           key={e.id}
           to={`/app/revisao/enviado/${e.id}`}
-          className="flex items-start gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors active:bg-muted/40"
+          className="flex items-start gap-3 rounded-xl border border-border bg-card p-3 shadow-sm transition-colors active:bg-muted/40"
         >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-success-bg text-success">
-            <CheckCircle2 className="h-6 w-6" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success-bg text-success">
+            <CheckCircle2 className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <strong className="mb-1 block truncate text-[15px] font-semibold">
+            <strong className="mb-0.5 block truncate text-[13px] font-semibold">
               {e.formNome}
             </strong>
-            <p className="mb-2 truncate text-[13px] font-medium text-muted-foreground">
+            <p className="mb-1.5 truncate text-[12px] font-medium text-muted-foreground">
               {t("{n} item(ns) · ref. {ref}", { n: e.totalItens, ref: fmtData(e.dataReferencia) })}
             </p>
-            <p className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-              <Clock className="h-3 w-3" />
+            <p className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+              <Clock className="h-2.5 w-2.5" />
               {new Date(e.enviadoEm).toLocaleString("pt-BR")}
             </p>
           </div>
-          <ChevronRight className="mt-1 h-5 w-5 shrink-0 self-center text-muted-foreground/60" />
+          <ChevronRight className="h-4 w-4 shrink-0 self-center text-muted-foreground/60" />
         </Link>
       ))}
     </div>
@@ -177,34 +177,34 @@ function PendentesList({ pendentes }: { pendentes: QueueRecord[] }) {
           <Link
             key={item.id}
             to={`/app/revisao/pendente/${item.id}`}
-            className="flex items-start gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors active:bg-muted/40"
+            className="flex items-start gap-3 rounded-xl border border-border bg-card p-3 shadow-sm transition-colors active:bg-muted/40"
           >
             <span
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
                 erro ? "bg-danger-bg text-danger" : "bg-primary/10 text-primary"
               }`}
             >
               {erro ? (
-                <AlertTriangle className="h-6 w-6" />
+                <AlertTriangle className="h-5 w-5" />
               ) : (
-                <Clock className="h-6 w-6" />
+                <Clock className="h-5 w-5" />
               )}
             </span>
             <div className="min-w-0 flex-1">
-              <strong className="mb-1 block truncate text-[15px] font-semibold">
+              <strong className="mb-0.5 block truncate text-[13px] font-semibold">
                 {item.title}
               </strong>
-              <p className="mb-2 truncate text-[13px] font-medium text-muted-foreground">
+              <p className="mb-1.5 truncate text-[12px] font-medium text-muted-foreground">
                 {item.kind === "form_response"
                   ? t("{n} resposta(s) coletada(s)", { n: item.payload.items.length })
                   : (item.subtitle ?? "")}
               </p>
-              <p className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-                <Clock className="h-3 w-3" />
+              <p className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                <Clock className="h-2.5 w-2.5" />
                 {new Date(item.createdAt).toLocaleString("pt-BR")}
               </p>
             </div>
-            <ChevronRight className="mt-1 h-5 w-5 shrink-0 self-center text-muted-foreground/60" />
+            <ChevronRight className="h-4 w-4 shrink-0 self-center text-muted-foreground/60" />
           </Link>
         );
       })}

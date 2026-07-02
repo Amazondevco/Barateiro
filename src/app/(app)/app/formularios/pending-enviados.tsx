@@ -67,29 +67,29 @@ export function FormulariosTabs({ enviados }: { enviados: EnviadoItem[] }) {
             texto="Os checklists que você enviar aparecem aqui pra conferência."
           />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2.5">
             {enviados.map((r) => (
               <Link
                 key={r.id}
                 href={`/app/formularios/${r.id}`}
-                className="flex items-start gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
+                className="flex items-start gap-3 rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-success-bg text-success">
-                  <CheckCircle2 className="h-6 w-6" />
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success-bg text-success">
+                  <CheckCircle2 className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 className="mb-1 truncate text-[15px] font-bold">{r.formNome}</h2>
-                  <p className="mb-2 truncate text-[13px] font-medium text-muted-foreground">
+                  <h2 className="mb-0.5 truncate text-[13px] font-bold">{r.formNome}</h2>
+                  <p className="mb-1.5 truncate text-[12px] font-medium text-muted-foreground">
                     {r.data}
                     {r.unidade ? ` • ${r.unidade}` : ""}
                   </p>
                   {r.totalNao > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-warning-bg px-2 py-1 text-xs font-medium text-warning">
-                      <AlertTriangle className="h-3.5 w-3.5" /> {r.totalNao} não-conformidade(s)
+                    <span className="inline-flex items-center gap-1 rounded-md bg-warning-bg px-1.5 py-0.5 text-[11px] font-medium text-warning">
+                      <AlertTriangle className="h-3 w-3" /> {r.totalNao} não-conformidade(s)
                     </span>
                   )}
                 </div>
-                <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-muted-foreground/60" />
+                <ChevronRight className="h-4 w-4 shrink-0 self-center text-muted-foreground/60" />
               </Link>
             ))}
           </div>
@@ -100,7 +100,7 @@ export function FormulariosTabs({ enviados }: { enviados: EnviadoItem[] }) {
           texto="Envios feitos offline aparecem aqui até sincronizarem."
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2.5">
           {pendentes.map((s) => {
             const d = new Date(s.criadoEm).toLocaleString("pt-BR", {
               day: "2-digit",
@@ -112,18 +112,18 @@ export function FormulariosTabs({ enviados }: { enviados: EnviadoItem[] }) {
             return (
               <div
                 key={s.id}
-                className="flex items-start gap-3.5 rounded-2xl border border-warning/40 bg-card p-4 shadow-sm"
+                className="flex items-start gap-3 rounded-xl border border-warning/40 bg-card p-3 shadow-sm"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-warning-bg text-warning">
-                  <Clock className="h-6 w-6" />
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning-bg text-warning">
+                  <Clock className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 className="mb-1 truncate text-[15px] font-bold">{s.formNome}</h2>
-                  <p className="truncate text-[13px] font-medium text-muted-foreground">
+                  <h2 className="mb-0.5 truncate text-[13px] font-bold">{s.formNome}</h2>
+                  <p className="truncate text-[12px] font-medium text-muted-foreground">
                     {d} • {falhou ? "tentando reenviar…" : "será enviado ao reconectar"}
                   </p>
                 </div>
-                {falhou && <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-danger" />}
+                {falhou && <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-danger" />}
               </div>
             );
           })}
