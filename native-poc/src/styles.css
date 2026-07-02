@@ -214,3 +214,18 @@ textarea {
 button {
   cursor: pointer;
 }
+
+/* Esconde o "revelar senha"/autofill nativo do navegador/WebView, que aparecia
+   no mesmo canto e cobria o nosso botão de olho ao começar a digitar. */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-strong-password-auto-fill-button,
+input::-webkit-strong-password-and-credentials-auto-fill-button,
+input::-webkit-caps-lock-indicator {
+  visibility: hidden !important;
+  display: none !important;
+  pointer-events: none !important;
+}

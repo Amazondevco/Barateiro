@@ -268,3 +268,18 @@ body {
 div[vw] {
   z-index: 45;
 }
+
+/* Esconde o "revelar senha"/autofill nativo do navegador, que cobria o nosso
+   botão de olho ao começar a digitar no campo de senha. */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-strong-password-auto-fill-button,
+input::-webkit-strong-password-and-credentials-auto-fill-button,
+input::-webkit-caps-lock-indicator {
+  visibility: hidden !important;
+  display: none !important;
+  pointer-events: none !important;
+}
