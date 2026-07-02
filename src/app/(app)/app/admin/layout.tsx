@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { getRedeMarcaById } from "@/lib/rede-branding";
 import { AppAdminNav } from "@/components/app-admin-nav";
+import { ToastProvider } from "@/components/toast";
 
 // Console do ADMIN da rede no app (mobile). Só admin_supermercado; super admin e
 // operadores não entram (o operador já é barrado no middleware).
@@ -25,20 +26,19 @@ export default async function AdminAppLayout({
     : undefined;
 
   return (
-    <div
-      style={style}
-      className="app-shell flex min-h-screen flex-col"
-    >
-      <main
-        className="flex flex-1 flex-col"
-        style={{
-          paddingTop: "env(safe-area-inset-top)",
-          paddingBottom: "calc(88px + env(safe-area-inset-bottom))",
-        }}
-      >
-        {children}
-      </main>
-      <AppAdminNav />
-    </div>
+    <ToastProvider>
+      <div style={style} className="app-shell flex min-h-screen flex-col">
+        <main
+          className="flex flex-1 flex-col"
+          style={{
+            paddingTop: "env(safe-area-inset-top)",
+            paddingBottom: "calc(88px + env(safe-area-inset-bottom))",
+          }}
+        >
+          {children}
+        </main>
+        <AppAdminNav />
+      </div>
+    </ToastProvider>
   );
 }
