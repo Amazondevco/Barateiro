@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/table";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/auth";
-import { SugestaoCard } from "./sugestao-card";
+import { SugestoesList, type SugestaoItem } from "./sugestoes-list";
 
 export const metadata = { title: "Sugestões — Check.AI" };
 
@@ -47,41 +45,30 @@ export default async function SugestoesPage() {
       }),
   );
 
-  const titulo =
-    profile.papel === "super_admin"
-      ? "Sugestões das redes"
-      : "Sugestões da equipe";
+  const superAdmin = profile.papel === "super_admin";
+  const titulo = superAdmin ? "Sugestões das redes" : "Sugestões da equipe";
+
+  const items: SugestaoItem[] = lista.map((s) => ({
+    id: s.id,
+    autor: s.autor_nome,
+    texto: s.texto,
+    audioUrl: audioUrls[s.id] ?? null,
+    status: s.status,
+    criadoEm: s.criado_em,
+  }));
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Sugestões" crumb="Sugestões" />
-      <p className="text-sm text-muted-foreground">{titulo}</p>
-
-      {lista.length === 0 ? (
-        <EmptyState
-          title="Nenhuma sugestão"
-          description={
-            profile.papel === "super_admin"
-              ? "As sugestões escaladas pelas redes aparecem aqui."
-              : "As sugestões da sua equipe aparecem aqui."
-          }
-        />
-      ) : (
-        <div className="space-y-3">
-          {lista.map((s) => (
-            <SugestaoCard
-              key={s.id}
-              id={s.id}
-              autor={s.autor_nome}
-              texto={s.texto}
-              audioUrl={audioUrls[s.id] ?? null}
-              status={s.status}
-              criadoEm={s.criado_em}
-              podeEscalar={profile.papel === "admin_supermercado"}
-            />
-          ))}
-        </div>
-      )}
+      <PageHeader title="Sugestões" subtitle={titulo} crumb="Sugestões" />
+      <SugestoesList
+        sugestoes={items}
+        podeEscalar={!superAdmin}
+        emptyDescription={
+          superAdmin
+            ? "As sugestões escaladas pelas redes aparecem aqui."
+            : "As sugestões da sua equipe aparecem aqui."
+        }
+      />
     </div>
   );
 }

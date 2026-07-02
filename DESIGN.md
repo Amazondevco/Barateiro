@@ -239,6 +239,18 @@ não-lida tem **ponto `bg-primary`** antes da data/unidade + leve realce
   o app calcula com as respostas reais. Novo relatório por **texto ou áudio**
   (Whisper). Mantenha esse estilo de gráfico minimalista.
 
+### 7.3 Sugestões
+Lista de cartões (`rounded-2xl border bg-card shadow-sm`) com **filtro segmentado**
+no topo (Todas/Novas/Recebidas, molde `bg-muted rounded-xl p-1`, ativo
+`bg-card shadow-sm` + contador). Cada cartão: cabeçalho com **avatar de iniciais**
+(`rounded-full bg-muted`) + autor + data e **badge** de status (Nova = `warning`,
+Recebida = `success`); corpo com o texto; **player de áudio custom** e rodapé de
+ações com divisória (`border-t pt-3`). Ações otimistas + `router.refresh()`.
+- **Player de áudio (`audio-player.tsx`):** substitui o `<audio controls>` nativo.
+  `<audio hidden>` + botão play/pause circular (`bg-primary`), barra de progresso
+  clicável (`bg-border` → preenche `bg-primary`) e tempo `atual / total`
+  (`tabular-nums`). Reusar sempre que houver áudio em UI de painel.
+
 ---
 
 ## 8. Padrões do App (PWA)
