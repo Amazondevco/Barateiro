@@ -186,8 +186,9 @@ Assistente IA (sparkle). Empilham no canto inferior direito.
   pouquinho, suave em qualquer cor) + divisória `border-t`.
 - A sidebar tem **sombra na borda direita** (`shadow-[6px_0_24px_-6px_…]` + `z-10`)
   para separá-la do conteúdo principal.
-- O **topbar** não usa linha de borda: só **sombra na borda de baixo**
-  (`shadow-[0_6px_20px_-8px_…]` + `z-10`). Ícones do topbar uniformes em `h-9 w-9`.
+- O **topbar** tem altura `h-20` (80px) e não usa linha de borda: só **sombra na
+  borda de baixo** (`shadow-[0_6px_20px_-8px_…]` + `z-10`). Ícones do topbar
+  uniformes em `h-9 w-9`; divisores verticais curtos em `h-10`.
 - **Usuários** tem abas **Sistema** (usuários do painel) e **Aplicativo** (equipe do
   app / roster) para admin de rede; "Equipe do app" saiu de Configurações.
 - **Termo de produto = "Checklist"** em toda a UI (nunca "Formulário" no texto

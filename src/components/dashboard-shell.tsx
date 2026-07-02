@@ -145,7 +145,7 @@ export function DashboardShell({
       {/* Coluna principal */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <header
-          className="relative z-10 flex h-16 shrink-0 items-center justify-between px-4 shadow-[0_6px_20px_-8px_rgba(2,6,23,0.18)] lg:pl-0 lg:pr-6"
+          className="relative z-10 flex h-20 shrink-0 items-center justify-between px-4 shadow-[0_6px_20px_-8px_rgba(2,6,23,0.18)] lg:pl-0 lg:pr-6"
           style={headerStyle}
         >
           {/* Separação sidebar ↔ topbar: traço vertical curto (menor que a
@@ -153,7 +153,7 @@ export function DashboardShell({
               Mesmo conceito do divisor botão-recolher ↔ título. */}
           <span
             aria-hidden
-            className="absolute left-0 top-1/2 hidden h-8 w-px -translate-y-1/2 bg-border shadow-[1.5px_0_4px_-1px_rgba(0,0,0,0.3)] lg:block"
+            className="absolute left-0 top-1/2 hidden h-10 w-px -translate-y-1/2 bg-border shadow-[1.5px_0_4px_-1px_rgba(0,0,0,0.3)] lg:block"
           />
           <div className="flex min-w-0 flex-1 items-center">
             {/* Recolher/expandir (desktop): célula de largura fixa encostada na
@@ -185,7 +185,7 @@ export function DashboardShell({
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
             {/* divisor botão ↔ título (sem margem à esquerda: encosta na célula) */}
-            <div className="mr-2 hidden h-8 w-px shrink-0 bg-border lg:block" />
+            <div className="mr-2 hidden h-10 w-px shrink-0 bg-border lg:block" />
             <TopbarTitle />
           </div>
 
