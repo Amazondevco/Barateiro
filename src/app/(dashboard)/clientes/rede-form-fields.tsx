@@ -24,6 +24,7 @@ import {
   encodePublico,
   type OpcaoSimples,
 } from "@/lib/tipos-negocio";
+import { parseEndereco } from "@/lib/endereco";
 
 // Normaliza para busca sem acento/caixa ("seguranca" acha "Segurança").
 const norm = (s: string) =>
@@ -233,13 +234,21 @@ function SegBtn({
 // ── Campo principal: Segmento (privado/público) + os campos de cada caso ─────
 export function SegmentoNegocioField({
   defaultValue,
+  onSegmentoChange,
 }: {
   defaultValue?: string | null;
+  onSegmentoChange?: (seg: "privado" | "publico") => void;
 }) {
   const parsed = parseSegmento(defaultValue);
   const [seg, setSeg] = useState<"privado" | "publico">(
     parsed.publico ? "publico" : "privado",
   );
+
+  // Reporta o segmento ao pai (ex.: CNPJ só aparece no privado). Roda no mount
+  // (valor inicial) e a cada troca.
+  useEffect(() => {
+    onSegmentoChange?.(seg);
+  }, [seg, onSegmentoChange]);
 
   // Privado: slug conhecido ou texto livre (mesma lógica de antes).
   const ramoInicial = parsed.publico ? "" : parsed.ramo;
@@ -349,6 +358,144 @@ export function SegmentoNegocioField({
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Endereço: CEP primeiro; ao digitar 8 dígitos, o ViaCEP preenche o resto ──
+export function EnderecoField({ defaultValue }: { defaultValue?: string | null }) {
+  const ini = parseEndereco(defaultValue);
+  const [cep, setCep] = useState(ini.cep);
+  const [logradouro, setLogradouro] = useState(ini.logradouro);
+  const [numero, setNumero] = useState(ini.numero);
+  const [complemento, setComplemento] = useState(ini.complemento);
+  const [bairro, setBairro] = useState(ini.bairro);
+  const [cidade, setCidade] = useState(ini.cidade);
+  const [uf, setUf] = useState(ini.uf);
+  const [buscando, setBuscando] = useState(false);
+  const [erroCep, setErroCep] = useState<string | null>(null);
+  const numeroRef = useRef<HTMLInputElement>(null);
+
+  async function buscarCep(raw: string) {
+    const d = raw.replace(/\D/g, "");
+    if (d.length !== 8) return;
+    setBuscando(true);
+    setErroCep(null);
+    try {
+      const r = await fetch(`https://viacep.com.br/ws/${d}/json/`);
+      const j = (await r.json()) as {
+        erro?: boolean;
+        logradouro?: string;
+        bairro?: string;
+        localidade?: string;
+        uf?: string;
+      };
+      if (j.erro) {
+        setErroCep("CEP não encontrado.");
+        return;
+      }
+      setLogradouro(j.logradouro ?? "");
+      setBairro(j.bairro ?? "");
+      setCidade(j.localidade ?? "");
+      setUf(j.uf ?? "");
+      numeroRef.current?.focus(); // o que falta é o número
+    } catch {
+      setErroCep("Não foi possível buscar o CEP.");
+    } finally {
+      setBuscando(false);
+    }
+  }
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-6">
+      <div className="sm:col-span-2">
+        <Label htmlFor="cep">CEP</Label>
+        <div className="relative">
+          <Input
+            id="cep"
+            name="cep"
+            value={cep}
+            inputMode="numeric"
+            maxLength={9}
+            placeholder="00000-000"
+            onChange={(e) => {
+              setCep(e.target.value);
+              if (e.target.value.replace(/\D/g, "").length === 8) {
+                void buscarCep(e.target.value);
+              }
+            }}
+            onBlur={(e) => void buscarCep(e.target.value)}
+          />
+          {buscando && (
+            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+          )}
+        </div>
+        {erroCep && <p className="mt-1 text-xs text-danger">{erroCep}</p>}
+      </div>
+
+      <div className="sm:col-span-4">
+        <Label htmlFor="logradouro">Logradouro</Label>
+        <Input
+          id="logradouro"
+          name="logradouro"
+          value={logradouro}
+          onChange={(e) => setLogradouro(e.target.value)}
+          placeholder="Rua, avenida…"
+        />
+      </div>
+
+      <div className="sm:col-span-2">
+        <Label htmlFor="numero">Número</Label>
+        <Input
+          id="numero"
+          name="numero"
+          ref={numeroRef}
+          value={numero}
+          onChange={(e) => setNumero(e.target.value)}
+        />
+      </div>
+
+      <div className="sm:col-span-4">
+        <Label htmlFor="complemento">Complemento</Label>
+        <Input
+          id="complemento"
+          name="complemento"
+          value={complemento}
+          onChange={(e) => setComplemento(e.target.value)}
+          placeholder="Sala, bloco, andar…"
+        />
+      </div>
+
+      <div className="sm:col-span-3">
+        <Label htmlFor="bairro">Bairro</Label>
+        <Input
+          id="bairro"
+          name="bairro"
+          value={bairro}
+          onChange={(e) => setBairro(e.target.value)}
+        />
+      </div>
+
+      <div className="sm:col-span-2">
+        <Label htmlFor="cidade">Cidade</Label>
+        <Input
+          id="cidade"
+          name="cidade"
+          value={cidade}
+          onChange={(e) => setCidade(e.target.value)}
+        />
+      </div>
+
+      <div className="sm:col-span-1">
+        <Label htmlFor="uf">UF</Label>
+        <Input
+          id="uf"
+          name="uf"
+          value={uf}
+          maxLength={2}
+          onChange={(e) => setUf(e.target.value.toUpperCase())}
+        />
+      </div>
     </div>
   );
 }

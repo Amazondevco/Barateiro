@@ -40,6 +40,7 @@ export type Rede = {
   contato_nome: string | null;
   contato_email: string | null;
   contato_fone: string | null;
+  endereco: string | null;
   horario_limite: string;
   dias_frequencia: number[];
   janela_edicao_min: number;

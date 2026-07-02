@@ -1,13 +1,18 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { FormState } from "./actions";
 import type { Rede } from "@/lib/types";
-import { SegmentoNegocioField, LogoUploader } from "./rede-form-fields";
+import { parseSegmento } from "@/lib/tipos-negocio";
+import {
+  SegmentoNegocioField,
+  LogoUploader,
+  EnderecoField,
+} from "./rede-form-fields";
 
 export function RedeForm({
   action,
@@ -19,6 +24,9 @@ export function RedeForm({
   submitLabel?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
+  const [segmento, setSegmento] = useState<"privado" | "publico">(
+    parseSegmento(rede?.tipo_negocio).publico ? "publico" : "privado",
+  );
 
   return (
     <form action={formAction} className="space-y-6">
@@ -31,12 +39,17 @@ export function RedeForm({
               <Input id="nome" name="nome" defaultValue={rede?.nome ?? ""} required />
             </div>
             <div className="sm:col-span-2">
-              <SegmentoNegocioField defaultValue={rede?.tipo_negocio} />
+              <SegmentoNegocioField
+                defaultValue={rede?.tipo_negocio}
+                onSegmentoChange={setSegmento}
+              />
             </div>
-            <div>
-              <Label htmlFor="cnpj">CNPJ</Label>
-              <Input id="cnpj" name="cnpj" defaultValue={rede?.cnpj ?? ""} />
-            </div>
+            {segmento === "privado" && (
+              <div>
+                <Label htmlFor="cnpj">CNPJ</Label>
+                <Input id="cnpj" name="cnpj" defaultValue={rede?.cnpj ?? ""} />
+              </div>
+            )}
             <div>
               <Label htmlFor="plano">Plano</Label>
               <Select id="plano" name="plano" defaultValue={rede?.plano ?? "free"}>
@@ -72,6 +85,13 @@ export function RedeForm({
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-4">
+          <h3 className="font-semibold">Endereço</h3>
+          <EnderecoField defaultValue={rede?.endereco} />
         </CardContent>
       </Card>
 

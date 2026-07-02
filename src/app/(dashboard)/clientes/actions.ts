@@ -7,6 +7,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { enviarEmail, emailConviteHtml } from "@/lib/email";
 import { novoConviteToken } from "@/lib/convite";
+import { encodeEndereco } from "@/lib/endereco";
 
 export type FormState = { error?: string; ok?: boolean };
 
@@ -139,6 +140,15 @@ function parseRede(formData: FormData) {
     contato_nome: String(formData.get("contato_nome") ?? "").trim() || null,
     contato_email: String(formData.get("contato_email") ?? "").trim() || null,
     contato_fone: String(formData.get("contato_fone") ?? "").trim() || null,
+    endereco: encodeEndereco({
+      cep: String(formData.get("cep") ?? ""),
+      logradouro: String(formData.get("logradouro") ?? ""),
+      numero: String(formData.get("numero") ?? ""),
+      complemento: String(formData.get("complemento") ?? ""),
+      bairro: String(formData.get("bairro") ?? ""),
+      cidade: String(formData.get("cidade") ?? ""),
+      uf: String(formData.get("uf") ?? ""),
+    }),
   };
 }
 
