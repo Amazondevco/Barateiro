@@ -17,6 +17,7 @@ type RedeRow = {
   plano: string;
   status: "ativo" | "inativo";
   cor_primaria: string | null;
+  logo_url: string | null;
   unidades: { count: number }[];
   profiles: { count: number }[];
 };
@@ -26,7 +27,7 @@ export default async function ClientesPage() {
   const { data } = await supabase
     .from("redes")
     .select(
-      "id,nome,cnpj,tipo_negocio,plano,status,cor_primaria,unidades(count),profiles(count)",
+      "id,nome,cnpj,tipo_negocio,plano,status,cor_primaria,logo_url,unidades(count),profiles(count)",
     )
     .order("created_at", { ascending: false });
 
@@ -79,10 +80,19 @@ export default async function ClientesPage() {
                     href={`/clientes/${r.id}`}
                     className="flex items-center gap-3"
                   >
-                    <span
-                      className="h-8 w-8 shrink-0 rounded-lg"
-                      style={{ background: r.cor_primaria ?? "#2563eb" }}
-                    />
+                    {r.logo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={r.logo_url}
+                        alt=""
+                        className="h-8 w-8 shrink-0 rounded-lg border border-border bg-white object-contain"
+                      />
+                    ) : (
+                      <span
+                        className="h-8 w-8 shrink-0 rounded-lg"
+                        style={{ background: r.cor_primaria ?? "#2563eb" }}
+                      />
+                    )}
                     <span>
                       <span className="block font-medium">{r.nome}</span>
                       {r.cnpj && (

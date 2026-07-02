@@ -14,6 +14,7 @@ import { RedeForm } from "../rede-form";
 import { updateRede, setRedeStatus } from "../actions";
 import { createUnidade, setUnidadeStatus } from "./unidade-actions";
 import { AddUnidadeForm } from "./add-unidade-form";
+import { EditUnidadeButton } from "./edit-unidade-button";
 import { AddUsuarioForm } from "@/components/add-usuario-form";
 import { createUsuario } from "../../usuarios/actions";
 import { UsuarioLinkButton } from "./usuario-link-button";
@@ -71,7 +72,9 @@ export default async function RedeDetailPage({
     await Promise.all([
       supabase
         .from("unidades")
-        .select("id,nome,codigo,tipo,cidade,uf,status")
+        .select(
+          "id,nome,codigo,tipo,endereco,cep,bairro,numero,complemento,cidade,uf,geo_lat,geo_lng,status",
+        )
         .eq("rede_id", id)
         .order("nome"),
       supabase
@@ -195,18 +198,21 @@ export default async function RedeDetailPage({
                       </Badge>
                     </TD>
                     <TD>
-                      <form
-                        action={setUnidadeStatus.bind(
-                          null,
-                          u.id,
-                          id,
-                          u.status === "ativo" ? "inativo" : "ativo",
-                        )}
-                      >
-                        <Button variant="ghost" size="sm" type="submit">
-                          {u.status === "ativo" ? "Desativar" : "Ativar"}
-                        </Button>
-                      </form>
+                      <div className="flex items-center justify-end gap-1">
+                        <EditUnidadeButton unidade={u} redeId={id} />
+                        <form
+                          action={setUnidadeStatus.bind(
+                            null,
+                            u.id,
+                            id,
+                            u.status === "ativo" ? "inativo" : "ativo",
+                          )}
+                        >
+                          <Button variant="ghost" size="sm" type="submit">
+                            {u.status === "ativo" ? "Desativar" : "Ativar"}
+                          </Button>
+                        </form>
+                      </div>
                     </TD>
                   </TR>
                 ))}

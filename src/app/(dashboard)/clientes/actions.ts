@@ -7,7 +7,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSessionContext } from "@/lib/auth";
 import { enviarEmail, emailConviteHtml } from "@/lib/email";
 import { novoConviteToken } from "@/lib/convite";
-import { encodeEndereco } from "@/lib/endereco";
+import { encodeEndereco, parseEndereco } from "@/lib/endereco";
 
 export type FormState = { error?: string; ok?: boolean };
 
@@ -168,6 +168,25 @@ export async function createRede(
     .single();
 
   if (error) return { error: error.message };
+
+  // A Matriz (unidade #001) é criada por trigger no banco. Se a rede tem endereço,
+  // já preenche a Matriz com ele (o gestor edita depois se a Matriz for em outro lugar).
+  if (payload.endereco) {
+    const e = parseEndereco(payload.endereco);
+    await supabase
+      .from("unidades")
+      .update({
+        endereco: e.logradouro || null,
+        cep: e.cep || null,
+        numero: e.numero || null,
+        complemento: e.complemento || null,
+        bairro: e.bairro || null,
+        cidade: e.cidade || null,
+        uf: e.uf || null,
+      })
+      .eq("rede_id", data.id)
+      .eq("codigo", "001");
+  }
 
   // Convida o responsável automaticamente (best-effort; não bloqueia a criação).
   if (payload.contato_email) {
