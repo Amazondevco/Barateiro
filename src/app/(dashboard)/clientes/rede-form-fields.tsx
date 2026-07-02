@@ -10,48 +10,52 @@ import {
   Loader2,
   Image as ImageIcon,
   X,
+  Building2,
+  Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input, Label } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
-import { TIPOS_NEGOCIO } from "@/lib/tipos-negocio";
+import {
+  TIPOS_NEGOCIO,
+  ORGAOS_PUBLICOS,
+  AREAS_PUBLICAS,
+  parseSegmento,
+  encodePublico,
+  type OpcaoSimples,
+} from "@/lib/tipos-negocio";
 
 // Normaliza para busca sem acento/caixa ("seguranca" acha "Segurança").
 const norm = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-// ── Tipo de negócio: dropdown buscável + "Outro" com campo livre ────────────
-export function TipoNegocioField({
-  defaultValue,
+// ── Combobox buscável (valor = slug) ────────────────────────────────────────
+function ComboSelect({
+  options,
+  value,
+  onChange,
+  placeholder,
 }: {
-  defaultValue?: string | null;
+  options: OpcaoSimples[];
+  value: string;
+  onChange: (slug: string) => void;
+  placeholder: string;
 }) {
-  const inicial = defaultValue ?? "";
-  const conhecido = TIPOS_NEGOCIO.some((t) => t.slug === inicial);
-  // Se o valor salvo não é um slug conhecido, é um ramo livre → "outro" + texto.
-  const [slug, setSlug] = useState(
-    conhecido ? inicial : inicial ? "outro" : "",
-  );
-  const [outro, setOutro] = useState(conhecido || !inicial ? "" : inicial);
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [rect, setRect] = useState<DOMRect | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
 
-  const isOutro = slug === "outro";
-  // Valor submetido: em "Outro" com texto, guarda o texto; senão o slug.
-  const valor = isOutro ? outro.trim() || "outro" : slug;
-
-  const labelSel = slug
-    ? (TIPOS_NEGOCIO.find((t) => t.slug === slug)?.label ?? "Outro")
-    : "Selecione o tipo de negócio";
+  const labelSel = value
+    ? (options.find((o) => o.slug === value)?.label ?? placeholder)
+    : placeholder;
 
   const filtrados = useMemo(() => {
     const nq = norm(q.trim());
-    if (!nq) return TIPOS_NEGOCIO;
-    return TIPOS_NEGOCIO.filter((t) => norm(t.label).includes(nq));
-  }, [q]);
+    if (!nq) return options;
+    return options.filter((o) => norm(o.label).includes(nq));
+  }, [q, options]);
 
   function updateRect() {
     if (wrapRef.current) setRect(wrapRef.current.getBoundingClientRect());
@@ -77,87 +81,274 @@ export function TipoNegocioField({
   }, [open]);
 
   function escolher(s: string) {
-    setSlug(s);
+    onChange(s);
     setOpen(false);
     setQ("");
   }
 
   return (
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-card px-3 text-sm transition-colors hover:bg-muted"
+      >
+        <span className={value ? "text-foreground" : "text-muted-foreground"}>
+          {labelSel}
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </button>
+
+      {open &&
+        rect &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={popRef}
+            className="fixed z-50 overflow-hidden rounded-lg border border-border bg-card shadow-lg"
+            style={{ top: rect.bottom + 4, left: rect.left, width: rect.width }}
+          >
+            <div className="border-b border-border p-2">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  autoFocus
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Buscar…"
+                  className="h-9 w-full rounded-md border border-input bg-card pl-8 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </div>
+            </div>
+            <div className="max-h-56 overflow-auto p-1">
+              {filtrados.length === 0 ? (
+                <p className="px-3 py-2 text-xs text-muted-foreground">
+                  Nada encontrado.
+                </p>
+              ) : (
+                filtrados.map((o) => (
+                  <button
+                    key={o.slug}
+                    type="button"
+                    onClick={() => escolher(o.slug)}
+                    className={cn(
+                      "flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-muted",
+                      value === o.slug && "font-medium text-primary",
+                    )}
+                  >
+                    {o.label}
+                    {value === o.slug && <Check className="h-4 w-4 shrink-0" />}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
+    </div>
+  );
+}
+
+// Combobox + campo livre que aparece ao escolher "Outro".
+function CampoComOutro({
+  label,
+  options,
+  slug,
+  setSlug,
+  outro,
+  setOutro,
+  placeholder,
+  outroPlaceholder,
+}: {
+  label: string;
+  options: OpcaoSimples[];
+  slug: string;
+  setSlug: (s: string) => void;
+  outro: string;
+  setOutro: (s: string) => void;
+  placeholder: string;
+  outroPlaceholder: string;
+}) {
+  return (
     <div>
-      <input type="hidden" name="tipo_negocio" value={valor} />
-      <div ref={wrapRef} className="relative">
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-card px-3 text-sm transition-colors hover:bg-muted"
-        >
-          <span className={slug ? "text-foreground" : "text-muted-foreground"}>
-            {labelSel}
-          </span>
-          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-        </button>
-
-        {open &&
-          rect &&
-          typeof document !== "undefined" &&
-          createPortal(
-            <div
-              ref={popRef}
-              className="fixed z-50 overflow-hidden rounded-lg border border-border bg-card shadow-lg"
-              style={{ top: rect.bottom + 4, left: rect.left, width: rect.width }}
-            >
-              <div className="border-b border-border p-2">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    autoFocus
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder="Buscar ramo…"
-                    className="h-9 w-full rounded-md border border-input bg-card pl-8 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
-                </div>
-              </div>
-              <div className="max-h-56 overflow-auto p-1">
-                {filtrados.length === 0 ? (
-                  <p className="px-3 py-2 text-xs text-muted-foreground">
-                    Nenhum ramo encontrado.
-                  </p>
-                ) : (
-                  filtrados.map((t) => (
-                    <button
-                      key={t.slug}
-                      type="button"
-                      onClick={() => escolher(t.slug)}
-                      className={cn(
-                        "flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-muted",
-                        slug === t.slug && "font-medium text-primary",
-                      )}
-                    >
-                      {t.label}
-                      {slug === t.slug && <Check className="h-4 w-4 shrink-0" />}
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>,
-            document.body,
-          )}
-      </div>
-
-      {isOutro && (
+      <Label>{label}</Label>
+      <ComboSelect
+        options={options}
+        value={slug}
+        onChange={setSlug}
+        placeholder={placeholder}
+      />
+      {slug === "outro" && (
         <Input
           autoFocus
           value={outro}
           onChange={(e) => setOutro(e.target.value)}
-          placeholder="Descreva o ramo do negócio"
+          placeholder={outroPlaceholder}
           className="mt-2"
         />
       )}
+    </div>
+  );
+}
 
-      <p className="mt-1 text-xs text-muted-foreground">
-        Personaliza os checklists e relatórios gerados por IA para o ramo.
-      </p>
+// Reverte um texto salvo (rótulo conhecido ou livre) para slug + texto de "Outro".
+function reverter(options: OpcaoSimples[], texto: string): {
+  slug: string;
+  outro: string;
+} {
+  const t = texto.trim();
+  if (!t) return { slug: "", outro: "" };
+  const achado = options.find((o) => o.slug !== "outro" && o.label === t);
+  if (achado) return { slug: achado.slug, outro: "" };
+  return { slug: "outro", outro: t };
+}
+
+function SegBtn({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: typeof Building2;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border text-sm font-medium transition-colors",
+        active
+          ? "border-primary bg-primary/10 text-primary"
+          : "border-input bg-card text-muted-foreground hover:bg-muted",
+      )}
+    >
+      <Icon className="h-4 w-4" /> {label}
+    </button>
+  );
+}
+
+// ── Campo principal: Segmento (privado/público) + os campos de cada caso ─────
+export function SegmentoNegocioField({
+  defaultValue,
+}: {
+  defaultValue?: string | null;
+}) {
+  const parsed = parseSegmento(defaultValue);
+  const [seg, setSeg] = useState<"privado" | "publico">(
+    parsed.publico ? "publico" : "privado",
+  );
+
+  // Privado: slug conhecido ou texto livre (mesma lógica de antes).
+  const ramoInicial = parsed.publico ? "" : parsed.ramo;
+  const ramoConhecido = TIPOS_NEGOCIO.some((t) => t.slug === ramoInicial);
+  const [privSlug, setPrivSlug] = useState(
+    ramoConhecido ? ramoInicial : ramoInicial ? "outro" : "",
+  );
+  const [privOutro, setPrivOutro] = useState(
+    ramoConhecido || !ramoInicial ? "" : ramoInicial,
+  );
+
+  // Público: órgão + área (reverte o texto salvo para preencher os campos).
+  const orgIni = reverter(ORGAOS_PUBLICOS, parsed.publico ? parsed.orgao : "");
+  const areaIni = reverter(AREAS_PUBLICAS, parsed.publico ? parsed.area : "");
+  const [orgSlug, setOrgSlug] = useState(orgIni.slug);
+  const [orgOutro, setOrgOutro] = useState(orgIni.outro);
+  const [areaSlug, setAreaSlug] = useState(areaIni.slug);
+  const [areaOutro, setAreaOutro] = useState(areaIni.outro);
+
+  const textoDe = (opts: OpcaoSimples[], slug: string, outro: string) =>
+    slug === "outro"
+      ? outro.trim()
+      : (opts.find((o) => o.slug === slug)?.label ?? "");
+
+  const orgText = textoDe(ORGAOS_PUBLICOS, orgSlug, orgOutro);
+  const areaText = textoDe(AREAS_PUBLICAS, areaSlug, areaOutro);
+
+  // Valor submetido no campo oculto `tipo_negocio`.
+  const valor =
+    seg === "publico"
+      ? orgText || areaText
+        ? encodePublico(orgText, areaText)
+        : ""
+      : privSlug === "outro"
+        ? privOutro.trim()
+        : privSlug;
+
+  return (
+    <div className="space-y-3">
+      <input type="hidden" name="tipo_negocio" value={valor} />
+
+      <div>
+        <Label>Segmento *</Label>
+        <div className="flex gap-2">
+          <SegBtn
+            active={seg === "privado"}
+            onClick={() => setSeg("privado")}
+            icon={Building2}
+            label="Privado"
+          />
+          <SegBtn
+            active={seg === "publico"}
+            onClick={() => setSeg("publico")}
+            icon={Landmark}
+            label="Público"
+          />
+        </div>
+      </div>
+
+      {seg === "privado" ? (
+        <div>
+          <Label>Tipo de negócio *</Label>
+          <ComboSelect
+            options={TIPOS_NEGOCIO}
+            value={privSlug}
+            onChange={setPrivSlug}
+            placeholder="Selecione o tipo de negócio"
+          />
+          {privSlug === "outro" && (
+            <Input
+              autoFocus
+              value={privOutro}
+              onChange={(e) => setPrivOutro(e.target.value)}
+              placeholder="Descreva o ramo do negócio"
+              className="mt-2"
+            />
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">
+            Personaliza os checklists e relatórios gerados por IA para o ramo.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <CampoComOutro
+            label="Tipo do órgão *"
+            options={ORGAOS_PUBLICOS}
+            slug={orgSlug}
+            setSlug={setOrgSlug}
+            outro={orgOutro}
+            setOutro={setOrgOutro}
+            placeholder="Selecione o tipo do órgão"
+            outroPlaceholder="Qual o tipo do órgão?"
+          />
+          <CampoComOutro
+            label="Área *"
+            options={AREAS_PUBLICAS}
+            slug={areaSlug}
+            setSlug={setAreaSlug}
+            outro={areaOutro}
+            setOutro={setAreaOutro}
+            placeholder="Selecione a área"
+            outroPlaceholder="Qual a área?"
+          />
+          <p className="mt-1 text-xs text-muted-foreground sm:col-span-2">
+            Personaliza os checklists e relatórios gerados por IA para o órgão
+            público.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { Input, Label } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { FormState } from "./actions";
 import type { Rede } from "@/lib/types";
-import { TipoNegocioField, LogoUploader } from "./rede-form-fields";
+import { SegmentoNegocioField, LogoUploader } from "./rede-form-fields";
 
 const DIAS = [
   { v: 1, l: "Seg" },
@@ -42,8 +42,7 @@ export function RedeForm({
               <Input id="nome" name="nome" defaultValue={rede?.nome ?? ""} required />
             </div>
             <div className="sm:col-span-2">
-              <Label>Tipo de negócio *</Label>
-              <TipoNegocioField defaultValue={rede?.tipo_negocio} />
+              <SegmentoNegocioField defaultValue={rede?.tipo_negocio} />
             </div>
             <div>
               <Label htmlFor="cnpj">CNPJ</Label>

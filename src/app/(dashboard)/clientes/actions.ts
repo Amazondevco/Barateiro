@@ -161,7 +161,7 @@ export async function createRede(
 ): Promise<FormState> {
   const payload = parseRede(formData);
   if (!payload.nome) return { error: "Informe o nome da rede." };
-  if (!payload.tipo_negocio) return { error: "Selecione o tipo de negócio." };
+  if (!payload.tipo_negocio) return { error: "Selecione o segmento (tipo de negócio ou órgão)." };
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -192,7 +192,7 @@ export async function updateRede(
 ): Promise<FormState> {
   const payload = parseRede(formData);
   if (!payload.nome) return { error: "Informe o nome da rede." };
-  if (!payload.tipo_negocio) return { error: "Selecione o tipo de negócio." };
+  if (!payload.tipo_negocio) return { error: "Selecione o segmento (tipo de negócio ou órgão)." };
 
   const supabase = await createClient();
   const { error } = await supabase.from("redes").update(payload).eq("id", id);

@@ -44,6 +44,74 @@ export const TIPOS_NEGOCIO: TipoNegocio[] = [
   { slug: "outro", label: "Outro", descritor: "operações gerais da empresa" },
 ];
 
+// ── Setor público ────────────────────────────────────────────────────────────
+// Quando o segmento é público, o `tipo_negocio` guarda um JSON com órgão + área
+// (texto já resolvido — rótulo conhecido ou o que o usuário digitou em "Outro").
+// Toda a interpretação fica aqui: nada mais no app lê `tipo_negocio` cru.
+export type OpcaoSimples = { slug: string; label: string };
+
+export const ORGAOS_PUBLICOS: OpcaoSimples[] = [
+  { slug: "secretaria", label: "Secretaria" },
+  { slug: "prefeitura", label: "Prefeitura" },
+  { slug: "camara", label: "Câmara Municipal" },
+  { slug: "autarquia", label: "Autarquia" },
+  { slug: "fundacao", label: "Fundação pública" },
+  { slug: "empresa-publica", label: "Empresa pública" },
+  { slug: "estadual", label: "Órgão estadual" },
+  { slug: "federal", label: "Órgão federal" },
+  { slug: "outro", label: "Outro" },
+];
+
+export const AREAS_PUBLICAS: OpcaoSimples[] = [
+  { slug: "educacao", label: "Educação" },
+  { slug: "saude", label: "Saúde" },
+  { slug: "assistencia", label: "Assistência Social" },
+  { slug: "turismo", label: "Turismo" },
+  { slug: "cultura", label: "Cultura" },
+  { slug: "esporte", label: "Esporte / Lazer" },
+  { slug: "juventude", label: "Juventude" },
+  { slug: "meio-ambiente", label: "Meio Ambiente" },
+  { slug: "seguranca", label: "Segurança Pública" },
+  { slug: "obras", label: "Obras / Infraestrutura" },
+  { slug: "administracao", label: "Administração" },
+  { slug: "fazenda", label: "Fazenda / Finanças" },
+  { slug: "transporte", label: "Transporte / Mobilidade" },
+  { slug: "agricultura", label: "Agricultura / Abastecimento" },
+  { slug: "habitacao", label: "Habitação" },
+  { slug: "comunicacao", label: "Comunicação" },
+  { slug: "outro", label: "Outro" },
+];
+
+export type Segmento =
+  | { publico: false; ramo: string } // privado: slug conhecido ou texto livre
+  | { publico: true; orgao: string; area: string };
+
+export function encodePublico(orgao: string, area: string): string {
+  return JSON.stringify({ seg: "pub", orgao: orgao.trim(), area: area.trim() });
+}
+
+export function parseSegmento(v?: string | null): Segmento {
+  if (v && v.trimStart().startsWith("{")) {
+    try {
+      const o = JSON.parse(v) as { seg?: string; orgao?: string; area?: string };
+      if (o?.seg === "pub") {
+        return { publico: true, orgao: o.orgao ?? "", area: o.area ?? "" };
+      }
+    } catch {
+      /* valor legado/corrompido → trata como privado */
+    }
+  }
+  return { publico: false, ramo: v ?? "" };
+}
+
+// "Secretaria de Educação" quando faz sentido; senão junta com "·".
+function rotuloPublico(orgao: string, area: string): string {
+  if (orgao && area) {
+    return orgao === "Secretaria" ? `Secretaria de ${area}` : `${orgao} · ${area}`;
+  }
+  return orgao || area || "Órgão público";
+}
+
 const MAP: Record<string, TipoNegocio> = Object.fromEntries(
   TIPOS_NEGOCIO.map((t) => [t.slug, t]),
 );
@@ -54,22 +122,30 @@ export function tipoNegocio(slug?: string | null): TipoNegocio {
   return (slug && MAP[slug]) || OUTRO;
 }
 
-// Rótulo do tipo (para exibir a tag). Ramo livre ("Outro" digitado) mostra o
-// próprio texto. Nulo se não houver.
-export function labelNegocio(slug?: string | null): string | null {
-  if (!slug) return null;
-  return MAP[slug]?.label ?? slug;
+// Rótulo do tipo (para exibir a tag). Público mostra "órgão · área"; ramo livre
+// ("Outro" digitado) mostra o próprio texto. Nulo se não houver.
+export function labelNegocio(v?: string | null): string | null {
+  if (!v) return null;
+  const s = parseSegmento(v);
+  if (s.publico) return rotuloPublico(s.orgao, s.area);
+  return MAP[s.ramo]?.label ?? s.ramo ?? null;
 }
 
-// Descritor do ramo para os prompts de IA. Ramo livre usa o texto como contexto;
-// cai no genérico se vazio/desconhecido.
-export function descritorNegocio(slug?: string | null): string {
-  if (slug && MAP[slug]) return MAP[slug].descritor;
-  const livre = slug?.trim();
+// Descritor para os prompts de IA. Público → contexto de órgão público; ramo
+// livre usa o texto; cai no genérico se vazio/desconhecido.
+export function descritorNegocio(v?: string | null): string {
+  const s = parseSegmento(v);
+  if (s.publico) {
+    return `um órgão público (setor público) — ${rotuloPublico(s.orgao, s.area)}`;
+  }
+  if (s.ramo && MAP[s.ramo]) return MAP[s.ramo].descritor;
+  const livre = s.ramo?.trim();
   if (livre) return `uma empresa do ramo "${livre}"`;
   return OUTRO.descritor;
 }
 
-export function usaGondola(slug?: string | null): boolean {
-  return Boolean(tipoNegocio(slug).usaGondola);
+export function usaGondola(v?: string | null): boolean {
+  const s = parseSegmento(v);
+  if (s.publico) return false;
+  return Boolean(tipoNegocio(s.ramo).usaGondola);
 }
