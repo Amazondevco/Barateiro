@@ -330,6 +330,21 @@ com fundo chapado ao admin — logo + cor já resolvem.
 
 ---
 
+### 8.2 Console do admin no app (`/app/admin`)
+Superfície **mobile do admin da rede** (papel `admin_supermercado`) dentro do app,
+separada da experiência do operador. Gestão (CRUD de unidades, departamentos,
+usuários, cargos/permissões — reusando as server actions do painel) + monitoramento
+**só leitura** (checklists preenchidos, relatórios por unidade/departamento).
+- **Roteamento:** middleware manda operador (`tipo==="app"`) para fora de
+  `/app/admin`; admin que cai em `/app` vai para `/app/admin`. O `layout.tsx` do
+  console trava por papel (`admin_supermercado`, senão `redirect("/")`). Cor da
+  rede vem de `getRedeMarcaById(profile.rede_id)`.
+- **Chrome próprio:** `AppChrome` e `LocationPrimer` **se desligam** em `/app/admin`
+  (sem barra do operador, sem FAB, sem prompt de localização). Nav própria
+  `AppAdminNav` (barra inferior, 3 abas: Gestão / Preenchidos / Relatórios).
+- **Entrada:** link "Console no app" no menu do usuário da sidebar (só admin).
+- Leituras/escritas pela **RLS do próprio admin** (sem service-role).
+
 ## 9. Status do checklist
 
 - **OK / conforme:** `text-success`, fundo `success-bg`.

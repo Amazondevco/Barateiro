@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 // Solicita a permissão de localização ao ENTRAR no app (uma vez), para que o
 // envio de checklist com geolocalização não falhe na hora por falta de permissão.
 // Só dispara o prompt se ainda estiver "prompt" (não decidido) — se já foi
-// concedida/negada, não incomoda.
+// concedida/negada, não incomoda. NÃO dispara no console do admin (/app/admin):
+// é monitoramento/gestão, não preenche checklist.
 export function LocationPrimer() {
+  const pathname = usePathname();
   useEffect(() => {
+    if (pathname.startsWith("/app/admin")) return;
     if (typeof navigator === "undefined" || !navigator.geolocation) return;
     let cancelado = false;
 
@@ -35,7 +39,7 @@ export function LocationPrimer() {
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }

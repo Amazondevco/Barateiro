@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, LifeBuoy, LogOut, ChevronUp, ChevronDown } from "lucide-react";
+import { Settings, LifeBuoy, LogOut, ChevronUp, ChevronDown, Smartphone } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { gruposPara } from "@/lib/nav";
 import { PAPEL_LABEL, type Papel } from "@/lib/types";
@@ -215,6 +215,18 @@ export function Sidebar({
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar hover:text-[color:var(--sidebar-strong)]"
                 >
                   <Settings className="h-[18px] w-[18px] shrink-0" /> Configurações
+                </Link>
+              )}
+              {papel === "admin_supermercado" && (
+                <Link
+                  href="/app/admin"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onNavigate?.();
+                  }}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar hover:text-[color:var(--sidebar-strong)]"
+                >
+                  <Smartphone className="h-[18px] w-[18px] shrink-0" /> Console no app
                 </Link>
               )}
               <Link

@@ -17,8 +17,11 @@ export function AppChrome({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  // Console do admin (/app/admin) tem chrome próprio (AppAdminNav) — sem a barra
+  // do operador nem o FAB de sugestão.
+  const adminConsole = pathname.startsWith("/app/admin");
   const telaCheia = /\/form\/|\/assinar$/.test(pathname);
-  if (telaCheia) return <>{children}</>;
+  if (telaCheia || adminConsole) return <>{children}</>;
   // Home da rede (banner colorido) vai edge-to-edge no topo: o banner passa sob a
   // barra de status; o respiro do conteúdo é tratado no próprio banner.
   const immersiveTop = /\/rede\/[^/]+$/.test(pathname);

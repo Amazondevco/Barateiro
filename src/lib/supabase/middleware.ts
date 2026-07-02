@@ -82,5 +82,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Console admin no app (/app/admin): é só do admin da rede (tem `profiles`).
+  // Operador (identidade, tipo="app") não entra — volta pra sua Início.
+  if (user && isApp && pathname.startsWith("/app/admin")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/app";
+    return NextResponse.redirect(url);
+  }
+  // Admin (não é usuário do app) que cai na raiz do app do operador → seu console.
+  if (user && !isApp && pathname === "/app") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/app/admin";
+    return NextResponse.redirect(url);
+  }
+
   return supabaseResponse;
 }
