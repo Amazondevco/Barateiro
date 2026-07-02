@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   "/api/manifest",
   "/api/app-icon",
   "/api/definir-senha-convite",
+  "/api/app-admin-link",
   // Verificação de deep link (App Links / Universal Links) — precisa responder
   // 200 direto, sem redirect de auth, senão a verificação do domínio falha.
   "/.well-known",

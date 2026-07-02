@@ -1,15 +1,12 @@
 import { useEffect, useState } from "react";
-import { Building2, ChevronRight, Store, ShieldCheck, ExternalLink } from "lucide-react";
+import { Building2, ChevronRight, Store, ShieldCheck, Loader2 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { fetchMemberships, peekMemberships, type Membership } from "../lib/operator-api";
 import { supabase } from "../lib/supabase";
+import { abrirConsoleAdmin } from "../lib/admin-console";
 import { useI18n } from "../lib/i18n/i18n";
 import { LoadingScreen } from "../ui/loading-screen";
 import { marcarBooted } from "../lib/boot-state";
-
-// Console do gestor é PWA (server actions + RLS). O app nativo do operador só
-// abre a versão web — não reimplementa a gestão (mantém a trava no servidor).
-const CONSOLE_URL = "https://check-ai-br.vercel.app/app/admin";
 
 export function MembershipsPage() {
   const { t } = useI18n();
@@ -18,6 +15,8 @@ export function MembershipsPage() {
   const [memberships, setMemberships] = useState<Membership[]>(initial ?? []);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [abrindoConsole, setAbrindoConsole] = useState(false);
+  const [erroConsole, setErroConsole] = useState<string | null>(null);
 
   // Detecta admin da rede (tem `profiles`, ao contrário do operador). Se for,
   // oferece abrir o console web.
@@ -83,6 +82,14 @@ export function MembershipsPage() {
     return <Navigate to={`/app/rede/${activeMemberships[0].id}`} replace />;
   }
 
+  async function abrirConsole() {
+    setErroConsole(null);
+    setAbrindoConsole(true);
+    const r = await abrirConsoleAdmin();
+    setAbrindoConsole(false);
+    if (!r.ok) setErroConsole(r.error ?? t("Não foi possível abrir o console."));
+  }
+
   return (
     <div className="mx-auto w-full max-w-md p-4">
       <header className="mb-5 mt-2">
@@ -99,23 +106,35 @@ export function MembershipsPage() {
       ) : null}
 
       {isAdmin ? (
-        <a
-          href={CONSOLE_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="mb-4 flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
-        >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <ShieldCheck className="h-5 w-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold">{t("Console do gestor")}</p>
-            <p className="text-xs text-muted-foreground">
-              {t("Gestão e acompanhamento abrem na versão web.")}
+        <>
+          <button
+            type="button"
+            onClick={() => void abrirConsole()}
+            disabled={abrindoConsole}
+            className="mb-2 flex w-full items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-left transition-colors hover:bg-primary/10 disabled:opacity-70"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              {abrindoConsole ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <ShieldCheck className="h-5 w-5" />
+              )}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">{t("Console do gestor")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("Gestão e acompanhamento da rede.")}
+              </p>
+            </div>
+          </button>
+          {erroConsole ? (
+            <p className="mb-4 rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
+              {erroConsole}
             </p>
-          </div>
-          <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
-        </a>
+          ) : (
+            <div className="mb-4" />
+          )}
+        </>
       ) : null}
 
       {activeMemberships.length > 0 ? (

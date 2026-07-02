@@ -253,6 +253,6 @@ export const en: Record<string, string> = {
   "Cadastro concluído! Faça login para entrar.":
     "Registration complete! Log in to enter.",
   "Console do gestor": "Manager console",
-  "Gestão e acompanhamento abrem na versão web.":
-    "Management and monitoring open in the web version.",
+  "Gestão e acompanhamento da rede.": "Management and monitoring for the network.",
+  "Não foi possível abrir o console.": "Couldn't open the console.",
 };
